@@ -22,9 +22,18 @@ function getUserByUsername(username) {
     });
 }
 
-function insertUser(username, password) {
+function getUserByEmail(email) {
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], function (err) {
+        db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
+            if (err) reject(err);
+            resolve(row);
+        });
+    });
+}
+
+function insertUser(username, password, email) {
+    return new Promise((resolve, reject) => {
+        db.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email], function (err) {
             if (err) reject(err);
             resolve(this.lastID);
         });
@@ -33,10 +42,10 @@ function insertUser(username, password) {
 
 // Registrar o novo usuário
 fastify.post('/register', async (request, reply) => {
-    const { username, password } = request.body;
+    const { username, password, email } = request.body;
 
-    if (!username || !password) {
-        return reply.status(400).send({ error: "Nome de usuário e senha são necessários!" });
+    if (!username || !password || !email) {
+        return reply.status(400).send({ error: "Nome de usuário, senha e email são necessários!" });
     }
 
     try {
@@ -46,8 +55,13 @@ fastify.post('/register', async (request, reply) => {
             return reply.status(400).send({ error: "Nome de usuário já está em uso!" });
         }
 
+        const emailExists = await getUserByEmail(email);
+        if (emailExists) {
+            return reply.status(400).send({ error: "Email de usuário já está em uso!" });
+        }
+
         // Inserir o novo usuário no banco de dados
-        const userId = await insertUser(username, password);
+        const userId = await insertUser(username, password, email);
         reply.status(201).send({ id: userId, username });
     } catch (err) {
         return reply.status(500).send({ error: "Erro ao registrar usuário: " + err.message });
@@ -94,12 +108,8 @@ fastify.register(fastifyCors, {
 });
 
 // Rota para servir o frontend
-fastify.get('/register', async (request, reply) => {
-    return reply.sendFile('register.html'); // Isso vai servir o arquivo register.html
-});
-
-fastify.get('/login', async (request, reply) => {
-    return reply.sendFile('login.html'); // Isso vai servir o arquivo login.html
+fastify.get('/', async (request, reply) => {
+    return reply.sendFile('index.html'); // Isso vai servir o arquivo index.html como página principal
 });
 
 // Iniciar o servidor

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game - SPA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+
+    <!-- Container principal -->
+    <div id="app" class="flex-1 flex items-center justify-center">
+
+        <!-- Página de Login -->
+        <div id="loginPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
+            <h2 class="text-2xl font-bold text-center mb-4">Login</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700">Usuário</label>
+                    <input type="text" id="username" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
+            </form>
+            <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
+            <button id="needRegister?" class="text-blue-500 hover:underline">Não tem uma conta? Registre-se</button>
+        </div>
+
+        <!-- Página de Registro -->
+        <div id="registerPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
+            <h2 class="text-2xl font-bold text-center mb-4">Registrar Novo Usuário</h2>
+            <form id="registerForm">
+                <div class="mb-4">
+                    <label for="registerUsername" class="block text-sm font-medium text-gray-700">Usuário</label>
+                    <input type="text" id="registerUsername" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div class="mb-4">
+                    <label for="registerPassword" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="registerPassword" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div class="mb-4">
+                    <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="registerEmail" name="email" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Registrar</button>
+            </form>
+            <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
+            <button id="yetRegister?" class="text-blue-500 hover:underline">Já tem uma conta? Faça login</button>
+        </div>
+
+        <!-- Página do Dashboard -->
+        <div id="dashboardPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
+            <h2 class="text-2xl font-bold text-center mb-4">Bem-vindo ao Dashboard!</h2>
+            <p class="mb-4">Você está autenticado e pode acessar o conteúdo protegido.</p>
+            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600">Sair</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Função para exibir a página de login
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('dashboardPage').classList.add('hidden');
+        }
+
+        // Função para exibir a página de registro
+        function showRegisterPage() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+            document.getElementById('dashboardPage').classList.add('hidden');
+        }
+
+        // Função para exibir o dashboard
+        function showDashboardPage() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('dashboardPage').classList.remove('hidden');
+        }
+
+        // Lógica de login
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('authToken', data.token);
+                    showDashboardPage();
+                } else {
+                    document.getElementById('loginResponseMessage').textContent = `Erro: ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('loginResponseMessage').textContent = 'Erro ao conectar com o servidor.';
+            }
+        });
+
+        document.getElementById('needRegister?').addEventListener('click', () => {
+            showRegisterPage();
+        });
+
+        // Lógica de registro
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const email = document.getElementById('registerEmail').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password, email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('registerResponseMessage').textContent = `Usuário ${data.username} registrado com sucesso!`;
+                    showLoginPage();
+                } else {
+                    document.getElementById('registerResponseMessage').textContent = `Erro: ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('registerResponseMessage').textContent = 'Erro ao conectar com o servidor.';
+            }
+        });
+
+        // Lógica de logout
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('authToken');
+            showLoginPage();
+        });
+
+        document.getElementById('yetRegister?').addEventListener('click', () => {
+            showLoginPage();
+        });
+
+        // Verificação do token JWT para mostrar a página apropriada
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                showDashboardPage();
+            } else {
+                showLoginPage();
+            }
+        }
+
+        // Chama a verificação ao carregar
+        window.onload = checkAuthentication;
+    </script>
+</body>
+</html>
