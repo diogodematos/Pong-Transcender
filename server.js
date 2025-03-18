@@ -40,6 +40,12 @@ function insertUser(username, password, email) {
     });
 }
 
+// Função para validar a senha
+function validatePassword(password) {
+    const passwordRegex = /^(?=(.*[a-z]){1})(?=(.*[A-Z]){1})(?=(.*\d){1})(?=(.*[a-zA-Z\d]){7})/;
+    return passwordRegex.test(password);
+}
+
 // Registrar o novo usuário
 fastify.post('/register', async (request, reply) => {
     const { username, password, email } = request.body;
@@ -48,6 +54,10 @@ fastify.post('/register', async (request, reply) => {
         return reply.status(400).send({ error: "Nome de usuário, senha e email são necessários!" });
     }
 
+    if (!validatePassword(password)) {
+        return reply.status(400).send({ error: "A senha deve conter pelo menos 1 letra maiscula, 1 minuscula e 1 digito!" });
+    }
+    
     try {
         // Verificar se o nome de usuário já existe
         const userExists = await getUserByUsername(username);

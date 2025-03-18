@@ -50,6 +50,15 @@
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="yetRegister?" class="text-blue-500 hover:underline">Já tem uma conta? Faça login</button>
         </div>
+        <!-- Modal de Sucesso de Registro -->
+        <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h3 class="text-lg font-bold text-center mb-4">Registro Concluído!</h3>
+                <p class="text-center mb-4">Seu registro foi realizado com sucesso. Agora você pode fazer login.</p>
+                <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Ir para Login</button>
+            </div>
+        </div>
+
 
         <!-- Página do Dashboard -->
         <div id="dashboardPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
@@ -104,6 +113,7 @@
                     showDashboardPage();
                 } else {
                     document.getElementById('loginResponseMessage').textContent = `Erro: ${data.error}`;
+                    showLoginPage();
                 }
             } catch (error) {
                 document.getElementById('loginResponseMessage').textContent = 'Erro ao conectar com o servidor.';
@@ -120,7 +130,7 @@
             const username = document.getElementById('registerUsername').value;
             const password = document.getElementById('registerPassword').value;
             const email = document.getElementById('registerEmail').value;
-
+            
             try {
                 const response = await fetch('http://localhost:3000/register', {
                     method: 'POST',
@@ -133,9 +143,15 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    document.getElementById('registerResponseMessage').textContent = `Usuário ${data.username} registrado com sucesso!`;
-                    showLoginPage();
+                    document.getElementById('registerSuccessModal').classList.remove('hidden');
+                    document.getElementById('registerUsername').value = '';
+                    document.getElementById('registerPassword').value = '';
+                    document.getElementById('registerEmail').value = '';
+                    document.getElementById('registerResponseMessage').textContent = '';
                 } else {
+                    document.getElementById('registerUsername').value = '';
+                    document.getElementById('registerPassword').value = '';
+                    document.getElementById('registerEmail').value = '';
                     document.getElementById('registerResponseMessage').textContent = `Erro: ${data.error}`;
                 }
             } catch (error) {
@@ -143,14 +159,26 @@
             }
         });
 
+        // Lógica para fechar o modal e redirecionar para a página de login
+        document.getElementById('goToLoginButton').addEventListener('click', () => {
+            showLoginPage(); // Exibe a página de login
+            document.getElementById('registerSuccessModal').classList.add('hidden'); // Oculta o modal
+        });
+
         // Lógica de logout
         document.getElementById('logoutButton').addEventListener('click', () => {
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
             localStorage.removeItem('authToken');
             showLoginPage();
         });
 
         document.getElementById('yetRegister?').addEventListener('click', () => {
             showLoginPage();
+            document.getElementById('registerUsername').value = '';
+            document.getElementById('registerPassword').value = '';
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerResponseMessage').textContent = '';
         });
 
         // Verificação do token JWT para mostrar a página apropriada
