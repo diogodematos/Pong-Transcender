@@ -46,7 +46,9 @@ function validatePassword(password) {
     return passwordRegex.test(password);
 }
 
-// Registrar o novo usuário
+const bcrypt = require('bcrypt');
+
+// Registrar o novo usuário com hash de senha
 fastify.post('/register', async (request, reply) => {
     const { username, password, email } = request.body;
 
@@ -55,9 +57,9 @@ fastify.post('/register', async (request, reply) => {
     }
 
     if (!validatePassword(password)) {
-        return reply.status(400).send({ error: "A senha deve conter pelo menos 1 letra maiscula, 1 minuscula e 1 digito!" });
+        return reply.status(400).send({ error: "A senha deve conter pelo menos 1 letra maiúscula, 1 minúscula e 1 dígito!" });
     }
-    
+
     try {
         // Verificar se o nome de usuário já existe
         const userExists = await getUserByUsername(username);
@@ -70,15 +72,18 @@ fastify.post('/register', async (request, reply) => {
             return reply.status(400).send({ error: "Email de usuário já está em uso!" });
         }
 
+        // Hash da senha
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         // Inserir o novo usuário no banco de dados
-        const userId = await insertUser(username, password, email);
+        const userId = await insertUser(username, hashedPassword, email);
         reply.status(201).send({ id: userId, username });
     } catch (err) {
         return reply.status(500).send({ error: "Erro ao registrar usuário: " + err.message });
     }
 });
 
-// Rota para login (semelhante ao seu código atual)
+// Rota para login com comparação de senha (usando bcrypt)
 fastify.post('/login', async (request, reply) => {
     const { username, password } = request.body;
 
@@ -92,8 +97,9 @@ fastify.post('/login', async (request, reply) => {
             return reply.status(401).send({ error: "Usuário não encontrado!" });
         }
 
-        // Aqui, a senha deveria ser verificada com hash (mas estamos usando em texto simples)
-        if (user.password === password) {
+        // Comparar a senha fornecida com o hash armazenado
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (passwordMatch) {
             const token = jwt.sign({ username }, 'segredo_super_secreto', { expiresIn: '1h' });
             return reply.send({ message: "Login bem-sucedido!", token });
         } else {
