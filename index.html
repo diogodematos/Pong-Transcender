@@ -6,50 +6,53 @@
     <title>Pong Game - SPA</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col">
+<body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('https://images8.alphacoders.com/963/963330.png'); background-size: cover; background-position: center;">
 
-    <!-- Container principal -->
     <div id="app" class="flex-1 flex items-center justify-center">
-
-        <!-- Página de Login -->
-        <div id="loginPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
-            <h2 class="text-2xl font-bold text-center mb-4">Login</h2>
+        <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+            <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
+                <img src="https://imgs.search.brave.com/b92pQHnX0wRW1hgXLu-M72UBHRDPBGj2uLgEa8V6CEQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMud2lraWEubm9j/b29raWUubmV0L3Bv/a2Vtb24vaW1hZ2Vz/LzgvODcvUG9rJUMz/JUE5X0JhbGwucG5n/L3JldmlzaW9uL2xh/dGVzdC9zY2FsZS10/by13aWR0aC1kb3du/LzIwMD9jYj0yMDI0/MDkyMjAyNDc1NQ" alt="Pikachu" class="w-8 h-8 mr-2">
+                Login
+            </h2>
             <form id="loginForm">
                 <div class="mb-4">
                     <label for="username" class="block text-sm font-medium text-gray-700">Usuário</label>
-                    <input type="text" id="username" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="text" id="username" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
                     <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
-                    <input type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
-                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
+                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Login</button>
             </form>
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="needRegister?" class="text-blue-500 hover:underline">Não tem uma conta? Registre-se</button>
+            <button id="needRegister?" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registre-se</button>
         </div>
-
         <!-- Página de Registro -->
-        <div id="registerPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
-            <h2 class="text-2xl font-bold text-center mb-4">Registrar Novo Usuário</h2>
+        <div id="registerPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+            <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
+                <img src="https://pokedex-tan-nine.vercel.app/images/Pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
+                New User
+            </h2>
             <form id="registerForm">
                 <div class="mb-4">
                     <label for="registerUsername" class="block text-sm font-medium text-gray-700">Usuário</label>
-                    <input type="text" id="registerUsername" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="text" id="registerUsername" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
                     <label for="registerPassword" class="block text-sm font-medium text-gray-700">Senha</label>
-                    <input type="password" id="registerPassword" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="password" id="registerPassword" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
                     <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="registerEmail" name="email" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="email" id="registerEmail" name="email" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
-                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Registrar</button>
+                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Registrar</button>
             </form>
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="yetRegister?" class="text-blue-500 hover:underline">Já tem uma conta? Faça login</button>
+            <button id="yetRegister?" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
         </div>
+    </div>
         <!-- Modal de Sucesso de Registro -->
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
@@ -111,8 +114,12 @@
                 if (response.ok) {
                     localStorage.setItem('authToken', data.token);
                     showDashboardPage();
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
                 } else {
                     document.getElementById('loginResponseMessage').textContent = `Erro: ${data.error}`;
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
                     showLoginPage();
                 }
             } catch (error) {
@@ -122,6 +129,8 @@
 
         document.getElementById('needRegister?').addEventListener('click', () => {
             showRegisterPage();
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
         });
 
         // Lógica de registro

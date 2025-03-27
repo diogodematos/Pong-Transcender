@@ -42,8 +42,14 @@ function insertUser(username, password, email) {
 
 // Função para validar a senha
 function validatePassword(password) {
-    const passwordRegex = /^(?=(.*[a-z]){1})(?=(.*[A-Z]){1})(?=(.*\d){1})(?=(.*[a-zA-Z\d]){7})/;
+    const passwordRegex = /^(?=(.*[a-z]))(?=(.*[A-Z]))(?=(.*\d))([a-zA-Z\d]{7,20})$/
     return passwordRegex.test(password);
+}
+
+// Função para validar o email
+function validateEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
 }
 
 const bcrypt = require('bcrypt');
@@ -57,8 +63,12 @@ fastify.post('/register', async (request, reply) => {
     }
 
     if (!validatePassword(password)) {
-        return reply.status(400).send({ error: "A senha deve conter pelo menos 1 letra maiúscula, 1 minúscula e 1 dígito!" });
+        return reply.status(400).send({ error: "Por favor insira uma password com 1 Maiscula, 1 Miniscula, 1 Numero, entre 7 - 20 caracteres" });
     }
+
+    if (!validateEmail(email)) {
+        return reply.status(400).send({ error: "Por favor insira um email no formato username@mail.com" });
+    } 
 
     try {
         // Verificar se o nome de usuário já existe
