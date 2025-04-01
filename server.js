@@ -104,7 +104,7 @@ fastify.post('/login', async (request, reply) => {
     try {
         const user = await getUserByUsername(username);
         if (!user) {
-            return reply.status(401).send({ error: "Usuário não encontrado!" });
+            return reply.status(401).send({ error: "Erro: Usuário não encontrado!" });
         }
 
         // Comparar a senha fornecida com o hash armazenado
@@ -119,6 +119,76 @@ fastify.post('/login', async (request, reply) => {
         return reply.status(500).send({ error: "Erro ao fazer login: " + err.message });
     }
 });
+
+// Rota para obter os dados do usuário (perfil)
+fastify.get('/profile', async (request, reply) => {
+    const token = request.headers['authorization']?.split(' ')[1]; // Extrai o token da autorização
+    if (!token) {
+        return reply.status(401).send({ error: 'Token não fornecido.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, 'segredo_super_secreto');
+        const user = await getUserByUsername(decoded.username);
+        if (!user) {
+            return reply.status(404).send({ error: 'Usuário não encontrado.' });
+        }
+
+        return reply.send({
+            username: user.username,
+            email: user.email
+        });
+    } catch (err) {
+        return reply.status(401).send({ error: 'Token inválido ou expirado.' });
+    }
+});
+
+// Rota para atualizar dados do perfil (nome de usuário, email e senha)
+fastify.put('/profile', async (request, reply) => {
+    const token = request.headers['authorization']?.split(' ')[1]; // Extrai o token da autorização
+    if (!token) {
+        return reply.status(401).send({ error: 'Token não fornecido.' });
+    }
+
+    const { username, newUsername, newEmail, newPassword } = request.body;
+
+    if (!newUsername && !newEmail && !newPassword) {
+        return reply.status(400).send({ error: 'É necessário fornecer pelo menos um dado para atualização.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, 'segredo_super_secreto');
+        const user = await getUserByUsername(decoded.username);
+        if (!user) {
+            return reply.status(404).send({ error: 'Usuário não encontrado.' });
+        }
+
+        // Atualizando o nome de usuário, email ou senha
+        const updatedFields = [];
+        if (newUsername) updatedFields.push(`username = "${newUsername}"`);
+        if (newEmail) updatedFields.push(`email = "${newEmail}"`);
+        if (newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            updatedFields.push(`password = "${hashedPassword}"`);
+        }
+
+        if (updatedFields.length > 0) {
+            const updateQuery = `UPDATE users SET ${updatedFields.join(', ')} WHERE username = ?`;
+            db.run(updateQuery, [decoded.username], function (err) {
+                if (err) {
+                    return reply.status(500).send({ error: 'Erro ao atualizar perfil.' });
+                }
+
+                return reply.send({ message: 'Perfil atualizado com sucesso.' });
+            });
+        } else {
+            return reply.status(400).send({ error: 'Nada para atualizar.' });
+        }
+    } catch (err) {
+        return reply.status(401).send({ error: 'Token inválido ou expirado.' });
+    }
+});
+
 
 // Servindo arquivos estáticos
 fastify.register(require('@fastify/static'), {

@@ -28,6 +28,9 @@
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="needRegister?" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registre-se</button>
         </div>
+
+        <div id="error-message"></div>
+
         <!-- Página de Registro -->
         <div id="registerPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
@@ -52,6 +55,41 @@
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="yetRegister?" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
         </div>
+
+        <!-- Página de Perfil -->
+        <div id="profilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+            <h2 class="text-2xl font-bold text-center mb-4">Perfil</h2>
+            <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
+            <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+            
+            <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Editar Perfil</button>
+            <button id="changePasswordButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg hover:bg-yellow-600 mt-2">Alterar Senha</button>
+            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 mt-2">Sair</button>
+        </div>
+
+        <!-- Formulário de Edição de Perfil -->
+        <div id="editProfilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+            <h2 class="text-2xl font-bold text-center mb-4">Editar Perfil</h2>
+            
+            <div class="mb-4">
+                <label for="newUsername" class="block text-sm font-medium text-gray-700">Novo Nome de Usuário</label>
+                <input type="text" id="newUsername" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
+            </div>
+            
+            <div class="mb-4">
+                <label for="newEmail" class="block text-sm font-medium text-gray-700">Novo Email</label>
+                <input type="email" id="newEmail" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
+            </div>
+            
+            <div class="mb-4">
+                <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Senha</label>
+                <input type="password" id="newPassword" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
+            </div>
+
+            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Salvar Alterações</button>
+            <button id="cancelEditProfileButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
+        </div>
+
     </div>
         <!-- Modal de Sucesso de Registro -->
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
@@ -61,15 +99,6 @@
                 <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Ir para Login</button>
             </div>
         </div>
-
-
-        <!-- Página do Dashboard -->
-        <div id="dashboardPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full">
-            <h2 class="text-2xl font-bold text-center mb-4">Bem-vindo ao Dashboard!</h2>
-            <p class="mb-4">Você está autenticado e pode acessar o conteúdo protegido.</p>
-            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600">Sair</button>
-        </div>
-
     </div>
 
     <script>
@@ -77,21 +106,28 @@
         function showLoginPage() {
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('profilePage').classList.add('hidden');
         }
 
         // Função para exibir a página de registro
         function showRegisterPage() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('registerPage').classList.remove('hidden');
-            document.getElementById('dashboardPage').classList.add('hidden');
+            document.getElementById('profilePage').classList.add('hidden');
         }
 
-        // Função para exibir o dashboard
-        function showDashboardPage() {
+        // Função para exibir a página de perfil
+        function showProfilePage() {
+            document.getElementById('profilePage').classList.remove('hidden');
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('dashboardPage').classList.remove('hidden');
+            document.getElementById('editProfilePage').classList.add('hidden');
+        }
+
+        // Função para exibir a página de edição de perfil
+        function showEditProfilePage() {
+            document.getElementById('editProfilePage').classList.remove('hidden');
+            document.getElementById('profilePage').classList.add('hidden');
         }
 
         // Lógica de login
@@ -113,11 +149,12 @@
 
                 if (response.ok) {
                     localStorage.setItem('authToken', data.token);
-                    showDashboardPage();
+                    showProfilePage();
                     document.getElementById('username').value = '';
                     document.getElementById('password').value = '';
                 } else {
-                    document.getElementById('loginResponseMessage').textContent = `Erro: ${data.error}`;
+                    document.getElementById('loginResponseMessage').textContent = `${data.error}`;
+                    document.getElementById('error-message').classList.add('bg-red-500', 'text-white', 'p-2', 'rounded');
                     document.getElementById('username').value = '';
                     document.getElementById('password').value = '';
                     showLoginPage();
@@ -182,6 +219,109 @@
             showLoginPage();
         });
 
+        // Função para obter o perfil do usuário
+        async function getProfile() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('http://localhost:3000/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('profileUsername').textContent = data.username;
+                    document.getElementById('profileEmail').textContent = data.email;
+                    showProfilePage();
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Erro ao carregar o perfil.');
+            }
+        }
+
+        // Função para exibir a página de perfil
+        function showProfilePage() {
+            document.getElementById('profilePage').classList.remove('hidden');
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('editProfilePage').classList.add('hidden');
+        }
+
+        // Função para exibir a página de edição de perfil
+        function showEditProfilePage() {
+            document.getElementById('editProfilePage').classList.remove('hidden');
+            document.getElementById('profilePage').classList.add('hidden');
+        }
+
+        // Função para salvar alterações no perfil
+        document.getElementById('saveProfileChangesButton').addEventListener('click', async () => {
+            const token = localStorage.getItem('authToken');
+            const newUsername = document.getElementById('newUsername').value;
+            const newEmail = document.getElementById('newEmail').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+
+            try {
+                const response = await fetch('http://localhost:3000/updateprofile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ newUsername, newEmail, newPassword })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    
+                    alert('Perfil atualizado com sucesso!');
+                    showProfilePage();
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('newPassword').value = '';
+                    getProfile(); // Atualizar as informações do perfil
+                } else {
+                    alert(data.error);
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('newPassword').value = '';
+                }
+            } catch (error) {
+                alert('Erro ao atualizar o perfil.');
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newEmail').value = '';
+                document.getElementById('newPassword').value = '';
+            }
+        });
+
+        // Função para cancelar a edição do perfil
+        document.getElementById('cancelEditProfileButton').addEventListener('click', () => {
+            showProfilePage();
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newEmail').value = '';
+        });
+
+        // Evento para editar o perfil
+        document.getElementById('editProfileButton').addEventListener('click', showEditProfilePage);
+
+        // Verificar o estado de autenticação
+        window.onload = () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                getProfile();
+            } else {
+                showLoginPage();
+            }
+        };
+
+
         document.getElementById('yetRegister?').addEventListener('click', () => {
             showLoginPage();
             document.getElementById('registerUsername').value = '';
@@ -194,7 +334,7 @@
         function checkAuthentication() {
             const token = localStorage.getItem('authToken');
             if (token) {
-                showDashboardPage();
+                showProfilePage();
             } else {
                 showLoginPage();
             }
