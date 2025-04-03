@@ -119,6 +119,7 @@
         // Função para exibir a página de perfil
         function showProfilePage() {
             document.getElementById('profilePage').classList.remove('hidden');
+            getProfile();
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('registerPage').classList.add('hidden');
             document.getElementById('editProfilePage').classList.add('hidden');
@@ -150,6 +151,7 @@
                 if (response.ok) {
                     localStorage.setItem('authToken', data.token);
                     showProfilePage();
+                    //getProfile();
                     document.getElementById('username').value = '';
                     document.getElementById('password').value = '';
                 } else {
@@ -236,7 +238,7 @@
                 if (response.ok) {
                     document.getElementById('profileUsername').textContent = data.username;
                     document.getElementById('profileEmail').textContent = data.email;
-                    showProfilePage();
+                    //showProfilePage();
                 } else {
                     alert(data.error);
                 }
@@ -245,36 +247,21 @@
             }
         }
 
-        // Função para exibir a página de perfil
-        function showProfilePage() {
-            document.getElementById('profilePage').classList.remove('hidden');
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('editProfilePage').classList.add('hidden');
-        }
-
-        // Função para exibir a página de edição de perfil
-        function showEditProfilePage() {
-            document.getElementById('editProfilePage').classList.remove('hidden');
-            document.getElementById('profilePage').classList.add('hidden');
-        }
-
         // Função para salvar alterações no perfil
         document.getElementById('saveProfileChangesButton').addEventListener('click', async () => {
             const token = localStorage.getItem('authToken');
             const newUsername = document.getElementById('newUsername').value;
-            const newEmail = document.getElementById('newEmail').value;
             const newPassword = document.getElementById('newPassword').value;
-
+            const newEmail = document.getElementById('newEmail').value;
 
             try {
-                const response = await fetch('http://localhost:3000/updateprofile', {
+                const response = await fetch('http://localhost:3000/updateProfile', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ newUsername, newEmail, newPassword })
+                    body: JSON.stringify({ newUsername, newPassword, newEmail })
                 });
 
                 const data = await response.json();
@@ -282,21 +269,21 @@
                     
                     alert('Perfil atualizado com sucesso!');
                     showProfilePage();
+                    //getProfile(); // Atualizar as informações do perfil
                     document.getElementById('newUsername').value = '';
-                    document.getElementById('newEmail').value = '';
                     document.getElementById('newPassword').value = '';
-                    getProfile(); // Atualizar as informações do perfil
+                    document.getElementById('newEmail').value = '';
                 } else {
                     alert(data.error);
                     document.getElementById('newUsername').value = '';
-                    document.getElementById('newEmail').value = '';
                     document.getElementById('newPassword').value = '';
+                    document.getElementById('newEmail').value = '';
                 }
             } catch (error) {
-                alert('Erro ao atualizar o perfil.');
+                alert('Erro ao atualizar o perfil - index.');
                 document.getElementById('newUsername').value = '';
-                document.getElementById('newEmail').value = '';
                 document.getElementById('newPassword').value = '';
+                document.getElementById('newEmail').value = '';
             }
         });
 
@@ -308,20 +295,6 @@
             document.getElementById('newEmail').value = '';
         });
 
-        // Evento para editar o perfil
-        document.getElementById('editProfileButton').addEventListener('click', showEditProfilePage);
-
-        // Verificar o estado de autenticação
-        window.onload = () => {
-            const token = localStorage.getItem('authToken');
-            if (token) {
-                getProfile();
-            } else {
-                showLoginPage();
-            }
-        };
-
-
         document.getElementById('yetRegister?').addEventListener('click', () => {
             showLoginPage();
             document.getElementById('registerUsername').value = '';
@@ -329,6 +302,8 @@
             document.getElementById('registerEmail').value = '';
             document.getElementById('registerResponseMessage').textContent = '';
         });
+
+        document.getElementById('editProfileButton').addEventListener('click', showEditProfilePage);
 
         // Verificação do token JWT para mostrar a página apropriada
         function checkAuthentication() {

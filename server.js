@@ -144,13 +144,13 @@ fastify.get('/profile', async (request, reply) => {
 });
 
 // Rota para atualizar dados do perfil (nome de usuário, email e senha)
-fastify.put('/profile', async (request, reply) => {
+fastify.put('/updateProfile', async (request, reply) => {
     const token = request.headers['authorization']?.split(' ')[1]; // Extrai o token da autorização
     if (!token) {
         return reply.status(401).send({ error: 'Token não fornecido.' });
     }
 
-    const { username, newUsername, newEmail, newPassword } = request.body;
+    const { newUsername, newEmail, newPassword } = request.body;
 
     if (!newUsername && !newEmail && !newPassword) {
         return reply.status(400).send({ error: 'É necessário fornecer pelo menos um dado para atualização.' });
@@ -166,11 +166,11 @@ fastify.put('/profile', async (request, reply) => {
         // Atualizando o nome de usuário, email ou senha
         const updatedFields = [];
         if (newUsername) updatedFields.push(`username = "${newUsername}"`);
-        if (newEmail) updatedFields.push(`email = "${newEmail}"`);
         if (newPassword) {
             const hashedPassword = await bcrypt.hash(newPassword, 10);
             updatedFields.push(`password = "${hashedPassword}"`);
         }
+        if (newEmail) updatedFields.push(`email = "${newEmail}"`);
 
         if (updatedFields.length > 0) {
             const updateQuery = `UPDATE users SET ${updatedFields.join(', ')} WHERE username = ?`;
