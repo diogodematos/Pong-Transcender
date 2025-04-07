@@ -138,7 +138,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('http://localhost:3000/login', {
+                const response = await fetch('http://localhost:3000/users/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -180,7 +180,7 @@
             const email = document.getElementById('registerEmail').value;
             
             try {
-                const response = await fetch('http://localhost:3000/register', {
+                const response = await fetch('http://localhost:3000/users/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -227,7 +227,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('http://localhost:3000/profile', {
+                const response = await fetch('http://localhost:3000/users/profile', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -255,7 +255,7 @@
             const newEmail = document.getElementById('newEmail').value;
 
             try {
-                const response = await fetch('http://localhost:3000/updateProfile', {
+                const response = await fetch('http://localhost:3000/users/updateProfile', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

@@ -127,13 +127,13 @@ fastify.get('/profile', async (request, reply) => {
         return reply.status(401).send({ error: 'Token não fornecido.' });
     }
 
-    try {
+    try 
+    {
         const decoded = jwt.verify(token, 'segredo_super_secreto');
         const user = await getUserByUsername(decoded.username);
         if (!user) {
             return reply.status(404).send({ error: 'Usuário não encontrado.' });
         }
-
         return reply.send({
             username: user.username,
             email: user.email
