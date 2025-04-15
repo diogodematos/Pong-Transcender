@@ -44,7 +44,7 @@ const usersController = (fastify, options, done) => {
 			insertData.run(username, hashedPassword, email);
 			return {success: true, message: 'User registered'};
 		} catch (error) {
-			return res.status(400).send({error: 'User already exists'});
+			return res.status(400).send({error: 'User or email already exists'});
 		};
 	});
 	
@@ -95,24 +95,30 @@ const usersController = (fastify, options, done) => {
 			return res.status(401).send({error: 'Unauthorized'});
 		}
 		const {newUsername, newEmail, newPassword} = req.body;
-		if (!newUsername || !newEmail || !newPassword) {
+		if (!newUsername && !newEmail && !newPassword) {
 			return res.status(400).send({error: 'Missing fields'});
 		}
-		if (!passwordRegex.test(newPassword)) {
+		if (newPassword)
+		{if (!passwordRegex.test(newPassword)) {
 			return res.status(400).send({error: 'Password must be 7-20 characters long, contain at least one uppercase letter, one lowercase letter and one number'});
-		}
-		if (!emailRegex.test(newEmail)) {			
+		}}
+		if (newEmail)
+		{if (!emailRegex.test(newEmail)) {			
 			return res.status(400).send({error: 'Email must be valid'});
-		}
+		}}
 		try {
 			const decoded = jwt.verify(token, secretKey);
 			const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
 			if (!user) {
 				return res.status(404).send({error: 'User not found'});
 			}
-			const hashedPassword = await argon2.hash(newPassword);
+			const fieldsToUpdate = {
+				username: newUsername || user.username,
+				email: newEmail || user.email,
+				password: newPassword ? await argon2.hash(newPassword) : user.password
+			};
 			const updateData = db.prepare('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
-			updateData.run(newUsername, newEmail, hashedPassword, decoded.id);
+			updateData.run(fieldsToUpdate.username, fieldsToUpdate.email, fieldsToUpdate.password, decoded.id);			
 			return res.send({success: true, message: 'User updated'});
 		} catch(error) {
 			return res.status(500).send({error: 'Internal server error'});
