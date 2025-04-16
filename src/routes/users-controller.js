@@ -1,385 +1,185 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pong Game - SPA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('https://images8.alphacoders.com/963/963330.png'); background-size: cover; background-position: center;">
+import db from '../db.js'
+import argon2 from 'argon2';
+import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 
-    <div id="app" class="flex-1 flex items-center justify-center">
-        <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
-            <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="https://imgs.search.brave.com/b92pQHnX0wRW1hgXLu-M72UBHRDPBGj2uLgEa8V6CEQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMud2lraWEubm9j/b29raWUubmV0L3Bv/a2Vtb24vaW1hZ2Vz/LzgvODcvUG9rJUMz/JUE5X0JhbGwucG5n/L3JldmlzaW9uL2xh/dGVzdC9zY2FsZS10/by13aWR0aC1kb3du/LzIwMD9jYj0yMDI0/MDkyMjAyNDc1NQ" alt="Pikachu" class="w-8 h-8 mr-2">
-                Login
-            </h2>
-            <form id="loginForm">
-                <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium text-gray-700">Usuário</label>
-                    <input type="text" id="username" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
-                </div>
-                <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
-                    <input type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
-                </div>
-                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Login</button>
-            </form>
-            <script src="https://accounts.google.com/gsi/client" async defer></script>
-            <div id="googleSignInButton" class="flex justify-center mt-4"></div>
-            <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registre-se</button>
-            
+const googleClient = new OAuth2Client('188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com');
 
-        </div>
+const secretKey = 'segredo_super_secreto';
 
-        <div id="error-message"></div>
 
-        <!-- Página de Registro -->
-        <div id="registerPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
-            <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="https://pokedex-tan-nine.vercel.app/images/Pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
-                New User
-            </h2>
-            <form id="registerForm">
-                <div class="mb-4">
-                    <label for="registerUsername" class="block text-sm font-medium text-gray-700">Usuário</label>
-                    <input type="text" id="registerUsername" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
-                </div>
-                <div class="mb-4">
-                    <label for="registerPassword" class="block text-sm font-medium text-gray-700">Senha</label>
-                    <input type="password" id="registerPassword" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
-                </div>
-                <div class="mb-4">
-                    <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="registerEmail" name="email" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
-                </div>
-                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Registrar</button>
-            </form>
-            <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
-        </div>
+const deleteSchema = {	
+	response: {
+		200: {
+			status: {type: 'number'}
+		}
+	}
+};
 
-        <!-- Página de Perfil -->
-        <div id="profilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
-            <h2 class="text-2xl font-bold text-center mb-4">Perfil</h2>
-            <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
-            <p><strong>Email:</strong> <span id="profileEmail"></span></p>
-            
-            <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Editar Perfil</button>
-        <!--   <button id="changePasswordButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg hover:bg-yellow-600 mt-2">Alterar Senha</button> -->
-            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 mt-2">Sair</button>
-        </div>
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{7,20}$/;
+const emailRegex = /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]{2,}$/;
 
-        <!-- Formulário de Edição de Perfil -->
-        <div id="editProfilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
-            <h2 class="text-2xl font-bold text-center mb-4">Editar Perfil</h2>
-            
-            <div class="mb-4">
-                <label for="newUsername" class="block text-sm font-medium text-gray-700">Novo Nome de Usuário</label>
-                <input type="text" id="newUsername" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
-            </div>
-            
-            <div class="mb-4">
-                <label for="newEmail" class="block text-sm font-medium text-gray-700">Novo Email</label>
-                <input type="email" id="newEmail" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
-            </div>
-            
-            <div class="mb-4">
-                <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Senha</label>
-                <input type="password" id="newPassword" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
-            </div>
+const usersController = (fastify, options, done) => {
 
-            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Salvar Alterações</button>
-            <button id="cancelEditProfileButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
-        </div>
+	fastify.get('/', async (req, res) => {
+		try {
+			const users = db.prepare('SELECT id, username FROM users').all();
+			return { users };
+		} catch(error) {
+			return(error);
+		};
+	});
+	
+	fastify.post('/register', async (req, res) => {
+		const { username, password, email } = req.body;
+		if (!username || !password || !email) {
+			return res.status(400).send({error: 'Missing fields'});
+		}
+		if (!passwordRegex.test(password)) {
+			return res.status(400).send({error: 'Password must be 7-20 characters long, contain at least one uppercase letter, one lowercase letter and one number'});
+		}
+		if (!emailRegex.test(email)) {			
+			return res.status(400).send({error: 'Email must be valid'});
+		}
+		try {
+			const hashedPassword = await argon2.hash(password);
+			const insertData = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)')
+			insertData.run(username, hashedPassword, email);
+			return {success: true, message: 'User registered'};
+		} catch (error) {
+			return res.status(400).send({error: 'User or email already exists'});
+		};
+	});
+	
+	fastify.post('/login', async (req, res) => {
+		const {username, password} = req.body;
+		if (!username || !password) {
+			return res.status(400).send({error: 'Missing fields'});
+		}
+		try {
+			const dbUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+			if (!dbUser) {
+				return res.status(404).send({error: 'User not found'});
+			}
+			const passwordMatch = await argon2.verify(dbUser.password, password);
+			if (!passwordMatch) {
+				return res.status(401).send({error: 'Invalid password'});
+			}
+			const token = jwt.sign({id: dbUser.id}, secretKey, {expiresIn: '1h'});
+			return {success: true, message: 'User logged in', token};
+		} catch (error) {
+			return res.status(500).send({error: 'Internal server error'});
+		}
+	});
+	
+	fastify.post('/google-login', async (req, res) => {
+		const { idToken } = req.body;
+	
+		if (!idToken) {
+			return res.status(400).send({ error: 'Missing ID token' });
+		}
+	
+		try {
+			const ticket = await googleClient.verifyIdToken({
+				idToken,
+				audience: '188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com'
+			});
+			const payload = ticket.getPayload();
+	
+			const email = payload.email;
+			const username = payload.name || email.split('@')[0];
+	
+			// Verifica se o user já existe
+			let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+	
+			if (!user) {
+				// Registra novo user vindo do Google
+				const insert = db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)');
+				// Password vazia ou placeholder, visto que login será sempre via Google
+				insert.run(username, email, 'google-auth');
+				user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+			}
+	
+			const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '1h' });
+	
+			return { success: true, message: 'Google login successful', token };
+	
+		} catch (err) {
+			console.error(err);
+			return res.status(401).send({ error: 'Invalid Google token' });
+		}
+	});
+	
+	fastify.get('/profile', async (req, res) => {
+		const token = req.headers.authorization?.split(' ')[1];
+		if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+		}
+		try {
+			const decoded = jwt.verify(token, secretKey);
+			const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
+			if (!user) {
+				return res.status(404).send({error: 'User not found'});
+			}
+			return res.send({
+				username: user.username,
+				email: user.email
+			});
+		} catch(error) {
+			return res.status(500).send({error: 'Internal server error'});
+		}
+	});
+	
+	fastify.put('/updateProfile' , async (req, res) => {
+		const token = req.headers.authorization?.split(' ')[1];
+		if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+		}
+		const {newUsername, newEmail, newPassword} = req.body;
+		if (!newUsername && !newEmail && !newPassword) {
+			return res.status(400).send({error: 'Missing fields'});
+		}
+		if (newPassword)
+		{if (!passwordRegex.test(newPassword)) {
+			return res.status(400).send({error: 'Password must be 7-20 characters long, contain at least one uppercase letter, one lowercase letter and one number'});
+		}}
+		if (newEmail)
+		{if (!emailRegex.test(newEmail)) {			
+			return res.status(400).send({error: 'Email must be valid'});
+		}}
+		try {
+			const decoded = jwt.verify(token, secretKey);
+			const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
+			if (!user) {
+				return res.status(404).send({error: 'User not found'});
+			}
+			const fieldsToUpdate = {
+				username: newUsername || user.username,
+				email: newEmail || user.email,
+				password: newPassword ? await argon2.hash(newPassword) : user.password
+			};
+			const updateData = db.prepare('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
+			updateData.run(fieldsToUpdate.username, fieldsToUpdate.email, fieldsToUpdate.password, decoded.id);			
+			return res.send({success: true, message: 'User updated'});
+		} catch(error) {
+			return res.status(500).send({error: 'Internal server error'});
+		}
+	});
+	
+	fastify.delete('/:id', {schema: deleteSchema}, async (req, res) => {
+		const {id} = req.params;
+		try {
+			const deleteData = db.prepare('DELETE FROM users WHERE id = ?');
+			const result = deleteData.run(id);
+			if (result.changes === 0) {
+				return res.status(404).send({ error: 'User not found' });
+			}
+			return {success: true, message: 'User deleted'};
+		} catch(error) {
+			return res.status(400).send({error: 'Could not delete user'});
+		}
+	})
+	done();
+};
 
-    </div>
-        <!-- Modal de Sucesso de Registro -->
-        <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-                <h3 class="text-lg font-bold text-center mb-4">Registro Concluído!</h3>
-                <p class="text-center mb-4">Seu registro foi realizado com sucesso. Agora você pode fazer login.</p>
-                <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Ir para Login</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Função para exibir a página de login
-        function showLoginPage() {
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('profilePage').classList.add('hidden');
-            document.getElementById('loginPage').classList.remove('hidden');
-        }
-
-        // Função para exibir a página de registro
-        function showRegisterPage() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.remove('hidden');
-            document.getElementById('profilePage').classList.add('hidden');
-        }
-
-        // Função para exibir a página de perfil
-        function showProfilePage() {
-            document.getElementById('profilePage').classList.remove('hidden');
-            getProfile();
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('editProfilePage').classList.add('hidden');
-        }
-
-        // Função para exibir a página de edição de perfil
-        function showEditProfilePage() {
-            document.getElementById('editProfilePage').classList.remove('hidden');
-            document.getElementById('profilePage').classList.add('hidden');
-        }
-
-        // Lógica de login
-        document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                const response = await fetch('http://localhost:3000/users/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('authToken', data.token);
-                    showProfilePage();
-                    clearInputs('username','password');
-                    //getProfile();
-                    // document.getElementById('username').value = '';
-                    // document.getElementById('password').value = '';
-                } else {
-                    document.getElementById('loginResponseMessage').textContent = `${data.error}`;
-                    document.getElementById('error-message').classList.add('bg-red-500', 'text-white', 'p-2', 'rounded');
-                    clearInputs('username','password');
-                    // document.getElementById('username').value = '';
-                    // document.getElementById('password').value = '';
-                    showLoginPage();
-                }
-            } catch (error) {
-                document.getElementById('loginResponseMessage').textContent = 'Erro ao conectar com o servidor.';
-            }
-        });
-
-        document.getElementById('GoToRegisterPage').addEventListener('click', () => {
-            showRegisterPage();
-            clearInputs('username','password');
-            // document.getElementById('username').value = '';
-            // document.getElementById('password').value = '';
-        });
-
-        // Lógica de registro
-        document.getElementById('registerForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const username = document.getElementById('registerUsername').value;
-            const password = document.getElementById('registerPassword').value;
-            const email = document.getElementById('registerEmail').value;
-            
-            try {
-                const response = await fetch('http://localhost:3000/users/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password, email })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    document.getElementById('registerSuccessModal').classList.remove('hidden');
-                    clearInputs('registerUsername','registerPassword','registerEmail');
-                    // document.getElementById('registerUsername').value = '';
-                    // document.getElementById('registerPassword').value = '';
-                    // document.getElementById('registerEmail').value = '';
-                    document.getElementById('registerResponseMessage').textContent = '';
-                } else {
-                    clearInputs('registerUsername','registerPassword','registerEmail');
-                    // document.getElementById('registerUsername').value = '';
-                    // document.getElementById('registerPassword').value = '';
-                    // document.getElementById('registerEmail').value = '';
-                    document.getElementById('registerResponseMessage').textContent = `Erro: ${data.error}`;
-                }
-            } catch (error) {
-                document.getElementById('registerResponseMessage').textContent = 'Erro ao conectar com o servidor.';
-            }
-        });
-
-        // Lógica para fechar o modal e redirecionar para a página de login
-        document.getElementById('goToLoginButton').addEventListener('click', () => {
-            showLoginPage(); // Exibe a página de login
-            document.getElementById('registerSuccessModal').classList.add('hidden'); // Oculta o modal
-        });
-
-        // Lógica de logout
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            clearInputs('username','password');
-            // document.getElementById('username').value = '';
-            // document.getElementById('password').value = '';
-            localStorage.removeItem('authToken');
-            showLoginPage();
-        });
-
-        // Função para obter o perfil do usuário
-        async function getProfile() {
-            const token = localStorage.getItem('authToken');
-            if (!token) return;
-
-            try {
-                const response = await fetch('http://localhost:3000/users/profile', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('profileUsername').textContent = data.username;
-                    document.getElementById('profileEmail').textContent = data.email;
-                    //showProfilePage();
-                } else {
-                    alert(data.error);
-                }
-            } catch (error) {
-                alert('Erro ao carregar o perfil.');
-            }
-        }
-
-        // Função para salvar alterações no perfil
-        document.getElementById('saveProfileChangesButton').addEventListener('click', async () => {
-            const token = localStorage.getItem('authToken');
-            const newUsername = document.getElementById('newUsername').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const newEmail = document.getElementById('newEmail').value;
-
-            try {
-                const response = await fetch('http://localhost:3000/users/updateProfile', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ newUsername, newPassword, newEmail })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    
-                    alert('Perfil atualizado com sucesso!');
-                    showProfilePage();
-                    clearInputs('newUsername','newPassword','newEmail');
-                    //getProfile(); // Atualizar as informações do perfil
-                    // document.getElementById('newUsername').value = '';
-                    // document.getElementById('newPassword').value = '';
-                    // document.getElementById('newEmail').value = '';
-                } else {
-                    alert(data.error);
-                    clearInputs('newUsername','newPassword','newEmail');
-                    // document.getElementById('newUsername').value = '';
-                    // document.getElementById('newPassword').value = '';
-                    // document.getElementById('newEmail').value = '';
-                }
-            } catch (error) {
-                alert('Erro ao atualizar o perfil - index.');
-                clearInputs('newUsername','newPassword','newEmail');
-                // document.getElementById('newUsername').value = '';
-                // document.getElementById('newPassword').value = '';
-                // document.getElementById('newEmail').value = '';
-            }
-        });
-
-        // Função para cancelar a edição do perfil
-        document.getElementById('cancelEditProfileButton').addEventListener('click', () => {
-            showProfilePage();
-            clearInputs('newUsername','newPassword','newEmail');
-            // document.getElementById('newUsername').value = '';
-            // document.getElementById('newPassword').value = '';
-            // document.getElementById('newEmail').value = '';
-        });
-
-        document.getElementById('GoToLoginPage').addEventListener('click', () => {
-            showLoginPage();
-            clearInputs('registerUsername','registerPassword','registerEmail','registerResponseMessage');
-            // document.getElementById('registerUsername').value = '';
-            // document.getElementById('registerPassword').value = '';
-            // document.getElementById('registerEmail').value = '';
-            // document.getElementById('registerResponseMessage').textContent = '';
-        });
-
-        function clearInputs(...inputIds) {
-            inputIds.forEach(id => document.getElementById(id).value = '');
-        }
-
-        document.getElementById('editProfileButton').addEventListener('click', showEditProfilePage);
-
-        // Verificação do token JWT para mostrar a página apropriada
-        function checkAuthentication() {
-            const token = localStorage.getItem('authToken');
-            if (token) {
-                showProfilePage();
-            } else {
-                showLoginPage();
-            }
-        }
-
-        // Chama a verificação ao carregar
-        //window.onload = checkAuthentication();
-
-        window.onload = () => {
-            checkAuthentication();
-            initGoogleSignIn(); // nova chamada
-        }
-
-        function initGoogleSignIn() {
-            google.accounts.id.initialize({
-                client_id: "188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com", // substitui pelo teu
-                callback: handleCredentialResponse
-            });
-
-            google.accounts.id.renderButton(
-            document.getElementById("googleSignInButton"),
-            {
-                theme: "outline",
-                size: "large",
-                text: "signin_with"
-            }
-        );
-        }
-
-        function handleCredentialResponse(response) {
-            const jwtToken = response.credential;
-            console.log("ID Token:", response.credential); // <- este é o id_token
-
-            fetch('http://localhost:3000/users/google-login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ idToken: jwtToken })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.token) {
-                    localStorage.setItem('authToken', data.token);
-                    showProfilePage();
-                } else {
-                    alert('Erro no login com Google: ' + (data.error || 'Token inválido'));
-                }
-            })
-            .catch(() => alert('Erro na requisição ao servidor.'));
-        }
-    </script>
-</body>
-</html>
+export default usersController;
