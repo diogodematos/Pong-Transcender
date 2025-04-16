@@ -26,6 +26,7 @@
                 <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Login</button>
             </form>
             <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <div id="googleSignInButton" class="flex justify-center mt-4"></div>
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registre-se</button>
             
@@ -155,10 +156,15 @@
                     localStorage.setItem('authToken', data.token);
                     showProfilePage();
                     clearInputs('username','password');
+                    //getProfile();
+                    // document.getElementById('username').value = '';
+                    // document.getElementById('password').value = '';
                 } else {
                     document.getElementById('loginResponseMessage').textContent = `${data.error}`;
                     document.getElementById('error-message').classList.add('bg-red-500', 'text-white', 'p-2', 'rounded');
                     clearInputs('username','password');
+                    // document.getElementById('username').value = '';
+                    // document.getElementById('password').value = '';
                     showLoginPage();
                 }
             } catch (error) {
@@ -169,6 +175,8 @@
         document.getElementById('GoToRegisterPage').addEventListener('click', () => {
             showRegisterPage();
             clearInputs('username','password');
+            // document.getElementById('username').value = '';
+            // document.getElementById('password').value = '';
         });
 
         // Lógica de registro
@@ -192,9 +200,15 @@
                 if (response.ok) {
                     document.getElementById('registerSuccessModal').classList.remove('hidden');
                     clearInputs('registerUsername','registerPassword','registerEmail');
+                    // document.getElementById('registerUsername').value = '';
+                    // document.getElementById('registerPassword').value = '';
+                    // document.getElementById('registerEmail').value = '';
                     document.getElementById('registerResponseMessage').textContent = '';
                 } else {
                     clearInputs('registerUsername','registerPassword','registerEmail');
+                    // document.getElementById('registerUsername').value = '';
+                    // document.getElementById('registerPassword').value = '';
+                    // document.getElementById('registerEmail').value = '';
                     document.getElementById('registerResponseMessage').textContent = `Erro: ${data.error}`;
                 }
             } catch (error) {
@@ -211,6 +225,8 @@
         // Lógica de logout
         document.getElementById('logoutButton').addEventListener('click', () => {
             clearInputs('username','password');
+            // document.getElementById('username').value = '';
+            // document.getElementById('password').value = '';
             localStorage.removeItem('authToken');
             showLoginPage();
         });
@@ -264,13 +280,23 @@
                     alert('Perfil atualizado com sucesso!');
                     showProfilePage();
                     clearInputs('newUsername','newPassword','newEmail');
+                    //getProfile(); // Atualizar as informações do perfil
+                    // document.getElementById('newUsername').value = '';
+                    // document.getElementById('newPassword').value = '';
+                    // document.getElementById('newEmail').value = '';
                 } else {
                     alert(data.error);
                     clearInputs('newUsername','newPassword','newEmail');
+                    // document.getElementById('newUsername').value = '';
+                    // document.getElementById('newPassword').value = '';
+                    // document.getElementById('newEmail').value = '';
                 }
             } catch (error) {
                 alert('Erro ao atualizar o perfil - index.');
                 clearInputs('newUsername','newPassword','newEmail');
+                // document.getElementById('newUsername').value = '';
+                // document.getElementById('newPassword').value = '';
+                // document.getElementById('newEmail').value = '';
             }
         });
 
@@ -278,11 +304,18 @@
         document.getElementById('cancelEditProfileButton').addEventListener('click', () => {
             showProfilePage();
             clearInputs('newUsername','newPassword','newEmail');
+            // document.getElementById('newUsername').value = '';
+            // document.getElementById('newPassword').value = '';
+            // document.getElementById('newEmail').value = '';
         });
 
         document.getElementById('GoToLoginPage').addEventListener('click', () => {
             showLoginPage();
             clearInputs('registerUsername','registerPassword','registerEmail','registerResponseMessage');
+            // document.getElementById('registerUsername').value = '';
+            // document.getElementById('registerPassword').value = '';
+            // document.getElementById('registerEmail').value = '';
+            // document.getElementById('registerResponseMessage').textContent = '';
         });
 
         function clearInputs(...inputIds) {
@@ -302,7 +335,51 @@
         }
 
         // Chama a verificação ao carregar
-        window.onload = checkAuthentication();
+        //window.onload = checkAuthentication();
+
+        window.onload = () => {
+            checkAuthentication();
+            initGoogleSignIn(); // nova chamada
+        }
+
+        function initGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: "188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com", // substitui pelo teu
+                callback: handleCredentialResponse
+            });
+
+            google.accounts.id.renderButton(
+            document.getElementById("googleSignInButton"),
+            {
+                theme: "outline",
+                size: "large",
+                text: "signin_with"
+            }
+        );
+        }
+
+        function handleCredentialResponse(response) {
+            const jwtToken = response.credential;
+            console.log("ID Token:", response.credential); // <- este é o id_token
+
+            fetch('http://localhost:3000/users/google-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idToken: jwtToken })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('authToken', data.token);
+                    showProfilePage();
+                } else {
+                    alert('Erro no login com Google: ' + (data.error || 'Token inválido'));
+                }
+            })
+            .catch(() => alert('Erro na requisição ao servidor.'));
+        }
     </script>
 </body>
 </html>
