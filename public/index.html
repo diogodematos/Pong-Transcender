@@ -106,6 +106,9 @@
     </div>
 
     <script>
+        // definir os 2 ips principias
+        const backendIp = '10.12.243.25' || '10.11.243.25'; // Caso não defina, usa o IP 10.11.243.25 por padrão
+
         // Função para exibir a página de login
         function showLoginPage() {
             document.getElementById('registerPage').classList.add('hidden');
@@ -142,7 +145,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('http://localhost:3000/users/login', {
+                const response = await fetch('http://${backendIp}:3000/users/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -156,15 +159,10 @@
                     localStorage.setItem('authToken', data.token);
                     showProfilePage();
                     clearInputs('username','password');
-                    //getProfile();
-                    // document.getElementById('username').value = '';
-                    // document.getElementById('password').value = '';
                 } else {
                     document.getElementById('loginResponseMessage').textContent = `${data.error}`;
                     document.getElementById('error-message').classList.add('bg-red-500', 'text-white', 'p-2', 'rounded');
                     clearInputs('username','password');
-                    // document.getElementById('username').value = '';
-                    // document.getElementById('password').value = '';
                     showLoginPage();
                 }
             } catch (error) {
@@ -175,8 +173,6 @@
         document.getElementById('GoToRegisterPage').addEventListener('click', () => {
             showRegisterPage();
             clearInputs('username','password');
-            // document.getElementById('username').value = '';
-            // document.getElementById('password').value = '';
         });
 
         // Lógica de registro
@@ -187,7 +183,7 @@
             const email = document.getElementById('registerEmail').value;
             
             try {
-                const response = await fetch('http://localhost:3000/users/register', {
+                const response = await fetch('http://${backendIp}:3000/users/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -200,15 +196,9 @@
                 if (response.ok) {
                     document.getElementById('registerSuccessModal').classList.remove('hidden');
                     clearInputs('registerUsername','registerPassword','registerEmail');
-                    // document.getElementById('registerUsername').value = '';
-                    // document.getElementById('registerPassword').value = '';
-                    // document.getElementById('registerEmail').value = '';
                     document.getElementById('registerResponseMessage').textContent = '';
                 } else {
                     clearInputs('registerUsername','registerPassword','registerEmail');
-                    // document.getElementById('registerUsername').value = '';
-                    // document.getElementById('registerPassword').value = '';
-                    // document.getElementById('registerEmail').value = '';
                     document.getElementById('registerResponseMessage').textContent = `Erro: ${data.error}`;
                 }
             } catch (error) {
@@ -237,7 +227,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('http://localhost:3000/users/profile', {
+                const response = await fetch('http://${backendIp}:3000/users/profile', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -265,7 +255,7 @@
             const newEmail = document.getElementById('newEmail').value;
 
             try {
-                const response = await fetch('http://localhost:3000/users/updateProfile', {
+                const response = await fetch('http://${backendIp}:3000/users/updateProfile', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -280,23 +270,13 @@
                     alert('Perfil atualizado com sucesso!');
                     showProfilePage();
                     clearInputs('newUsername','newPassword','newEmail');
-                    //getProfile(); // Atualizar as informações do perfil
-                    // document.getElementById('newUsername').value = '';
-                    // document.getElementById('newPassword').value = '';
-                    // document.getElementById('newEmail').value = '';
                 } else {
                     alert(data.error);
                     clearInputs('newUsername','newPassword','newEmail');
-                    // document.getElementById('newUsername').value = '';
-                    // document.getElementById('newPassword').value = '';
-                    // document.getElementById('newEmail').value = '';
                 }
             } catch (error) {
                 alert('Erro ao atualizar o perfil - index.');
                 clearInputs('newUsername','newPassword','newEmail');
-                // document.getElementById('newUsername').value = '';
-                // document.getElementById('newPassword').value = '';
-                // document.getElementById('newEmail').value = '';
             }
         });
 
@@ -304,18 +284,11 @@
         document.getElementById('cancelEditProfileButton').addEventListener('click', () => {
             showProfilePage();
             clearInputs('newUsername','newPassword','newEmail');
-            // document.getElementById('newUsername').value = '';
-            // document.getElementById('newPassword').value = '';
-            // document.getElementById('newEmail').value = '';
         });
 
         document.getElementById('GoToLoginPage').addEventListener('click', () => {
             showLoginPage();
             clearInputs('registerUsername','registerPassword','registerEmail','registerResponseMessage');
-            // document.getElementById('registerUsername').value = '';
-            // document.getElementById('registerPassword').value = '';
-            // document.getElementById('registerEmail').value = '';
-            // document.getElementById('registerResponseMessage').textContent = '';
         });
 
         function clearInputs(...inputIds) {
@@ -362,7 +335,7 @@
             const jwtToken = response.credential;
             console.log("ID Token:", response.credential); // <- este é o id_token
 
-            fetch('http://localhost:3000/users/google-login', {
+            fetch('http://${backendIp}:3000/users/google-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
