@@ -4,25 +4,15 @@ import fastifyCors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import usersController from "./routes/users-controller.js";
 import path from "path";
-// import { OAuth2Client } from 'google-auth-library';
-
-// const googleClient = new OAuth2Client('188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com');
 
 const fastify = Fastify({
 	logger: true
 });
 
-//fastify.register(fastifyHelmet, {global: true});
-
-// fastify.register(fastifyCors, {
-//     origin: 'http://10.11.243.25:8080', // Permitir requisições apenas de http://localhost:8080
-//     methods: ['GET', 'POST'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-// });
-
 const allowedOrigins = [
 	'http://10.11.243.25:8080',
 	'http://10.12.243.25:8080',
+	'http://localhost:8080'
 	// adicionar mais se necessário
   ];
   

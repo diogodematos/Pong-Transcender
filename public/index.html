@@ -107,7 +107,7 @@
 
     <script>
         // definir os 2 ips principias
-        const backendIp = '10.12.243.25' || '10.11.243.25'; // Caso não defina, usa o IP 10.11.243.25 por padrão
+        //const backendIp = '10.12.243.25' //|| '10.11.243.25'; // Caso não defina, usa o IP 10.11.243.25 por padrão
 
         // Função para exibir a página de login
         function showLoginPage() {
@@ -145,7 +145,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('http://${backendIp}:3000/users/login', {
+                const response = await fetch('http://localhost:3000/users/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -183,7 +183,7 @@
             const email = document.getElementById('registerEmail').value;
             
             try {
-                const response = await fetch('http://${backendIp}:3000/users/register', {
+                const response = await fetch('http://localhost:3000/users/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -227,7 +227,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('http://${backendIp}:3000/users/profile', {
+                const response = await fetch('http://10.11.243.25:3000/users/profile', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -255,7 +255,7 @@
             const newEmail = document.getElementById('newEmail').value;
 
             try {
-                const response = await fetch('http://${backendIp}:3000/users/updateProfile', {
+                const response = await fetch('http://10.11.243.25:3000/users/updateProfile', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -335,7 +335,7 @@
             const jwtToken = response.credential;
             console.log("ID Token:", response.credential); // <- este é o id_token
 
-            fetch('http://${backendIp}:3000/users/google-login', {
+            fetch('http://10.11.243.25:3000/users/google-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
