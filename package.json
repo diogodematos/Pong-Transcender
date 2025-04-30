@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/diogodematos/Pong-Transcender#readme",
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.10"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",
