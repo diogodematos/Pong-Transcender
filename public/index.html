@@ -28,14 +28,14 @@
             <script src="https://accounts.google.com/gsi/client" async defer></script>
             <div id="googleSignInButton" class="flex justify-center mt-4"></div>
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registre-se</button>
+            <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registe-se</button>
             
 
         </div>
 
         <div id="error-message"></div>
 
-        <!-- Página de Registro -->
+        <!-- Página de registo -->
         <div id="registerPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
                 <img src="https://pokedex-tan-nine.vercel.app/images/Pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
@@ -43,18 +43,18 @@
             </h2>
             <form id="registerForm">
                 <div class="mb-4">
-                    <label for="registerUsername" class="block text-sm font-medium text-gray-700">Usuário</label>
+                    <label for="registerUsername" class="block text-sm font-medium text-gray-700">Utilizador</label>
                     <input type="text" id="registerUsername" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
-                    <label for="registerPassword" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <label for="registerPassword" class="block text-sm font-medium text-gray-700">Password</label>
                     <input type="password" id="registerPassword" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
                     <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
                     <input type="email" id="registerEmail" name="email" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
-                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Registrar</button>
+                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Registar</button>
             </form>
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
@@ -76,7 +76,7 @@
             <h2 class="text-2xl font-bold text-center mb-4">Editar Perfil</h2>
             
             <div class="mb-4">
-                <label for="newUsername" class="block text-sm font-medium text-gray-700">Novo Nome de Usuário</label>
+                <label for="newUsername" class="block text-sm font-medium text-gray-700">Novo Nome de Utilizador</label>
                 <input type="text" id="newUsername" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
             
@@ -86,21 +86,21 @@
             </div>
             
             <div class="mb-4">
-                <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Senha</label>
+                <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Password</label>
                 <input type="password" id="newPassword" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
 
-            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Salvar Alterações</button>
+            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Guardar Alterações</button>
             <button id="cancelEditProfileButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
         </div>
 
     </div>
-        <!-- Modal de Sucesso de Registro -->
+        <!-- Modal de Sucesso de registo -->
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-                <h3 class="text-lg font-bold text-center mb-4">Registro Concluído!</h3>
-                <p class="text-center mb-4">Seu registro foi realizado com sucesso. Agora você pode fazer login.</p>
-                <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Ir para Login</button>
+                <h3 class="text-lg font-bold text-center mb-4">Registo Concluído!</h3>
+                <p class="text-center mb-4">Registado com sucesso! Ja pode fazer login.</p>
+                <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
             </div>
         </div>
     </div>
@@ -116,7 +116,7 @@
             document.getElementById('loginPage').classList.remove('hidden');
         }
 
-        // Função para exibir a página de registro
+        // Função para exibir a página de registo
         function showRegisterPage() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('registerPage').classList.remove('hidden');
@@ -175,7 +175,7 @@
             clearInputs('username','password');
         });
 
-        // Lógica de registro
+        // Lógica de registo
         document.getElementById('registerForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const username = document.getElementById('registerUsername').value;
@@ -227,7 +227,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('http://10.11.243.25:3000/users/profile', {
+                const response = await fetch('http://localhost:3000/users/profile', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -255,7 +255,7 @@
             const newEmail = document.getElementById('newEmail').value;
 
             try {
-                const response = await fetch('http://10.11.243.25:3000/users/updateProfile', {
+                const response = await fetch('http://localhost:3000/users/updateProfile', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -335,7 +335,7 @@
             const jwtToken = response.credential;
             console.log("ID Token:", response.credential); // <- este é o id_token
 
-            fetch('http://10.11.243.25:3000/users/google-login', {
+            fetch('http://localhost:3000/users/google-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
