@@ -30,7 +30,7 @@
     "argon2": "^0.41.1",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.9.1",
-    "fastify": "^5.3.0",
+    "fastify": "^5.3.2",
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7"

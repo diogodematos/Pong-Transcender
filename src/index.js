@@ -9,24 +9,27 @@ const fastify = Fastify({
 	logger: true
 });
 
-const allowedOrigins = [
-	'http://10.11.243.25:8080',
-	'http://10.12.243.25:8080',
-	'http://localhost:8080'
-	// adicionar mais se necessário
-  ];
+// const allowedOrigins = [
+// 	'http://10.11.243.25:8080',
+// 	'http://10.12.243.25:8080',
+// 	'http://10.12.243.25:3000',
+// 	'http://localhost:8080',
+// 	'http://localhost:3000'
+// 	// adicionar mais se necessário
+//   ];
   
 fastify.register(fastifyCors, {
-	origin: (origin, cb) => {
-		if (!origin) return cb(null, false);
-		if (allowedOrigins.includes(origin)) {
-			cb(null, true);
-		} else {
-			cb(new Error("Not allowed by CORS"));
-		}
-	},
-	methods: ['GET', 'POST'],
-	allowedHeaders: ['Content-Type', 'Authorization'],
+	origin: '*',
+	// origin: (origin, cb) => {
+	// 	if (!origin) return cb(null, false);
+	// 	if (allowedOrigins.includes(origin)) {
+	// 		cb(null, true);
+	// 	} else {
+	// 		cb(new Error("Not allowed by CORS"));
+	// 	}
+	// },
+	// methods: ['GET', 'POST'],
+	// allowedHeaders: ['Content-Type', 'Authorization'],
 });
 
 fastify.register(fastifyStatic, {
