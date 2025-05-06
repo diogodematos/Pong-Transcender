@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
+import fastifyMultipart from '@fastify/multipart';
 import usersController from "./routes/users-controller.js";
 import path from "path";
 
@@ -35,6 +36,11 @@ fastify.register(fastifyCors, {
 fastify.register(fastifyStatic, {
 	root: path.join(process.cwd(), 'public'),
 	prefix: '/', // optional: default '/'
+});
+
+// Registra o plugin de multipart
+fastify.register(fastifyMultipart, {
+	addToBody: true
 });
 
 fastify.register(usersController, {prefix: '/users'});
