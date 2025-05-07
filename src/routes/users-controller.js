@@ -6,7 +6,7 @@ import path from 'path';
 import pump from 'pump';
 import fs from 'fs';
 
-const googleClient = new OAuth2Client('188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com');
+//const googleClient = new OAuth2Client('188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com');
 
 const secretKey = 'segredo_super_secreto';
 
@@ -118,43 +118,43 @@ const usersController = (fastify, options, done) => {
 		}
 	});
 	
-	fastify.post('/google-login', async (req, res) => {
-		const { idToken } = req.body;
+	// fastify.post('/google-login', async (req, res) => {
+	// 	const { idToken } = req.body;
 	
-		if (!idToken) {
-			return res.status(400).send({ error: 'Missing ID token' });
-		}
+	// 	if (!idToken) {
+	// 		return res.status(400).send({ error: 'Missing ID token' });
+	// 	}
 	
-		try {
-			const ticket = await googleClient.verifyIdToken({
-				idToken,
-				audience: '188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com'
-			});
-			const payload = ticket.getPayload();
+	// 	try {
+	// 		const ticket = await googleClient.verifyIdToken({
+	// 			idToken,
+	// 			audience: '188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com'
+	// 		});
+	// 		const payload = ticket.getPayload();
 	
-			const email = payload.email;
-			const username = payload.name || email.split('@')[0];
+	// 		const email = payload.email;
+	// 		const username = payload.name || email.split('@')[0];
 	
-			// Verifica se o user já existe
-			let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+	// 		// Verifica se o user já existe
+	// 		let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 	
-			if (!user) {
-				// Registra novo user vindo do Google
-				const insert = db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)');
-				// Password vazia ou placeholder, visto que login será sempre via Google
-				insert.run(username, email, 'google-auth');
-				user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-			}
+	// 		if (!user) {
+	// 			// Registra novo user vindo do Google
+	// 			const insert = db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)');
+	// 			// Password vazia ou placeholder, visto que login será sempre via Google
+	// 			insert.run(username, email, 'google-auth');
+	// 			user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+	// 		}
 	
-			const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '1h' });
+	// 		const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '1h' });
 	
-			return { success: true, message: 'Google login successful', token };
+	// 		return { success: true, message: 'Google login successful', token };
 	
-		} catch (err) {
-			console.error(err);
-			return res.status(401).send({ error: 'Invalid Google token' });
-		}
-	});
+	// 	} catch (err) {
+	// 		console.error(err);
+	// 		return res.status(401).send({ error: 'Invalid Google token' });
+	// 	}
+	// });
 	
 	fastify.get('/profile', async (req, res) => {
 		const token = req.headers.authorization?.split(' ')[1];
