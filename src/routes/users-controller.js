@@ -38,15 +38,12 @@ const usersController = (fastify, options, done) => {
 	// Código do handler para o upload
 	fastify.post('/register', async (req, res) => {
 		try {
-			console.log("Iniciando o registo...");
-	
 			const parts = req.parts();
 			const userData = {};
 			let avatarFile;
 	
 			// Processa os dados recebidos
 			for await (const part of parts) {
-				console.log(`Campo: ${part.fieldname}`);
 				if (part.file) {
 					avatarFile = part;
 					console.log(`Avatar recebido: ${part.filename}`);
@@ -58,32 +55,23 @@ const usersController = (fastify, options, done) => {
 			const { username, password, email } = userData;
 	
 			if (!username || !password || !email || !avatarFile) {
-				console.log("Campos obrigatórios faltando.");
 				return res.status(400).send({ error: 'Missing fields' });
 			}
-	
-			console.log(`Username: ${username}, Email: ${email}`);
-	
+		
 			if (!passwordRegex.test(password)) {
-				console.log("Password inválida.");
 				return res.status(400).send({ error: 'Password inválida' });
 			}
 	
 			if (!emailRegex.test(email)) {
-				console.log("Email inválido.");
 				return res.status(400).send({ error: 'Email inválido' });
 			}
 	
 			const hashedPassword = await argon2.hash(password);
-			console.log("Senha hasheada.");
 	
 			// Salva o arquivo avatar
 			const avatarFilename = `${username}-${Date.now()}-${avatarFile.filename}`;
-			console.log(`Nome do arquivo: ${avatarFilename}`);
 			const avatarPath = path.join(process.cwd(),'public', 'uploads', avatarFilename);
-	
-			console.log(`Salvando arquivo: ${avatarPath}`);
-	
+		
 			// Usa o pump para salvar o avatar
 			await new Promise((resolve, reject) => {
 				pump(avatarFile.file, fs.createWriteStream(avatarPath), (err) => {
@@ -93,32 +81,16 @@ const usersController = (fastify, options, done) => {
 			});
 	
 			const avatarURL = `/uploads/${avatarFilename}`;
-			console.log(`Avatar salvo em: ${avatarURL}`);
 			
-			console.log("Username type:", typeof username); // Deve ser string
-			console.log("Password type:", typeof hashedPassword); // Deve ser string
-			console.log("Email type:", typeof email); // Deve ser string
-			console.log("Avatar URL type:", typeof avatarURL); // Deve ser string
-			console.log('Username:', username);
-			console.log('Password:', hashedPassword);
-			console.log('Email:', email);
-			console.log('Avatar URL:', avatarURL);
-
-			const stmt = db.prepare('INSERT INTO users (username, password, email, avatar) VALUES (?, ?, ?, ?)');
-			stmt.run(username, hashedPassword, email, avatarURL, function(err) {
-				console.log("username:", typeof username, username);
-				console.log("hashedPassword:", typeof hashedPassword, hashedPassword);
-				console.log("email:", typeof email, email);
-				console.log("avatarURL:", typeof avatarURL, avatarURL);
-				console.error("Erro inesperado:", error);
-				if (err) {
-					console.log("Erro ao registrar usuário: ", err);
-					return res.status(400).send({ error: 'Failed to register user' });
-				}
-	
-				console.log("Usuário registrado com sucesso.");
+			const stmt = db.prepare("INSERT INTO users (username, password, email, avatar) VALUES (?, ?, ?, ?)");
+			  try {
+				const info = stmt.run(username, hashedPassword, email, avatarURL);
 				return res.send({ success: true, message: 'User registered' });
-			});
+			  } catch (err) {
+				console.error("Erro ao registrar usuário:", err);
+				return res.status(400).send({ error: 'Failed to register user' });
+			  }
+			  
 		} catch (error) {
 			console.error("Erro inesperado:", error);
 			return res.status(500).send({ error: 'Internal Server Error' });
@@ -197,7 +169,8 @@ const usersController = (fastify, options, done) => {
 			}
 			return res.send({
 				username: user.username,
-				email: user.email
+				email: user.email,
+				avatar: user.avatar
 			});
 		} catch(error) {
 			return res.status(500).send({error: 'Internal server error'});
