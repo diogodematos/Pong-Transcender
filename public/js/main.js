@@ -1,9 +1,9 @@
 import { login, register } from './auth.js';
-import { getProfile, updateProfile } from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage } from './pages.js';
+import { updateProfile } from './profile.js';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
 // Adiciona ouvintes de eventos
 window.onload = () => {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     checkAuth();
     //initGoogleSignIn();
     (_a = document.getElementById('loginForm')) === null || _a === void 0 ? void 0 : _a.addEventListener('submit', (e) => {
@@ -17,11 +17,16 @@ window.onload = () => {
         showRegisterPage();
         clearInputs('username', 'password');
     });
-    (_c = document.getElementById('GoToLoginPage')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => {
+    (_c = document.getElementById('goToLoginButton')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => {
+        var _a;
+        showLoginPage();
+        (_a = document.getElementById('registerSuccessModal')) === null || _a === void 0 ? void 0 : _a.classList.add('hidden'); // Oculta o modal
+    });
+    (_d = document.getElementById('GoToLoginPage')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
         showLoginPage();
         clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
     });
-    (_d = document.getElementById('registerForm')) === null || _d === void 0 ? void 0 : _d.addEventListener('submit', (e) => {
+    (_e = document.getElementById('registerForm')) === null || _e === void 0 ? void 0 : _e.addEventListener('submit', (e) => {
         var _a;
         e.preventDefault();
         const fileInput = document.getElementById('registerAvatar');
@@ -32,12 +37,12 @@ window.onload = () => {
             avatar: (_a = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files) === null || _a === void 0 ? void 0 : _a[0],
         });
     });
-    (_e = document.getElementById('logoutButton')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
+    (_f = document.getElementById('logoutButton')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', () => {
         localStorage.removeItem('authToken');
         showLoginPage();
     });
-    (_f = document.getElementById('editProfileButton')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', showEditProfilePage);
-    (_g = document.getElementById('saveProfileChangesButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
+    (_g = document.getElementById('editProfileButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', showEditProfilePage);
+    (_h = document.getElementById('saveProfileChangesButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
         updateProfile({
             username: document.getElementById('newUsername').value,
             newPassword: document.getElementById('newPassword').value,
@@ -47,7 +52,7 @@ window.onload = () => {
 };
 function checkAuth() {
     const token = localStorage.getItem('authToken');
-    token ? getProfile() : showLoginPage();
+    token ? showProfilePage() : showLoginPage();
 }
 // Google login
 // function initGoogleSignIn() {

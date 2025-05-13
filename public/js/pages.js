@@ -1,3 +1,4 @@
+import { getProfile } from "./profile.js";
 export function showLoginPage() {
     togglePages('loginPage');
 }
@@ -5,6 +6,7 @@ export function showRegisterPage() {
     togglePages('registerPage');
 }
 export function showProfilePage() {
+    getProfile();
     togglePages('profilePage');
 }
 export function showEditProfilePage() {

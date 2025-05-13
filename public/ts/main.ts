@@ -1,6 +1,6 @@
 import { login, register } from './auth.js';
 import { getProfile, updateProfile } from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage } from './pages.js';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
 
 // Adiciona ouvintes de eventos
 window.onload = () => {
@@ -20,6 +20,11 @@ window.onload = () => {
     clearInputs('username', 'password');
   });
 
+  document.getElementById('goToLoginButton')?.addEventListener('click', () => {
+    showLoginPage();
+    document.getElementById('registerSuccessModal')?.classList.add('hidden'); // Oculta o modal
+  });
+
   document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
     showLoginPage();
     clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
@@ -35,7 +40,7 @@ window.onload = () => {
       avatar: fileInput?.files?.[0],
     });
   });
-
+  
   document.getElementById('logoutButton')?.addEventListener('click', () => {
     localStorage.removeItem('authToken');
     showLoginPage();
@@ -54,7 +59,7 @@ window.onload = () => {
 
 function checkAuth() {
   const token = localStorage.getItem('authToken');
-  token ? getProfile() : showLoginPage();
+  token ? showProfilePage() : showLoginPage();
 }
 
 // Google login

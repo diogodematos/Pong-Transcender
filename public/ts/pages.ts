@@ -1,3 +1,6 @@
+import { get } from "http";
+import { getProfile } from "./profile.js";
+
 export function showLoginPage() {
     togglePages('loginPage');
   }
@@ -7,6 +10,7 @@ export function showLoginPage() {
   }
   
   export function showProfilePage() {
+    getProfile();
     togglePages('profilePage');
   }
   
