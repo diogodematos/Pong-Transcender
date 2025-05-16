@@ -55,6 +55,11 @@ window.onload = () => {
       email: (document.getElementById('newEmail') as HTMLInputElement).value,
     });
   });
+
+  document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
+    showProfilePage();
+  });
+
 };
 
 function checkAuth() {

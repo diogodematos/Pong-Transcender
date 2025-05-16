@@ -200,11 +200,14 @@ const usersController = (fastify, options, done) => {
 			if (!user) {
 				return res.status(404).send({error: 'User not found'});
 			}
+			console.log(newUsername, newEmail, newPassword);
+
 			const fieldsToUpdate = {
 				username: newUsername || user.username,
 				email: newEmail || user.email,
 				password: newPassword ? await argon2.hash(newPassword) : user.password
 			};
+			console.log(fieldsToUpdate);
 			const updateData = db.prepare('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
 			updateData.run(fieldsToUpdate.username, fieldsToUpdate.email, fieldsToUpdate.password, decoded.id);			
 			return res.send({success: true, message: 'User updated'});

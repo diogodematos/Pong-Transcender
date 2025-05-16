@@ -3,7 +3,7 @@ import { updateProfile } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
 // Adiciona ouvintes de eventos
 window.onload = () => {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     checkAuth();
     //initGoogleSignIn();
     (_a = document.getElementById('loginForm')) === null || _a === void 0 ? void 0 : _a.addEventListener('submit', (e) => {
@@ -48,6 +48,11 @@ window.onload = () => {
             newPassword: document.getElementById('newPassword').value,
             email: document.getElementById('newEmail').value,
         });
+        console.log('Salvando alterações de perfil...');
+        console.log('Novo nome de usuário:', document.getElementById('newUsername').value);
+    });
+    (_j = document.getElementById('cancelProfileChangesButton')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
+        showProfilePage();
     });
 };
 function checkAuth() {
