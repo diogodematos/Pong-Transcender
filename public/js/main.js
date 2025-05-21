@@ -3,7 +3,7 @@ import { updateProfile } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
 // Adiciona ouvintes de eventos
 window.onload = () => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     checkAuth();
     //initGoogleSignIn();
     (_a = document.getElementById('loginForm')) === null || _a === void 0 ? void 0 : _a.addEventListener('submit', (e) => {
@@ -17,16 +17,32 @@ window.onload = () => {
         showRegisterPage();
         clearInputs('username', 'password');
     });
-    (_c = document.getElementById('goToLoginButton')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => {
+    (_c = document.getElementById('registerAvatar')) === null || _c === void 0 ? void 0 : _c.addEventListener('change', function (event) {
+        const target = event.target;
+        const file = target.files ? target.files[0] : null;
+        const preview = document.getElementById('avatarImage');
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                var _a;
+                preview.src = (_a = e.target) === null || _a === void 0 ? void 0 : _a.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        else {
+            preview.src = '/img/default-avatar.jpg';
+        }
+    });
+    (_d = document.getElementById('goToLoginButton')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
         var _a;
         showLoginPage();
         (_a = document.getElementById('registerSuccessModal')) === null || _a === void 0 ? void 0 : _a.classList.add('hidden'); // Oculta o modal
     });
-    (_d = document.getElementById('GoToLoginPage')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
+    (_e = document.getElementById('GoToLoginPage')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
         showLoginPage();
         clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
     });
-    (_e = document.getElementById('registerForm')) === null || _e === void 0 ? void 0 : _e.addEventListener('submit', (e) => {
+    (_f = document.getElementById('registerForm')) === null || _f === void 0 ? void 0 : _f.addEventListener('submit', (e) => {
         var _a;
         e.preventDefault();
         const fileInput = document.getElementById('registerAvatar');
@@ -37,21 +53,19 @@ window.onload = () => {
             avatar: (_a = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files) === null || _a === void 0 ? void 0 : _a[0],
         });
     });
-    (_f = document.getElementById('logoutButton')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', () => {
+    (_g = document.getElementById('logoutButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
         localStorage.removeItem('authToken');
         showLoginPage();
     });
-    (_g = document.getElementById('editProfileButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', showEditProfilePage);
-    (_h = document.getElementById('saveProfileChangesButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
+    (_h = document.getElementById('editProfileButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', showEditProfilePage);
+    (_j = document.getElementById('saveProfileChangesButton')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
         updateProfile({
             username: document.getElementById('newUsername').value,
             newPassword: document.getElementById('newPassword').value,
             email: document.getElementById('newEmail').value,
         });
-        console.log('Salvando alterações de perfil...');
-        console.log('Novo nome de usuário:', document.getElementById('newUsername').value);
     });
-    (_j = document.getElementById('cancelProfileChangesButton')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
+    (_k = document.getElementById('cancelProfileChangesButton')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
         showProfilePage();
     });
 };

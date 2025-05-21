@@ -20,6 +20,22 @@ window.onload = () => {
     clearInputs('username', 'password');
   });
 
+  document.getElementById('registerAvatar')?.addEventListener('change', function(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files ? target.files[0] : null;
+    const preview = document.getElementById('avatarImage') as HTMLImageElement;
+
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e: ProgressEvent<FileReader>) {
+            preview.src = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = '/img/default-avatar.jpg';
+    }
+  });
+
   document.getElementById('goToLoginButton')?.addEventListener('click', () => {
     showLoginPage();
     document.getElementById('registerSuccessModal')?.classList.add('hidden'); // Oculta o modal
