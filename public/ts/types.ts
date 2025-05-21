@@ -13,4 +13,10 @@ export interface UserCredentials {
     email: string;
     avatar: string;
   }
+
+  export interface UpdateProfileData {
+    newUsername?: string;
+    newPassword?: string;
+    newEmail?: string;
+  }
   

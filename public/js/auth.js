@@ -47,7 +47,7 @@ export function register(data) {
             const json = yield res.json();
             if (res.ok) {
                 document.getElementById('registerSuccessModal').classList.remove('hidden');
-                clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
+                clearInputs('registerUsername', 'registerPassword', 'registerEmail');
             }
             else {
                 displayError('registerResponseMessage', `Erro: ${json.error}`);

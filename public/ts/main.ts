@@ -66,14 +66,15 @@ window.onload = () => {
 
   document.getElementById('saveProfileChangesButton')?.addEventListener('click', () => {
     updateProfile({
-      username: (document.getElementById('newUsername') as HTMLInputElement).value,
+      newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
       newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
-      email: (document.getElementById('newEmail') as HTMLInputElement).value,
+      newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
     });
   });
 
   document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
     showProfilePage();
+    clearInputs('newUsername', 'newPassword', 'newEmail');
   });
 
 };

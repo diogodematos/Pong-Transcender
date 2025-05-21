@@ -40,7 +40,7 @@ window.onload = () => {
     });
     (_e = document.getElementById('GoToLoginPage')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
         showLoginPage();
-        clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
+        clearInputs('registerUsername', 'registerPassword', 'registerEmail');
     });
     (_f = document.getElementById('registerForm')) === null || _f === void 0 ? void 0 : _f.addEventListener('submit', (e) => {
         var _a;
@@ -60,13 +60,14 @@ window.onload = () => {
     (_h = document.getElementById('editProfileButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', showEditProfilePage);
     (_j = document.getElementById('saveProfileChangesButton')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
         updateProfile({
-            username: document.getElementById('newUsername').value,
+            newUsername: document.getElementById('newUsername').value,
             newPassword: document.getElementById('newPassword').value,
-            email: document.getElementById('newEmail').value,
+            newEmail: document.getElementById('newEmail').value,
         });
     });
     (_k = document.getElementById('cancelProfileChangesButton')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
         showProfilePage();
+        clearInputs('newUsername', 'newPassword', 'newEmail');
     });
 };
 function checkAuth() {

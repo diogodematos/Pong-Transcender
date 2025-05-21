@@ -56,6 +56,7 @@ export function updateProfile(newData) {
         }
         catch (_a) {
             alert('Erro ao atualizar o perfil.');
+            clearInputs('newUsername', 'newPassword', 'newEmail');
         }
     });
 }

@@ -1,4 +1,4 @@
-import { Profile } from './types.js';
+import { Profile, UpdateProfileData } from './types.js';
 import { clearInputs, showProfilePage } from './pages.js';
 
 export async function getProfile(): Promise<void> {
@@ -24,7 +24,7 @@ export async function getProfile(): Promise<void> {
   }
 }
 
-export async function updateProfile(newData: Partial<Profile> & { newPassword?: string }) {
+export async function updateProfile(newData: UpdateProfileData): Promise<void> {
   const token = localStorage.getItem('authToken');
 
   try {
@@ -47,5 +47,6 @@ export async function updateProfile(newData: Partial<Profile> & { newPassword?: 
     }
   } catch {
     alert('Erro ao atualizar o perfil.');
+    clearInputs('newUsername', 'newPassword', 'newEmail');
   }
 }
