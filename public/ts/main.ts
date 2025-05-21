@@ -43,7 +43,7 @@ window.onload = () => {
 
   document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
     showLoginPage();
-    clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
+    clearInputs('registerUsername', 'registerPassword', 'registerEmail');
   });
 
   document.getElementById('registerForm')?.addEventListener('submit', (e) => {

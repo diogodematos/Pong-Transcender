@@ -51,6 +51,15 @@ const usersController = (fastify, options, done) => {
 					userData[part.fieldname] = part.value;
 				}
 			}
+
+			if (!avatarFile) {
+				avatarFile = {
+					filename: 'default-avatar.jpg',
+					file: fs.createReadStream(path.join(process.cwd(), 'public', 'img', 'default-avatar.jpg'))
+				};
+				console.log(`Avatar padrão usado: ${avatarFile.filename}`);
+			}
+			
 	
 			const { username, password, email } = userData;
 	
