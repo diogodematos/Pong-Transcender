@@ -43,7 +43,7 @@ window.onload = () => {
 
   document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
     showLoginPage();
-    clearInputs('registerUsername', 'registerPassword', 'registerEmail');
+    clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
   });
 
   document.getElementById('registerForm')?.addEventListener('submit', (e) => {
@@ -74,7 +74,7 @@ window.onload = () => {
 
   document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
     showProfilePage();
-    clearInputs('newUsername', 'newPassword', 'newEmail');
+    clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
   });
 
 };

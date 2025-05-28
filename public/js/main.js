@@ -40,7 +40,7 @@ window.onload = () => {
     });
     (_e = document.getElementById('GoToLoginPage')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
         showLoginPage();
-        clearInputs('registerUsername', 'registerPassword', 'registerEmail');
+        clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
     });
     (_f = document.getElementById('registerForm')) === null || _f === void 0 ? void 0 : _f.addEventListener('submit', (e) => {
         var _a;
@@ -67,7 +67,7 @@ window.onload = () => {
     });
     (_k = document.getElementById('cancelProfileChangesButton')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
         showProfilePage();
-        clearInputs('newUsername', 'newPassword', 'newEmail');
+        clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
     });
 };
 function checkAuth() {

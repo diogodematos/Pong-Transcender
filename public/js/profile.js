@@ -47,7 +47,7 @@ export function updateProfile(newData) {
             if (res.ok) {
                 alert('Perfil atualizado com sucesso!');
                 showProfilePage();
-                clearInputs('newUsername', 'newPassword', 'newEmail');
+                clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
             }
             else {
                 const data = yield res.json();
@@ -56,7 +56,7 @@ export function updateProfile(newData) {
         }
         catch (_a) {
             alert('Erro ao atualizar o perfil.');
-            clearInputs('newUsername', 'newPassword', 'newEmail');
+            clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
         }
     });
 }

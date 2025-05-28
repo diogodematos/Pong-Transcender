@@ -40,8 +40,7 @@ export async function register(data: RegisterData): Promise<void> {
 
     if (res.ok) {
       document.getElementById('registerSuccessModal')!.classList.remove('hidden');
-      clearInputs('registerUsername', 'registerPassword', 'registerEmail');
-      
+      clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'RegisterAvatar');
     } else {
       displayError('registerResponseMessage', `Erro: ${json.error}`);
     }

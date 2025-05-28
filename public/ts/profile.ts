@@ -40,13 +40,13 @@ export async function updateProfile(newData: UpdateProfileData): Promise<void> {
     if (res.ok) {
       alert('Perfil atualizado com sucesso!');
       showProfilePage();
-      clearInputs('newUsername', 'newPassword', 'newEmail');
+      clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
     } else {
       const data = await res.json();
       alert(data.error);
     }
   } catch {
     alert('Erro ao atualizar o perfil.');
-    clearInputs('newUsername', 'newPassword', 'newEmail');
+    clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
   }
 }
