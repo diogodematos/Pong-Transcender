@@ -36,6 +36,22 @@ window.onload = () => {
     }
   });
 
+    document.getElementById('newAvatar')?.addEventListener('change', function(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files ? target.files[0] : null;
+    const preview = document.getElementById('avatarImageUpdate') as HTMLImageElement;
+
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e: ProgressEvent<FileReader>) {
+            preview.src = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = '';
+    }
+  });
+
   document.getElementById('goToLoginButton')?.addEventListener('click', () => {
     showLoginPage();
     document.getElementById('registerSuccessModal')?.classList.add('hidden'); // Oculta o modal
@@ -65,10 +81,12 @@ window.onload = () => {
   document.getElementById('editProfileButton')?.addEventListener('click', showEditProfilePage);
 
   document.getElementById('saveProfileChangesButton')?.addEventListener('click', () => {
+        const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
     updateProfile({
       newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
       newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
       newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
+      newAvatar: fileInput?.files?.[0],
     });
   });
 

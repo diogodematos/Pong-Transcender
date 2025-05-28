@@ -3,7 +3,7 @@ import { updateProfile } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
 // Adiciona ouvintes de eventos
 window.onload = () => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     checkAuth();
     //initGoogleSignIn();
     (_a = document.getElementById('loginForm')) === null || _a === void 0 ? void 0 : _a.addEventListener('submit', (e) => {
@@ -33,16 +33,32 @@ window.onload = () => {
             preview.src = '/img/default-avatar.jpg';
         }
     });
-    (_d = document.getElementById('goToLoginButton')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
+    (_d = document.getElementById('newAvatar')) === null || _d === void 0 ? void 0 : _d.addEventListener('change', function (event) {
+        const target = event.target;
+        const file = target.files ? target.files[0] : null;
+        const preview = document.getElementById('avatarImageUpdate');
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                var _a;
+                preview.src = (_a = e.target) === null || _a === void 0 ? void 0 : _a.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        else {
+            preview.src = '';
+        }
+    });
+    (_e = document.getElementById('goToLoginButton')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
         var _a;
         showLoginPage();
         (_a = document.getElementById('registerSuccessModal')) === null || _a === void 0 ? void 0 : _a.classList.add('hidden'); // Oculta o modal
     });
-    (_e = document.getElementById('GoToLoginPage')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
+    (_f = document.getElementById('GoToLoginPage')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', () => {
         showLoginPage();
         clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
     });
-    (_f = document.getElementById('registerForm')) === null || _f === void 0 ? void 0 : _f.addEventListener('submit', (e) => {
+    (_g = document.getElementById('registerForm')) === null || _g === void 0 ? void 0 : _g.addEventListener('submit', (e) => {
         var _a;
         e.preventDefault();
         const fileInput = document.getElementById('registerAvatar');
@@ -53,19 +69,22 @@ window.onload = () => {
             avatar: (_a = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files) === null || _a === void 0 ? void 0 : _a[0],
         });
     });
-    (_g = document.getElementById('logoutButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
+    (_h = document.getElementById('logoutButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
         localStorage.removeItem('authToken');
         showLoginPage();
     });
-    (_h = document.getElementById('editProfileButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', showEditProfilePage);
-    (_j = document.getElementById('saveProfileChangesButton')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
+    (_j = document.getElementById('editProfileButton')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', showEditProfilePage);
+    (_k = document.getElementById('saveProfileChangesButton')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
+        var _a;
+        const fileInput = document.getElementById('newAvatar');
         updateProfile({
             newUsername: document.getElementById('newUsername').value,
             newPassword: document.getElementById('newPassword').value,
             newEmail: document.getElementById('newEmail').value,
+            newAvatar: (_a = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files) === null || _a === void 0 ? void 0 : _a[0],
         });
     });
-    (_k = document.getElementById('cancelProfileChangesButton')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
+    (_l = document.getElementById('cancelProfileChangesButton')) === null || _l === void 0 ? void 0 : _l.addEventListener('click', () => {
         showProfilePage();
         clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
     });

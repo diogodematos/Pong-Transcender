@@ -100,7 +100,13 @@
                 <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Password</label>
                 <input type="password" id="newPassword" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
-
+            <div class="mb-4">
+                <label for="newAvatar" class="block text-sm font-medium text-gray-700">New Avatar</label>
+                <input type="file" id="newAvatar" name="avatar" accept="image/*" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
+                <div id="avatarPreview" class="mt-2 flex justify-center">
+                    <img src="" alt="Avatar Preview" id="avatarImageUpdate" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
+                </div>
+            </div>
             <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Guardar Alterações</button>
             <button id="cancelProfileChangesButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
         </div>

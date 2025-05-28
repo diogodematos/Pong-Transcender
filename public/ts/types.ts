@@ -18,5 +18,6 @@ export interface UserCredentials {
     newUsername?: string;
     newPassword?: string;
     newEmail?: string;
+    newAvatar?: File;
   }
   

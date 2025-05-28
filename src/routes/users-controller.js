@@ -188,42 +188,124 @@ const usersController = (fastify, options, done) => {
 	
 	fastify.put('/updateProfile' , async (req, res) => {
 		const token = req.headers.authorization?.split(' ')[1];
+
 		if (!token) {
 			return res.status(401).send({error: 'Unauthorized'});
 		}
-		const {newUsername, newEmail, newPassword} = req.body;
-		if (!newUsername && !newEmail && !newPassword) {
+		const parts = req.parts();
+		let newAvatarFile;
+		let newAvatarFilename = null;
+		let newAvatarPath = null;
+		let newAvatarURL = null;
+		let fieldsToUpdate = {};
+	
+		// Processa os dados recebidos
+		for await (const part of parts) {
+			if (part.file) {
+				newAvatarFile = part;
+				console.log(`Avatar recebido: ${part.filename}`);
+			} else {
+				fieldsToUpdate[part.fieldname] = part.value;
+			}
+		}
+
+		const {newUsername, newEmail, newPassword} = fieldsToUpdate;
+		
+		if (!newUsername && !newEmail && !newPassword && !newAvatarFile) {
 			return res.status(400).send({error: 'Missing fields'});
 		}
-		if (newPassword)
-		{if (!passwordRegex.test(newPassword)) {
+		if (newPassword){
+			if (!passwordRegex.test(newPassword)) {
 			return res.status(400).send({error: 'Password must be 7-20 characters long, contain at least one uppercase letter, one lowercase letter and one number'});
-		}}
+			}
+		}
 		if (newEmail)
 		{if (!emailRegex.test(newEmail)) {			
 			return res.status(400).send({error: 'Email must be valid'});
 		}}
+
+		const decoded = jwt.verify(token, secretKey);
+		const user1 = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
+		if (!user1) {
+		return res.status(404).send({ error: 'User not found' });
+		}
+		if (newAvatarFile) {	
+			newAvatarFilename = `${user1.username}-${Date.now()}-${newAvatarFile.filename}`;
+			newAvatarPath = path.join(process.cwd(),'public', 'uploads', newAvatarFilename);
+		
+			// Usa o pump para salvar o avatar
+			await new Promise((resolve, reject) => {
+				pump(newAvatarFile.file, fs.createWriteStream(newAvatarPath), (err) => {
+					if (err) return reject(err);
+					resolve();
+				});
+			});
+	
+			newAvatarURL = `/uploads/${newAvatarFilename}`;
+		}
+		else {
+			newAvatarURL = null; // Se não houver novo avatar, mantém o antigo
+		}
 		try {
 			const decoded = jwt.verify(token, secretKey);
 			const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
 			if (!user) {
 				return res.status(404).send({error: 'User not found'});
 			}
-			console.log(newUsername, newEmail, newPassword);
+			console.log(newUsername, newEmail, newPassword, newAvatarURL);
 
 			const fieldsToUpdate = {
 				username: newUsername || user.username,
 				email: newEmail || user.email,
-				password: newPassword ? await argon2.hash(newPassword) : user.password
+				password: newPassword ? await argon2.hash(newPassword) : user.password,
+				avatar: newAvatarURL || user.avatar
 			};
 			console.log(fieldsToUpdate);
-			const updateData = db.prepare('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
-			updateData.run(fieldsToUpdate.username, fieldsToUpdate.email, fieldsToUpdate.password, decoded.id);			
+			const updateData = db.prepare('UPDATE users SET username = ?, email = ?, password = ?, avatar = ? WHERE id = ?');
+			updateData.run(fieldsToUpdate.username, fieldsToUpdate.email, fieldsToUpdate.password, fieldsToUpdate.avatar, decoded.id);			
 			return res.send({success: true, message: 'User updated'});
 		} catch(error) {
 			return res.status(500).send({error: 'Internal server error'});
 		}
-	});
+	});	
+	// fastify.put('/updateProfile' , async (req, res) => {
+	// 	const token = req.headers.authorization?.split(' ')[1];
+	// 	if (!token) {
+	// 		return res.status(401).send({error: 'Unauthorized'});
+	// 	}
+	// 	const {newUsername, newEmail, newPassword} = req.body;
+	// 	if (!newUsername && !newEmail && !newPassword) {
+	// 		return res.status(400).send({error: 'Missing fields'});
+	// 	}
+	// 	if (newPassword)
+	// 	{if (!passwordRegex.test(newPassword)) {
+	// 		return res.status(400).send({error: 'Password must be 7-20 characters long, contain at least one uppercase letter, one lowercase letter and one number'});
+	// 	}}
+	// 	if (newEmail)
+	// 	{if (!emailRegex.test(newEmail)) {			
+	// 		return res.status(400).send({error: 'Email must be valid'});
+	// 	}}
+	// 	try {
+	// 		const decoded = jwt.verify(token, secretKey);
+	// 		const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
+	// 		if (!user) {
+	// 			return res.status(404).send({error: 'User not found'});
+	// 		}
+	// 		console.log(newUsername, newEmail, newPassword);
+
+	// 		const fieldsToUpdate = {
+	// 			username: newUsername || user.username,
+	// 			email: newEmail || user.email,
+	// 			password: newPassword ? await argon2.hash(newPassword) : user.password
+	// 		};
+	// 		console.log(fieldsToUpdate);
+	// 		const updateData = db.prepare('UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?');
+	// 		updateData.run(fieldsToUpdate.username, fieldsToUpdate.email, fieldsToUpdate.password, decoded.id);			
+	// 		return res.send({success: true, message: 'User updated'});
+	// 	} catch(error) {
+	// 		return res.status(500).send({error: 'Internal server error'});
+	// 	}
+	// });
 	
 	fastify.delete('/:id', {schema: deleteSchema}, async (req, res) => {
 		const {id} = req.params;

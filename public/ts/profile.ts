@@ -26,15 +26,20 @@ export async function getProfile(): Promise<void> {
 
 export async function updateProfile(newData: UpdateProfileData): Promise<void> {
   const token = localStorage.getItem('authToken');
+  const formData = new FormData();
 
+  if (newData.newUsername) formData.append('newUsername', newData.newUsername);
+  if (newData.newEmail) formData.append('newEmail', newData.newEmail);
+  if (newData.newPassword) formData.append('newPassword', newData.newPassword);
+  if (newData.newAvatar) formData.append('newAvatar', newData.newAvatar);
+  
   try {
     const res = await fetch('/users/updateProfile', {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(newData),
+      body: formData,
     });
 
     if (res.ok) {
@@ -44,6 +49,8 @@ export async function updateProfile(newData: UpdateProfileData): Promise<void> {
     } else {
       const data = await res.json();
       alert(data.error);
+      clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+
     }
   } catch {
     alert('Erro ao atualizar o perfil.');

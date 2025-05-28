@@ -35,14 +35,22 @@ export function getProfile() {
 export function updateProfile(newData) {
     return __awaiter(this, void 0, void 0, function* () {
         const token = localStorage.getItem('authToken');
+        const formData = new FormData();
+        if (newData.newUsername)
+            formData.append('newUsername', newData.newUsername);
+        if (newData.newEmail)
+            formData.append('newEmail', newData.newEmail);
+        if (newData.newPassword)
+            formData.append('newPassword', newData.newPassword);
+        if (newData.newAvatar)
+            formData.append('newAvatar', newData.newAvatar);
         try {
             const res = yield fetch('/users/updateProfile', {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(newData),
+                body: formData,
             });
             if (res.ok) {
                 alert('Perfil atualizado com sucesso!');
@@ -52,6 +60,7 @@ export function updateProfile(newData) {
             else {
                 const data = yield res.json();
                 alert(data.error);
+                clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
             }
         }
         catch (_a) {
