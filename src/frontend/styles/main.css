@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Importar fonte pixel para o tema retro */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Estilos customizados para o Pong */
+@layer base {
+  body {
+    @apply bg-pong-dark text-pong-light font-mono;
+  }
+}
+
+@layer components {
+  /* Botões com estilo retro */
+  .btn-pong {
+    @apply px-4 py-2 bg-pong-primary text-pong-dark font-bold border-2 border-pong-primary hover:bg-transparent hover:text-pong-primary transition-all duration-200;
+  }
+  
+  .btn-pong-secondary {
+    @apply px-4 py-2 bg-transparent text-pong-secondary border-2 border-pong-secondary hover:bg-pong-secondary hover:text-pong-dark transition-all duration-200;
+  }
+
+  /* Input fields com tema */
+  .input-pong {
+    @apply w-full px-3 py-2 bg-transparent border-2 border-pong-primary text-pong-light placeholder-gray-400 focus:outline-none focus:border-pong-secondary transition-colors;
+  }
+
+  /* Cards/Containers */
+  .card-pong {
+    @apply bg-gray-900 border-2 border-pong-primary p-6 rounded-none shadow-lg shadow-pong-primary/20;
+  }
+
+  /* Efeito de scanlines para look retro */
+  .scanlines::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-full pointer-events-none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 65, 0.03) 2px,
+      rgba(0, 255, 65, 0.03) 4px
+    );
+  }
+}
+
+/* Animações customizadas */
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
+.text-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}

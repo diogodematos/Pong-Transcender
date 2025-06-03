@@ -1,8 +1,8 @@
 {
-  "name": "pong-transcender",
+  "name": "pong-transcender-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/routes/users-controller.js",
+  "description": "Backend for Pong Transcender using Fastify",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -38,7 +38,6 @@
     "fastify-multipart": "^5.3.1",
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.2",
-    "node": "^22.16.0",
     "pump": "^3.0.2",
     "sqlite3": "^5.1.7"
   }
