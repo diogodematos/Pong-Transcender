@@ -1,9 +1,13 @@
 import { Profile, UpdateProfileData } from './types.js';
-import { clearInputs, showProfilePage } from './pages.js';
+import { clearInputs } from './pages.js';
+import { router } from './router.js';
 
 export async function getProfile(): Promise<void> {
   const token = localStorage.getItem('authToken');
-  if (!token) return;
+  if (!token) {
+    router.navigate('/login');
+    return;
+  }
 
   try {
     const res = await fetch('/users/profile', {
@@ -13,19 +17,27 @@ export async function getProfile(): Promise<void> {
     const data: Profile = await res.json();
 
     if (res.ok) {
-      (document.getElementById('profileUsername') as HTMLElement).textContent = data.username;
-      (document.getElementById('profileEmail') as HTMLElement).textContent = data.email;
-      (document.getElementById('profileAvatar') as HTMLImageElement).src = data.avatar;
+      updateProfileUI(data);
     } else {
       alert('Erro ao obter perfil.');
+      if (res.status === 401) {
+        // Token invalid, redirect to login
+        localStorage.removeItem('authToken');
+        router.navigate('/login');
+      }
     }
   } catch {
     alert('Erro de conexão ao buscar perfil.');
   }
 }
 
-export async function updateProfile(newData: UpdateProfileData): Promise<void> {
+export async function updateProfile(newData: UpdateProfileData): Promise<boolean> {
   const token = localStorage.getItem('authToken');
+  if (!token) {
+    router.navigate('/login');
+    return false;
+  }
+
   const formData = new FormData();
 
   if (newData.newUsername) formData.append('newUsername', newData.newUsername);
@@ -44,16 +56,46 @@ export async function updateProfile(newData: UpdateProfileData): Promise<void> {
 
     if (res.ok) {
       alert('Perfil atualizado com sucesso!');
-      showProfilePage();
       clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+      router.navigate('/profile');
+      return true;
     } else {
       const data = await res.json();
       alert(data.error);
       clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
-
+      
+      if (res.status === 401) {
+        localStorage.removeItem('authToken');
+        router.navigate('/login');
+      }
+      return false;
     }
   } catch {
     alert('Erro ao atualizar o perfil.');
     clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+    return false;
   }
+}
+
+function updateProfileUI(profile: Profile): void {
+  const usernameEl = document.getElementById('profileUsername') as HTMLElement;
+  const emailEl = document.getElementById('profileEmail') as HTMLElement;
+  const avatarEl = document.getElementById('profileAvatar') as HTMLImageElement;
+
+  if (usernameEl) usernameEl.textContent = profile.username;
+  if (emailEl) emailEl.textContent = profile.email;
+  if (avatarEl) avatarEl.src = profile.avatar || '/img/default-avatar.jpg';
+
+  // Also update edit form with current values
+  prefillEditForm(profile);
+}
+
+function prefillEditForm(profile: Profile): void {
+  const newUsernameInput = document.getElementById('newUsername') as HTMLInputElement;
+  const newEmailInput = document.getElementById('newEmail') as HTMLInputElement;
+  const avatarPreview = document.getElementById('avatarImageUpdate') as HTMLImageElement;
+
+  if (newUsernameInput) newUsernameInput.placeholder = profile.username;
+  if (newEmailInput) newEmailInput.placeholder = profile.email;
+  if (avatarPreview) avatarPreview.src = profile.avatar || '/img/default-avatar.jpg';
 }

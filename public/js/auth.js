@@ -7,7 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { showProfilePage, clearInputs } from './pages.js';
+import { clearInputs } from './pages.js';
+import { router } from './router.js';
 export function login(credentials) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -19,15 +20,18 @@ export function login(credentials) {
             const data = yield res.json();
             if (res.ok) {
                 localStorage.setItem('authToken', data.token);
-                showProfilePage();
                 clearInputs('username', 'password');
+                router.navigate('/profile'); // Use router instead of direct page call
+                return true;
             }
             else {
                 displayError('loginResponseMessage', data.error);
+                return false;
             }
         }
         catch (_a) {
             displayError('loginResponseMessage', 'Erro ao conectar com o servidor.');
+            return false;
         }
     });
 }
@@ -47,16 +51,27 @@ export function register(data) {
             const json = yield res.json();
             if (res.ok) {
                 document.getElementById('registerSuccessModal').classList.remove('hidden');
-                clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'RegisterAvatar');
+                clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
+                return true;
             }
             else {
                 displayError('registerResponseMessage', `Erro: ${json.error}`);
+                return false;
             }
         }
         catch (_a) {
             displayError('registerResponseMessage', 'Erro ao conectar com o servidor.');
+            return false;
         }
     });
+}
+export function logout() {
+    localStorage.removeItem('authToken');
+    router.navigate('/login');
+}
+// Check if user is authenticated
+export function isAuthenticated() {
+    return localStorage.getItem('authToken') !== null;
 }
 function displayError(id, message) {
     const el = document.getElementById(id);

@@ -1,106 +1,198 @@
-import { login, register } from './auth.js';
-import { getProfile, updateProfile } from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
+import { login, register, logout, isAuthenticated } from './auth.js';
+import { updateProfile } from './profile.js';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage } from './pages.js';
+import { router } from './router.js';
 
-// Adiciona ouvintes de eventos
-window.onload = () => {
-  checkAuth();
-  //initGoogleSignIn();
-
-  document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    login({
-      username: (document.getElementById('username') as HTMLInputElement).value,
-      password: (document.getElementById('password') as HTMLInputElement).value
+// Setup routes
+function setupRoutes(): void {
+    // Default route - check authentication
+    router.addRoute('/', () => {
+        checkAuthAndRedirect();
     });
-  });
 
-  document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
-    showRegisterPage();
-    clearInputs('username', 'password');
-  });
+    // Login page
+    router.addRoute('/login', () => {
+        showLoginPage();
+    });
 
-  document.getElementById('registerAvatar')?.addEventListener('change', function(event: Event) {
+    // Register page
+    router.addRoute('/register', () => {
+        showRegisterPage();
+    });
+
+    // Profile page (requires auth)
+    router.addRoute('/profile', () => {
+        if (isAuthenticated()) {
+            showProfilePage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+    // Edit profile page (requires auth)
+    router.addRoute('/edit-profile', () => {
+        if (isAuthenticated()) {
+            showEditProfilePage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+    // Game page (requires auth)
+    router.addRoute('/game', () => {
+        if (isAuthenticated()) {
+            showGamePage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+}
+
+function checkAuthAndRedirect(): void {
+    if (isAuthenticated()) {
+        router.navigate('/profile');
+    } else {
+        router.navigate('/login');
+    }
+}
+
+// Event listeners
+function setupEventListeners(): void {
+    // Login form
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const success = await login({
+            username: (document.getElementById('username') as HTMLInputElement).value,
+            password: (document.getElementById('password') as HTMLInputElement).value
+        });
+        // Login function now handles navigation via router
+    });
+
+    // Register form
+    document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
+        const success = await register({
+            username: (document.getElementById('registerUsername') as HTMLInputElement).value,
+            password: (document.getElementById('registerPassword') as HTMLInputElement).value,
+            email: (document.getElementById('registerEmail') as HTMLInputElement).value,
+            avatar: fileInput?.files?.[0],
+        });
+        // Register function handles success modal
+    });
+
+    // Navigation buttons
+    document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
+        router.navigate('/register');
+    });
+
+    document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
+        router.navigate('/login');
+    });
+
+    document.getElementById('goToLoginButton')?.addEventListener('click', () => {
+        router.navigate('/login');
+        document.getElementById('registerSuccessModal')?.classList.add('hidden');
+    });
+
+    // Profile actions
+    document.getElementById('logoutButton')?.addEventListener('click', () => {
+        logout();
+    });
+
+    document.getElementById('editProfileButton')?.addEventListener('click', () => {
+        router.navigate('/edit-profile');
+    });
+
+    document.getElementById('playGameButton')?.addEventListener('click', () => {
+        router.navigate('/game');
+    });
+
+    // Navigation bar buttons (for authenticated users)
+    document.querySelector('[data-route="/game"]')?.addEventListener('click', () => {
+        router.navigate('/game');
+    });
+
+    document.querySelector('[data-route="/profile"]')?.addEventListener('click', () => {
+        router.navigate('/profile');
+    });
+
+    document.getElementById('navLogoutButton')?.addEventListener('click', () => {
+        logout();
+    });
+
+    // Edit profile actions
+    document.getElementById('saveProfileChangesButton')?.addEventListener('click', async () => {
+        const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
+        const success = await updateProfile({
+            newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
+            newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
+            newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
+            newAvatar: fileInput?.files?.[0],
+        });
+        // updateProfile function handles navigation on success
+    });
+
+    document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
+        router.navigate('/profile');
+        clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+    });
+
+    // Game back button
+    document.getElementById('backToProfileButton')?.addEventListener('click', () => {
+        router.navigate('/profile');
+    });
+
+    // Avatar preview handlers
+    document.getElementById('registerAvatar')?.addEventListener('change', handleAvatarPreview);
+    document.getElementById('newAvatar')?.addEventListener('change', handleAvatarPreviewUpdate);
+}
+
+function handleAvatarPreview(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files ? target.files[0] : null;
     const preview = document.getElementById('avatarImage') as HTMLImageElement;
-
+    
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function(e: ProgressEvent<FileReader>) {
-            preview.src = e.target?.result as string;
+            if (preview && e.target?.result) {
+                preview.src = e.target.result as string;
+            }
         };
         reader.readAsDataURL(file);
-    } else {
+    } else if (preview) {
         preview.src = '/img/default-avatar.jpg';
     }
-  });
+}
 
-    document.getElementById('newAvatar')?.addEventListener('change', function(event: Event) {
+function handleAvatarPreviewUpdate(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files ? target.files[0] : null;
     const preview = document.getElementById('avatarImageUpdate') as HTMLImageElement;
-
+    
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function(e: ProgressEvent<FileReader>) {
-            preview.src = e.target?.result as string;
+            if (preview && e.target?.result) {
+                preview.src = e.target.result as string;
+            }
         };
         reader.readAsDataURL(file);
-    } else {
+    } else if (preview) {
         preview.src = '';
     }
-  });
+}
 
-  document.getElementById('goToLoginButton')?.addEventListener('click', () => {
-    showLoginPage();
-    document.getElementById('registerSuccessModal')?.classList.add('hidden'); // Oculta o modal
-  });
-
-  document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
-    showLoginPage();
-    clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
-  });
-
-  document.getElementById('registerForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
-    register({
-      username: (document.getElementById('registerUsername') as HTMLInputElement).value,
-      password: (document.getElementById('registerPassword') as HTMLInputElement).value,
-      email: (document.getElementById('registerEmail') as HTMLInputElement).value,
-      avatar: fileInput?.files?.[0],
-    });
-  });
-  
-  document.getElementById('logoutButton')?.addEventListener('click', () => {
-    localStorage.removeItem('authToken');
-    showLoginPage();
-  });
-
-  document.getElementById('editProfileButton')?.addEventListener('click', showEditProfilePage);
-
-  document.getElementById('saveProfileChangesButton')?.addEventListener('click', () => {
-        const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
-    updateProfile({
-      newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
-      newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
-      newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
-      newAvatar: fileInput?.files?.[0],
-    });
-  });
-
-  document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
-    showProfilePage();
-    clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
-  });
-
+// Initialize application
+window.onload = (): void => {
+    setupRoutes();
+    setupEventListeners();
+    checkAuthAndRedirect();
 };
 
-function checkAuth() {
-  const token = localStorage.getItem('authToken');
-  token ? showProfilePage() : showLoginPage();
-}
+// Export router for external use if needed
+export { router };
 
 // Google login
 // function initGoogleSignIn() {

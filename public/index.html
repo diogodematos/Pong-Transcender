@@ -8,7 +8,21 @@
 </head>
 <body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('/img/background.png'); background-size: cover; background-position: center;">
 
+    <!-- Navigation (visible when logged in) -->
+    <nav id="mainNavigation" class="hidden bg-black bg-opacity-50 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-white font-bold text-xl">Pong Game</div>
+            <div class="space-x-4">
+                <button data-route="/game" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Game</button>
+                <button data-route="/profile" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Profile</button>
+                <button id="navLogoutButton" class="text-white hover:text-red-400 px-3 py-1 rounded transition-colors">Logout</button>
+            </div>
+        </div>
+    </nav>
+
     <div id="app" class="flex-1 flex items-center justify-center">
+        
+        <!-- Login Page -->
         <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
                 <img src="/img/pokeball.png" alt="Pikachu" class="w-8 h-8 mr-2">
@@ -23,20 +37,16 @@
                     <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
                     <input type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
-                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Login</button>
+                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] transition-colors">Login</button>
             </form>
-            <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> 
-            <div id="googleSignInButton" class="flex justify-center mt-4"></div> -->
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registe-se</button>
-            
-
         </div>
 
         <div id="error-message"></div>
 
-        <!-- Página de registo -->
-        <div id="registerPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+        <!-- Register Page -->
+        <div id="registerPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
                 <img src="/img/pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
                 New User
@@ -54,7 +64,6 @@
                     <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
                     <input type="email" id="registerEmail" name="email" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
-                <!-- Novo campo de Avatar -->
                 <div class="mb-4">
                     <label for="registerAvatar" class="block text-sm font-medium text-gray-700">Avatar</label>
                     <input type="file" id="registerAvatar" name="avatar" accept="image/*" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
@@ -62,13 +71,13 @@
                         <img src="/img/default-avatar.jpg" alt="Avatar Preview" id="avatarImage" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Registar</button>
+                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] transition-colors">Registar</button>
             </form>
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
         </div>
 
-        <!-- Página de Perfil -->
+        <!-- Profile Page -->
         <div id="profilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4">Perfil</h2>
             <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
@@ -77,12 +86,13 @@
                 <img id="profileAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
             </div>
             
-            <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Editar Perfil</button>
-        <!--   <button id="changePasswordButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg hover:bg-yellow-600 mt-2">Alterar Senha</button> -->
-            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 mt-2">Sair</button>
+            <button id="playGameButton" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] mb-2 transition-colors flex items-center justify-center">
+                <img src="/img/gameboy.png" alt="Gameboy" class="w-8 h-8 mr-2"> Jogar Pong</button>
+            <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 mb-2 transition-colors">Editar Perfil</button>
+            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors">Sair</button>
         </div>
 
-        <!-- Formulário de Edição de Perfil -->
+        <!-- Edit Profile Page -->
         <div id="editProfilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4">Editar Perfil</h2>
             
@@ -107,7 +117,7 @@
                     <img src="" alt="Avatar Preview" id="avatarImageUpdate" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
                 </div>
             </div>
-            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Guardar Alterações</button>
+            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 mb-2 transition-colors">Guardar Alterações</button>
             <button id="cancelProfileChangesButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
         </div>
 

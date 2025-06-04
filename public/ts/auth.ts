@@ -1,7 +1,8 @@
 import { UserCredentials, RegisterData } from './types.js';
-import { showProfilePage, showLoginPage, clearInputs } from './pages.js';
+import { clearInputs } from './pages.js';
+import { router } from './router.js';
 
-export async function login(credentials: UserCredentials): Promise<void> {
+export async function login(credentials: UserCredentials): Promise<boolean> {
   try {
     const res = await fetch('/users/login', {
       method: 'POST',
@@ -13,17 +14,20 @@ export async function login(credentials: UserCredentials): Promise<void> {
 
     if (res.ok) {
       localStorage.setItem('authToken', data.token);
-      showProfilePage();
       clearInputs('username', 'password');
+      router.navigate('/profile'); // Use router instead of direct page call
+      return true;
     } else {
       displayError('loginResponseMessage', data.error);
+      return false;
     }
   } catch {
     displayError('loginResponseMessage', 'Erro ao conectar com o servidor.');
+    return false;
   }
 }
 
-export async function register(data: RegisterData): Promise<void> {
+export async function register(data: RegisterData): Promise<boolean> {
   const formData = new FormData();
   formData.append('username', data.username);
   formData.append('password', data.password);
@@ -40,13 +44,26 @@ export async function register(data: RegisterData): Promise<void> {
 
     if (res.ok) {
       document.getElementById('registerSuccessModal')!.classList.remove('hidden');
-      clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'RegisterAvatar');
+      clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
+      return true;
     } else {
       displayError('registerResponseMessage', `Erro: ${json.error}`);
+      return false;
     }
   } catch {
     displayError('registerResponseMessage', 'Erro ao conectar com o servidor.');
+    return false;
   }
+}
+
+export function logout(): void {
+  localStorage.removeItem('authToken');
+  router.navigate('/login');
+}
+
+// Check if user is authenticated
+export function isAuthenticated(): boolean {
+  return localStorage.getItem('authToken') !== null;
 }
 
 function displayError(id: string, message: string) {

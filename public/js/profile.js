@@ -7,24 +7,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { clearInputs, showProfilePage } from './pages.js';
+import { clearInputs } from './pages.js';
+import { router } from './router.js';
 export function getProfile() {
     return __awaiter(this, void 0, void 0, function* () {
         const token = localStorage.getItem('authToken');
-        if (!token)
+        if (!token) {
+            router.navigate('/login');
             return;
+        }
         try {
             const res = yield fetch('/users/profile', {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
             const data = yield res.json();
             if (res.ok) {
-                document.getElementById('profileUsername').textContent = data.username;
-                document.getElementById('profileEmail').textContent = data.email;
-                document.getElementById('profileAvatar').src = data.avatar;
+                updateProfileUI(data);
             }
             else {
                 alert('Erro ao obter perfil.');
+                if (res.status === 401) {
+                    // Token invalid, redirect to login
+                    localStorage.removeItem('authToken');
+                    router.navigate('/login');
+                }
             }
         }
         catch (_a) {
@@ -35,6 +41,10 @@ export function getProfile() {
 export function updateProfile(newData) {
     return __awaiter(this, void 0, void 0, function* () {
         const token = localStorage.getItem('authToken');
+        if (!token) {
+            router.navigate('/login');
+            return false;
+        }
         const formData = new FormData();
         if (newData.newUsername)
             formData.append('newUsername', newData.newUsername);
@@ -54,18 +64,49 @@ export function updateProfile(newData) {
             });
             if (res.ok) {
                 alert('Perfil atualizado com sucesso!');
-                showProfilePage();
                 clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+                router.navigate('/profile');
+                return true;
             }
             else {
                 const data = yield res.json();
                 alert(data.error);
                 clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+                if (res.status === 401) {
+                    localStorage.removeItem('authToken');
+                    router.navigate('/login');
+                }
+                return false;
             }
         }
         catch (_a) {
             alert('Erro ao atualizar o perfil.');
             clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+            return false;
         }
     });
+}
+function updateProfileUI(profile) {
+    const usernameEl = document.getElementById('profileUsername');
+    const emailEl = document.getElementById('profileEmail');
+    const avatarEl = document.getElementById('profileAvatar');
+    if (usernameEl)
+        usernameEl.textContent = profile.username;
+    if (emailEl)
+        emailEl.textContent = profile.email;
+    if (avatarEl)
+        avatarEl.src = profile.avatar || '/img/default-avatar.jpg';
+    // Also update edit form with current values
+    prefillEditForm(profile);
+}
+function prefillEditForm(profile) {
+    const newUsernameInput = document.getElementById('newUsername');
+    const newEmailInput = document.getElementById('newEmail');
+    const avatarPreview = document.getElementById('avatarImageUpdate');
+    if (newUsernameInput)
+        newUsernameInput.placeholder = profile.username;
+    if (newEmailInput)
+        newEmailInput.placeholder = profile.email;
+    if (avatarPreview)
+        avatarPreview.src = profile.avatar || '/img/default-avatar.jpg';
 }
