@@ -6,12 +6,12 @@
     <title>Pong Game - SPA</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('/img/background.png'); background-size: cover; background-position: center;">
+<body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('assets/img/background.png'); background-size: cover; background-position: center;">
 
     <div id="app" class="flex-1 flex items-center justify-center">
-        <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+        <div id="loginPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="/img/pokeball.png" alt="Pikachu" class="w-8 h-8 mr-2">
+                <img src="assets/img/pokeball.png" alt="Pikachu" class="w-8 h-8 mr-2">
                 Login
             </h2>
             <form id="loginForm">
@@ -38,7 +38,7 @@
         <!-- Página de registo -->
         <div id="registerPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="/img/pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
+                <img src="assets/img/pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
                 New User
             </h2>
             <form id="registerForm" enctype="multipart/form-data">
@@ -74,7 +74,7 @@
             <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
             <p><strong>Email:</strong> <span id="profileEmail"></span></p>
             <div class="flex justify-center mb-4">
-                <img id="profileAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
+                <img id="profileAvatar" src="assets/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
             </div>
             
             <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Editar Perfil</button>

@@ -12,7 +12,10 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8000
+      # CORRIGIDO: Use /api que será proxy pelo nginx, não localhost:8000
+      - VITE_API_URL=/api
+      # OU se precisar do URL completo:
+      # - VITE_API_URL=https://localhost/api
     depends_on:
       - backend
     networks:
@@ -28,11 +31,13 @@ services:
     volumes:
       - ./src/backend:/app
       - /app/node_modules
-      - db-data:/app/data  # Fixed: Mount directory for database
+      - db-data:/app/data
     environment:
       - NODE_ENV=development
       - PORT=8000
-      - DATABASE_URL=sqlite:./data/app.db  # Fixed: Updated path
+      - DATABASE_URL=sqlite:./data/app.db
+      # ADICIONADO: Configurações CORS para aceitar requests do nginx
+      - CORS_ORIGIN=https://localhost,http://localhost
     depends_on:
       - database
     networks:

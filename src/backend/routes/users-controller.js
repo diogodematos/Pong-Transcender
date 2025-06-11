@@ -55,7 +55,7 @@ const usersController = (fastify, options, done) => {
 			if (!avatarFile) {
 				avatarFile = {
 					filename: 'default-avatar.jpg',
-					file: fs.createReadStream(path.join(process.cwd(), 'public', 'img', 'default-avatar.jpg'))
+					file: fs.createReadStream(path.join(process.cwd(), 'assets', 'img', 'default-avatar.jpg'))
 				};
 				console.log(`Avatar padrão usado: ${avatarFile.filename}`);
 			}
@@ -79,7 +79,7 @@ const usersController = (fastify, options, done) => {
 	
 			// Salva o arquivo avatar
 			const avatarFilename = `${username}-${Date.now()}-${avatarFile.filename}`;
-			const avatarPath = path.join(process.cwd(),'public', 'uploads', avatarFilename);
+			const avatarPath = path.join(process.cwd(), 'uploads', avatarFilename);
 		
 			// Usa o pump para salvar o avatar
 			await new Promise((resolve, reject) => {
@@ -231,7 +231,7 @@ const usersController = (fastify, options, done) => {
 		}
 		if (newAvatarFile) {	
 			newAvatarFilename = `${user1.username}-${Date.now()}-${newAvatarFile.filename}`;
-			newAvatarPath = path.join(process.cwd(),'public', 'uploads', newAvatarFilename);
+			newAvatarPath = path.join(process.cwd(), 'uploads', newAvatarFilename);
 		
 			// Usa o pump para salvar o avatar
 			await new Promise((resolve, reject) => {

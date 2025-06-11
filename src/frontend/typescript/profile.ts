@@ -6,7 +6,7 @@ export async function getProfile(): Promise<void> {
   if (!token) return;
 
   try {
-    const res = await fetch('/users/profile', {
+    const res = await fetch('api/users/profile', {
       headers: { 'Authorization': `Bearer ${token}` },
     });
 
@@ -34,7 +34,7 @@ export async function updateProfile(newData: UpdateProfileData): Promise<void> {
   if (newData.newAvatar) formData.append('newAvatar', newData.newAvatar);
   
   try {
-    const res = await fetch('/users/updateProfile', {
+    const res = await fetch('api/users/updateProfile', {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,

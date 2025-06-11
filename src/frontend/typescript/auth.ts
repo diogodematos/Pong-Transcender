@@ -3,7 +3,7 @@ import { showProfilePage, showLoginPage, clearInputs } from './pages.js';
 
 export async function login(credentials: UserCredentials): Promise<void> {
   try {
-    const res = await fetch('/users/login', {
+    const res = await fetch('api/users/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
@@ -31,7 +31,7 @@ export async function register(data: RegisterData): Promise<void> {
   if (data.avatar) formData.append('avatar', data.avatar);
 
   try {
-    const res = await fetch('/users/register', {
+    const res = await fetch('api/users/register', {
       method: 'POST',
       body: formData,
     });
