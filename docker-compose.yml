@@ -1,12 +1,110 @@
+version: '3.8'
 services:
-  app:
+  # Frontend Service
+  frontend:
     build:
-      context: .
+      context: ./src/frontend
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "3000:3000"
     volumes:
-      - ./app.db:/app/app.db
+      - ./src/frontend:/app
+      - /app/node_modules
     environment:
-      - NODE_ENV=production
-    restart: always
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - pong-network
+
+  # Backend Service
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/backend:/app
+      - /app/node_modules
+      - db-data:/app/data  # Fixed: Mount directory for database
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - DATABASE_URL=sqlite:./data/app.db  # Fixed: Updated path
+    depends_on:
+      - database
+    networks:
+      - pong-network
+
+  # Database Service (SQLite will be file-based, but we can use a volume)
+  database:
+    image: alpine:latest
+    command: tail -f /dev/null
+    volumes:
+      - db-data:/data
+    networks:
+      - pong-network
+
+  # Blockchain Development Environment (Ganache for Avalanche testing)
+  blockchain:
+    image: trufflesuite/ganache:latest
+    ports:
+      - "7545:8545"
+    command: >
+      --host 0.0.0.0
+      --port 8545
+      --networkId 43112
+      --accounts 10
+      --mnemonic "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+    networks:
+      - pong-network
+
+  # Nginx Reverse Proxy with SSL
+  nginx:
+    build:
+      context: ./src/docker/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./src/docker/nginx/ssl:/etc/nginx/ssl
+      - ./src/docker/certbot/conf:/etc/letsencrypt:ro
+      - ./src/docker/certbot/www:/var/www/certbot:ro
+      - nginx-cache:/var/cache/nginx
+    environment:
+      - SSL_DOMAIN=localhost
+      - SSL_COUNTRY=PT
+      - SSL_STATE=Lisboa
+      - SSL_CITY=Lisboa
+      - SSL_ORG=ft_transcendence
+      - SSL_OU=Development
+      - WAIT_FOR_SERVICES=true
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - pong-network
+    restart: unless-stopped
+
+  # Certbot for Let's Encrypt (optional)
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./src/docker/certbot/conf:/etc/letsencrypt
+      - ./src/docker/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - pong-network
+    profiles:
+      - production
+
+volumes:
+  db-data:
+  nginx-cache:
+
+networks:
+  pong-network:
+    driver: bridge

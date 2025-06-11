@@ -5,7 +5,7 @@ import path from "path";
 const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'data', 'app.db');
 
 // Criar base de dados
-const db = new Database(dbPath);
+const db = new Database('./data/app.db');
 
 // Configurar WAL mode para melhor performance
 db.pragma('journal_mode = WAL');

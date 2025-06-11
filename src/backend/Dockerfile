@@ -13,7 +13,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Copiar código fonte
-COPY *.js ./
+COPY . .
 COPY routes/ ./routes/
 
 # Criar diretório para uploads
@@ -26,4 +26,4 @@ RUN mkdir -p data
 EXPOSE 3001
 
 # Comando para produção
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
