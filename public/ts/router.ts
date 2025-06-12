@@ -72,7 +72,8 @@ export class Router {
           '/register': 'Register - Pong Game', 
           '/profile': 'Profile - Pong Game',
           '/edit-profile': 'Edit Profile - Pong Game',
-          '/game': 'Play Pong - Pong Game'
+          '/game': 'Play Pong - Pong Game',
+          '/dashboard': 'Dashboard - Pong Game'
       };
       
       document.title = titles[path] || 'Pong Game';

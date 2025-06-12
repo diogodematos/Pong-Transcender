@@ -1,6 +1,6 @@
 import { login, register, logout, isAuthenticated } from './auth.js';
 import { updateProfile } from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage } from './pages.js';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
 import { router } from './router.js';
 
 // Setup routes
@@ -12,12 +12,29 @@ function setupRoutes(): void {
 
     // Login page
     router.addRoute('/login', () => {
-        showLoginPage();
+        if (isAuthenticated()) {
+            router.navigate('/dashboard');
+        } else {
+            showLoginPage();
+        }
     });
 
     // Register page
     router.addRoute('/register', () => {
-        showRegisterPage();
+        if (isAuthenticated()) {
+            router.navigate('/dashboard');
+        } else {
+            showRegisterPage();
+        }
+    });
+
+    // Dashboard page
+    router.addRoute('/dashboard', () => {
+        if (isAuthenticated()) {
+            showDashboardPage();
+        } else {
+            router.navigate('/login');
+        }
     });
 
     // Profile page (requires auth)
@@ -28,7 +45,7 @@ function setupRoutes(): void {
             router.navigate('/login');
         }
     });
-
+    
     // Edit profile page (requires auth)
     router.addRoute('/edit-profile', () => {
         if (isAuthenticated()) {
@@ -50,7 +67,7 @@ function setupRoutes(): void {
 
 function checkAuthAndRedirect(): void {
     if (isAuthenticated()) {
-        router.navigate('/profile');
+        router.navigate('/dashboard');
     } else {
         router.navigate('/login');
     }
@@ -96,8 +113,8 @@ function setupEventListeners(): void {
     });
 
     // Profile actions
-    document.getElementById('logoutButton')?.addEventListener('click', () => {
-        logout();
+    document.getElementById('goToDashboard')?.addEventListener('click', () => {
+        router.navigate('/dashboard');
     });
 
     document.getElementById('editProfileButton')?.addEventListener('click', () => {

@@ -164,6 +164,33 @@ const usersController = (fastify, options, done) => {
 	// 		return res.status(401).send({ error: 'Invalid Google token' });
 	// 	}
 	// });
+
+	// No teu servidor
+	fastify.get('/dashboard', async (req, res) => {
+		// Verificar token JWT
+		const token = req.headers.authorization?.split(' ')[1];
+		if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+		}
+		try {
+				// Verificar e decodificar o token
+				const decoded = jwt.verify(token, secretKey);
+
+				// Buscar dados do usuário na base de dados
+				const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
+				
+				if (!user) {
+						return res.status(404).send({ error: 'Usuário não encontrado' });
+				}
+				return res.send({
+						username: user.username,
+						avatar: user.avatar,
+				});
+		} catch (error) {
+				console.error('Dashboard error:', error);
+				return res.status(401).send({ error: 'Token inválido' });
+		}
+	});
 	
 	fastify.get('/profile', async (req, res) => {
 		const token = req.headers.authorization?.split(' ')[1];
@@ -179,7 +206,9 @@ const usersController = (fastify, options, done) => {
 			return res.send({
 				username: user.username,
 				email: user.email,
-				avatar: user.avatar
+				avatar: user.avatar,
+				wins: user.wins,
+				losses: user.losses
 			});
 		} catch(error) {
 			return res.status(500).send({error: 'Internal server error'});

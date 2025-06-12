@@ -12,9 +12,13 @@
     <nav id="mainNavigation" class="hidden bg-black bg-opacity-50 p-4">
         <div class="container mx-auto flex justify-between items-center">
             <div class="text-white font-bold text-xl">Pong Game</div>
-            <div class="space-x-4">
+            <div class="flex items-center space-x-4">
+                <img id="dashboardAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-500">
+                <button class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors"><a href="/#/dashboard">Main Page</a></button>
                 <button data-route="/game" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Game</button>
-                <button data-route="/profile" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Profile</button>
+                <button data-route="/profile" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">
+                    <span id="dashboardUsername"></span>
+                </button>                
                 <button id="navLogoutButton" class="text-white hover:text-red-400 px-3 py-1 rounded transition-colors">Logout</button>
             </div>
         </div>
@@ -76,20 +80,48 @@
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
         </div>
-
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page">
+            <div class="flex flex-col items-center justify-center min-h-screen p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8 bg-white p-4 rounded-xl shadow-md border border-gray-200 text-center">
+                    Choose Game Mode
+                  </h2>
+                  
+                
+                <div class="flex gap-8 flex-wrap justify-center">
+                    <button class="bg-white border-2 border-blue-500 rounded-2xl p-8 w-48 text-center cursor-pointer transition-all duration-300 shadow-lg hover:bg-blue-500 hover:text-white hover:-translate-y-1 hover:shadow-xl" onclick="startOneVsOne()">
+                        <div class="text-5xl mb-4">⚔️</div>
+                        <h3 class="text-xl font-semibold mb-2">Duel</h3>
+                        <p class="text-sm opacity-70 m-0">Play against another player</p>
+                    </button>
+        
+                    <button class="bg-white border-2 border-blue-500 rounded-2xl p-8 w-48 text-center cursor-pointer transition-all duration-300 shadow-lg hover:bg-blue-500 hover:text-white hover:-translate-y-1 hover:shadow-xl" onclick="startTournament()">
+                        <div class="text-5xl mb-4">🏆</div>
+                        <h3 class="text-xl font-semibold mb-2">League</h3>
+                        <p class="text-sm opacity-70 m-0">Compete in a tournament</p>
+                    </button>
+        
+                    <button class="bg-white border-2 border-blue-500 rounded-2xl p-8 w-48 text-center cursor-pointer transition-all duration-300 shadow-lg hover:bg-blue-500 hover:text-white hover:-translate-y-1 hover:shadow-xl" onclick="startVsComputer()">
+                        <div class="text-5xl mb-4">🤖</div>
+                        <h3 class="text-xl font-semibold mb-2">IA Battle</h3>
+                        <p class="text-sm opacity-70 m-0">Practice against AI</p>
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- Profile Page -->
         <div id="profilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4">Perfil</h2>
-            <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
-            <p><strong>Email:</strong> <span id="profileEmail"></span></p>
             <div class="flex justify-center mb-4">
                 <img id="profileAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
             </div>
-            
+            <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
+            <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+            <p><strong>Wins:</strong> <span id="profileWins"></span> &nbsp;&nbsp;&nbsp; <strong>Losses:</strong> <span id="profileLosses"></span></p>            
             <button id="playGameButton" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] mb-2 transition-colors flex items-center justify-center">
                 <img src="/img/gameboy.png" alt="Gameboy" class="w-8 h-8 mr-2"> Jogar Pong</button>
             <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 mb-2 transition-colors">Editar Perfil</button>
-            <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors">Sair</button>
+            <button id="goToDashboard" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors">Voltar</button>
         </div>
 
         <!-- Edit Profile Page -->

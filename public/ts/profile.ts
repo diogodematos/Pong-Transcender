@@ -2,6 +2,39 @@ import { Profile, UpdateProfileData } from './types.js';
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
 
+export async function getDashboard() {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    router.navigate('/login');
+    return;
+  }
+
+  try {
+    const res = await fetch('/users/dashboard', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    const userData: Profile = await res.json();
+
+    if (res.ok) {
+      const usernameDash = document.getElementById('dashboardUsername') as HTMLElement;
+      const avatarDash = document.getElementById('dashboardAvatar') as HTMLImageElement;
+      
+      if (usernameDash) usernameDash.textContent = userData.username;
+      if (avatarDash) avatarDash.src = userData.avatar || '/img/default-avatar.jpg';
+    } else {
+      alert('Erro ao aceder ao Dashboard.');
+      if (res.status === 401) {
+        // Token invalid, redirect to login
+        localStorage.removeItem('authToken');
+        router.navigate('/login');
+      }
+    }
+  } catch {
+    alert('Erro de conexão ao Dashboard.');
+  }
+}
+
 export async function getProfile(): Promise<void> {
   const token = localStorage.getItem('authToken');
   if (!token) {
@@ -81,10 +114,14 @@ function updateProfileUI(profile: Profile): void {
   const usernameEl = document.getElementById('profileUsername') as HTMLElement;
   const emailEl = document.getElementById('profileEmail') as HTMLElement;
   const avatarEl = document.getElementById('profileAvatar') as HTMLImageElement;
+  const winsEl = document.getElementById('profileWins') as HTMLElement;
+  const lossesEl = document.getElementById('profileLosses') as HTMLElement;
 
   if (usernameEl) usernameEl.textContent = profile.username;
   if (emailEl) emailEl.textContent = profile.email;
   if (avatarEl) avatarEl.src = profile.avatar || '/img/default-avatar.jpg';
+  if (winsEl) winsEl.textContent = profile.wins.toString();
+  if (lossesEl) lossesEl.textContent = profile.losses.toString();
 
   // Also update edit form with current values
   prefillEditForm(profile);

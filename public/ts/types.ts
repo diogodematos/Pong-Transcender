@@ -12,6 +12,8 @@ export interface UserCredentials {
     username: string;
     email: string;
     avatar: string;
+    wins: number;
+    losses: number;
   }
 
   export interface UpdateProfileData {

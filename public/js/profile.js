@@ -9,6 +9,40 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
+export function getDashboard() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            router.navigate('/login');
+            return;
+        }
+        try {
+            const res = yield fetch('/users/dashboard', {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            const userData = yield res.json();
+            if (res.ok) {
+                const usernameDash = document.getElementById('dashboardUsername');
+                const avatarDash = document.getElementById('dashboardAvatar');
+                if (usernameDash)
+                    usernameDash.textContent = userData.username;
+                if (avatarDash)
+                    avatarDash.src = userData.avatar || '/img/default-avatar.jpg';
+            }
+            else {
+                alert('Erro ao aceder ao Dashboard.');
+                if (res.status === 401) {
+                    // Token invalid, redirect to login
+                    localStorage.removeItem('authToken');
+                    router.navigate('/login');
+                }
+            }
+        }
+        catch (_a) {
+            alert('Erro de conexão ao Dashboard.');
+        }
+    });
+}
 export function getProfile() {
     return __awaiter(this, void 0, void 0, function* () {
         const token = localStorage.getItem('authToken');
@@ -90,12 +124,18 @@ function updateProfileUI(profile) {
     const usernameEl = document.getElementById('profileUsername');
     const emailEl = document.getElementById('profileEmail');
     const avatarEl = document.getElementById('profileAvatar');
+    const winsEl = document.getElementById('profileWins');
+    const lossesEl = document.getElementById('profileLosses');
     if (usernameEl)
         usernameEl.textContent = profile.username;
     if (emailEl)
         emailEl.textContent = profile.email;
     if (avatarEl)
         avatarEl.src = profile.avatar || '/img/default-avatar.jpg';
+    if (winsEl)
+        winsEl.textContent = profile.wins.toString();
+    if (lossesEl)
+        lossesEl.textContent = profile.losses.toString();
     // Also update edit form with current values
     prefillEditForm(profile);
 }

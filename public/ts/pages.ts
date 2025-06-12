@@ -1,4 +1,4 @@
-import { getProfile } from "./profile.js";
+import { getDashboard, getProfile} from "./profile.js";
 
 export function showLoginPage(): void {
     togglePages('loginPage');
@@ -8,6 +8,12 @@ export function showLoginPage(): void {
 export function showRegisterPage(): void {
     togglePages('registerPage');
     hideNavigation();
+}
+
+export function showDashboardPage(): void {
+    getDashboard();
+    togglePages('dashboardPage');
+    showNavigation();
 }
 
 export function showProfilePage(): void {
@@ -44,7 +50,7 @@ export function clearInputs(...ids: string[]): void {
 }
 
 function togglePages(visiblePageId: string): void {
-    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage'];
+    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage'];
     pages.forEach(page => {
         const el = document.getElementById(page);
         if (el) {

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { login, register, logout, isAuthenticated } from './auth.js';
 import { updateProfile } from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage } from './pages.js';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
 import { router } from './router.js';
 // Setup routes
 function setupRoutes() {
@@ -19,11 +19,30 @@ function setupRoutes() {
     });
     // Login page
     router.addRoute('/login', () => {
-        showLoginPage();
+        if (isAuthenticated()) {
+            router.navigate('/dashboard');
+        }
+        else {
+            showLoginPage();
+        }
     });
     // Register page
     router.addRoute('/register', () => {
-        showRegisterPage();
+        if (isAuthenticated()) {
+            router.navigate('/dashboard');
+        }
+        else {
+            showRegisterPage();
+        }
+    });
+    // Dashboard page
+    router.addRoute('/dashboard', () => {
+        if (isAuthenticated()) {
+            showDashboardPage();
+        }
+        else {
+            router.navigate('/login');
+        }
     });
     // Profile page (requires auth)
     router.addRoute('/profile', () => {
@@ -55,7 +74,7 @@ function setupRoutes() {
 }
 function checkAuthAndRedirect() {
     if (isAuthenticated()) {
-        router.navigate('/profile');
+        router.navigate('/dashboard');
     }
     else {
         router.navigate('/login');
@@ -99,8 +118,8 @@ function setupEventListeners() {
         (_a = document.getElementById('registerSuccessModal')) === null || _a === void 0 ? void 0 : _a.classList.add('hidden');
     });
     // Profile actions
-    (_f = document.getElementById('logoutButton')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', () => {
-        logout();
+    (_f = document.getElementById('goToDashboard')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', () => {
+        router.navigate('/dashboard');
     });
     (_g = document.getElementById('editProfileButton')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
         router.navigate('/edit-profile');

@@ -21,7 +21,8 @@ export function login(credentials) {
             if (res.ok) {
                 localStorage.setItem('authToken', data.token);
                 clearInputs('username', 'password');
-                router.navigate('/profile'); // Use router instead of direct page call
+                // Redirect to dashboard using router
+                router.navigate('/dashboard'); // Use router instead of direct page call
                 return true;
             }
             else {
