@@ -1,6 +1,6 @@
 import i18next from 'i18next';
-import * as en from './translation/en.json';
-import * as fr from './translation/fr.json';
+import en from './translation/en.json';
+import fr from './translation/fr.json';
 
 i18next.init({
   resources: {
