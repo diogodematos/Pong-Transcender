@@ -5,8 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong Game - SPA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Melhorias no dropdown para evitar o problema de hover */
+        .dropdown-container {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 0.25rem;
+            min-width: max-content;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+            z-index: 50;
+        }
+        
+        .dropdown-container:hover .dropdown-menu,
+        .dropdown-menu:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        /* Adiciona uma área invisível para facilitar a transição */
+        .dropdown-container::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: transparent;
+        }
+        
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            color: #374151;
+            transition: background-color 0.15s ease;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .dropdown-item:first-child {
+            border-top-left-radius: 0.375rem;
+            border-top-right-radius: 0.375rem;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom-left-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('/img/background.png'); background-size: cover; background-position: center;">
+    <!-- Language Dropdown -->
+    <div class="relative z-50 flex justify-end p-4">
+        <div class="dropdown-container">
+            <button id="languageButton" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors duration-200">
+                Português ▾
+            </button>
+            <div class="dropdown-menu">
+                <button class="dropdown-item" data-lang="en">English</button>
+                <button class="dropdown-item" data-lang="pt">Português</button>
+                <button class="dropdown-item" data-lang="fr">Français</button>
+            </div>
+        </div>
+    </div>
 
     <div id="app" class="flex-1 flex items-center justify-center">
         <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
@@ -25,12 +105,8 @@
                 </div>
                 <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20]">Login</button>
             </form>
-            <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> 
-            <div id="googleSignInButton" class="flex justify-center mt-4"></div> -->
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registe-se</button>
-            
-
         </div>
 
         <div id="error-message"></div>
@@ -78,7 +154,6 @@
             </div>
             
             <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Editar Perfil</button>
-        <!--   <button id="changePasswordButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg hover:bg-yellow-600 mt-2">Alterar Senha</button> -->
             <button id="logoutButton" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 mt-2">Sair</button>
         </div>
 
@@ -101,7 +176,7 @@
                 <input type="password" id="newPassword" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
             <div class="mb-4">
-                <label for="newAvatar" class="block text-sm font-medium text-gray-700">New Avatar</label>
+                <label for="newAvatar" class="block text-sm font-medium text-gray-700">Novo Avatar</label>
                 <input type="file" id="newAvatar" name="avatar" accept="image/*" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
                 <div id="avatarPreview" class="mt-2 flex justify-center">
                     <img src="" alt="Avatar Preview" id="avatarImageUpdate" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
@@ -110,15 +185,14 @@
             <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600">Guardar Alterações</button>
             <button id="cancelProfileChangesButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
         </div>
-
     </div>
-        <!-- Modal de Sucesso de registo -->
-        <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-                <h3 class="text-lg font-bold text-center mb-4">Registo Concluído!</h3>
-                <p class="text-center mb-4">Registado com sucesso! Ja pode fazer login.</p>
-                <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
-            </div>
+
+    <!-- Modal de Sucesso de registo -->
+    <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 class="text-lg font-bold text-center mb-4">Registo Concluído!</h3>
+            <p class="text-center mb-4">Registado com sucesso! Ja pode fazer login.</p>
+            <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
         </div>
     </div>
 

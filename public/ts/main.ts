@@ -1,12 +1,20 @@
 import { login, register } from './auth.js';
 import { getProfile, updateProfile } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
+import i18next, { updatePageTranslations } from './trltr.js';
 
 // Adiciona ouvintes de eventos
 window.onload = () => {
   checkAuth();
-  //initGoogleSignIn();
+  setupEventListeners();
+  setupLanguageSelector();
+  
+  // Atualizar traduções na inicialização
+  updatePageTranslations();
+};
 
+function setupEventListeners() {
+  // Login form
   document.getElementById('loginForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     login({
@@ -15,46 +23,10 @@ window.onload = () => {
     });
   });
 
+  // Navigation buttons
   document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
     showRegisterPage();
     clearInputs('username', 'password');
-  });
-
-  document.getElementById('registerAvatar')?.addEventListener('change', function(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files ? target.files[0] : null;
-    const preview = document.getElementById('avatarImage') as HTMLImageElement;
-
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e: ProgressEvent<FileReader>) {
-            preview.src = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.src = '/img/default-avatar.jpg';
-    }
-  });
-
-    document.getElementById('newAvatar')?.addEventListener('change', function(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files ? target.files[0] : null;
-    const preview = document.getElementById('avatarImageUpdate') as HTMLImageElement;
-
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e: ProgressEvent<FileReader>) {
-            preview.src = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.src = '';
-    }
-  });
-
-  document.getElementById('goToLoginButton')?.addEventListener('click', () => {
-    showLoginPage();
-    document.getElementById('registerSuccessModal')?.classList.add('hidden'); // Oculta o modal
   });
 
   document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
@@ -62,6 +34,21 @@ window.onload = () => {
     clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
   });
 
+  document.getElementById('goToLoginButton')?.addEventListener('click', () => {
+    showLoginPage();
+    document.getElementById('registerSuccessModal')?.classList.add('hidden');
+  });
+
+  // Avatar preview handlers
+  document.getElementById('registerAvatar')?.addEventListener('change', function(event: Event) {
+    handleAvatarPreview(event, 'avatarImage');
+  });
+
+  document.getElementById('newAvatar')?.addEventListener('change', function(event: Event) {
+    handleAvatarPreview(event, 'avatarImageUpdate');
+  });
+
+  // Register form
   document.getElementById('registerForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
@@ -72,7 +59,8 @@ window.onload = () => {
       avatar: fileInput?.files?.[0],
     });
   });
-  
+
+  // Profile management
   document.getElementById('logoutButton')?.addEventListener('click', () => {
     localStorage.removeItem('authToken');
     showLoginPage();
@@ -81,7 +69,7 @@ window.onload = () => {
   document.getElementById('editProfileButton')?.addEventListener('click', showEditProfilePage);
 
   document.getElementById('saveProfileChangesButton')?.addEventListener('click', () => {
-        const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
+    const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
     updateProfile({
       newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
       newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
@@ -94,8 +82,67 @@ window.onload = () => {
     showProfilePage();
     clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
   });
+}
 
-};
+function setupLanguageSelector() {
+  // Configurar seletor de idioma atualizado
+  const languageItems = document.querySelectorAll('.dropdown-item');
+  const languageButton = document.getElementById('languageButton');
+  
+  languageItems.forEach(item => {
+    item.addEventListener('click', (event) => {
+      const target = event.currentTarget as HTMLElement;
+      const selectedLang = target.getAttribute('data-lang');
+      if (selectedLang) {
+        // Mudar idioma
+        i18next.changeLanguage(selectedLang);
+        localStorage.setItem('lang', selectedLang);
+        
+        // Atualizar texto do botão
+        const langNames = {
+          'en': 'English',
+          'pt': 'Português', 
+          'fr': 'Français'
+        };
+        
+        if (languageButton) {
+          languageButton.textContent = langNames[selectedLang as keyof typeof langNames] + ' ▾';
+        }
+        
+        // Atualizar todas as traduções
+        updatePageTranslations();
+      }
+    });
+  });
+
+  // Definir idioma inicial no botão
+  const currentLang = i18next.language || 'pt';
+  const langNames = {
+    'en': 'English',
+    'pt': 'Português', 
+    'fr': 'Français'
+  };
+  
+  if (languageButton) {
+    languageButton.textContent = langNames[currentLang as keyof typeof langNames] + ' ▾';
+  }
+}
+
+function handleAvatarPreview(event: Event, previewId: string) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files ? target.files[0] : null;
+  const preview = document.getElementById(previewId) as HTMLImageElement;
+
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = function(e: ProgressEvent<FileReader>) {
+      preview.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.src = previewId === 'avatarImage' ? '/img/default-avatar.jpg' : '';
+  }
+}
 
 function checkAuth() {
   const token = localStorage.getItem('authToken');
