@@ -180,7 +180,7 @@
                         
                         <!-- Lista de jogos -->
                         <div id="gameHistory" class="space-y-3 max-h-96 overflow-y-auto">
-                            <!-- Exemplo de jogo -->
+                            <!-- Exemplo de jogo 
                             <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
                                 <div class="flex justify-between items-center">
                                     <div>
@@ -218,7 +218,7 @@
                                         <p class="text-xs text-gray-500">15/06, 10:20</p>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         
                         <!-- Mostrar mais jogos -->
@@ -233,87 +233,46 @@
                         
                         <!-- Buscar amigos -->
                         <div class="mb-4">
-                            <input type="text" placeholder="Buscar amigos..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" 
+                                   id="searchFriendsInput" 
+                                   placeholder="Buscar utilizadores..." 
+                                   class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Resultados da pesquisa -->
+                        <div id="searchResults" class="mb-4 space-y-2 hidden">
+                            <h4 class="text-sm font-semibold text-gray-700">Resultados da Pesquisa:</h4>
+                            <div id="searchResultsList" class="space-y-2"></div>
                         </div>
                         
                         <!-- Lista de amigos online -->
                         <div class="mb-4">
-                            <h3 class="text-sm font-semibold text-green-600 mb-2">Online (3)</h3>
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
-                                        <span class="text-sm font-medium">João Silva</span>
-                                    </div>
-                                    <button class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
-                                        Desafiar
-                                    </button>
-                                </div>
-                                
-                                <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
-                                        <span class="text-sm font-medium">Maria Santos</span>
-                                    </div>
-                                    <button class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
-                                        Desafiar
-                                    </button>
-                                </div>
-                                
-                                <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
-                                        <span class="text-sm font-medium">Ana Costa</span>
-                                    </div>
-                                    <button class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
-                                        Desafiar
-                                    </button>
-                                </div>
-                            </div>
+                            <h3 class="text-sm font-semibold text-green-600 mb-2" id="onlineFriendsTitle">Online (0)</h3>
+                            <div id="onlineFriendsList" class="space-y-2"></div>
                         </div>
                         
                         <!-- Lista de amigos offline -->
                         <div class="mb-4">
-                            <h3 class="text-sm font-semibold text-gray-500 mb-2">Offline (2)</h3>
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
-                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2 grayscale">
-                                        <span class="text-sm text-gray-600">Pedro Silva</span>
-                                    </div>
-                                    <span class="text-xs text-gray-400">Há 2h</span>
-                                </div>
-                                
-                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
-                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2 grayscale">
-                                        <span class="text-sm text-gray-600">Carla Lima</span>
-                                    </div>
-                                    <span class="text-xs text-gray-400">Ontem</span>
-                                </div>
-                            </div>
+                            <h3 class="text-sm font-semibold text-gray-500 mb-2" id="offlineFriendsTitle">Offline (0)</h3>
+                            <div id="offlineFriendsList" class="space-y-2"></div>
                         </div>
                         
-                        <!-- Adicionar amigo -->
-                        <button class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors">
-                            + Adicionar Amigo
+                        <!-- Botão adicionar amigo (pode ser removido se só vais usar a pesquisa) -->
+                        <button id="addFriendButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            + Procurar Utilizadores
                         </button>
                     </div>
+                    
                 </div>
             </div>
         </div>
 
-        <!-- Friends Page -->
+        <!-- Friends Page 
         <div id="friendsPage" class="hidden">
             <div class="max-w-4xl mx-auto p-6">
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">Meus Amigos</h1>
                 
-                <!-- Search Section -->
+                !-- Search Section --
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
                     <h2 class="text-xl font-semibold mb-4">Procurar Utilizadores</h2>
                     <div class="flex space-x-2">
@@ -329,13 +288,13 @@
                     <div id="searchResults" class="mt-4 space-y-2"></div>
                 </div>
                 
-                <!-- Friends List -->
+                !-- Friends List --
                 <div class="bg-white rounded-lg shadow p-6">
                     <h2 class="text-xl font-semibold mb-4">Lista de Amigos</h2>
                     <div id="friendsList" class="space-y-3"></div>
-                </div>
+                </div> --
                 
-                <!-- Back Button -->
+                !-- Back Button --
                 <div class="mt-6">
                     <button onclick="router.navigate('/dashboard')" 
                             class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md">
@@ -343,7 +302,7 @@
                     </button>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Edit Profile Page -->
         <div id="editProfilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">

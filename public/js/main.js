@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { login, register, logout, isAuthenticated } from './auth.js';
-import { updateProfile } from './profile.js';
+import { updateProfile, searchUsers } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
 import { router } from './router.js';
 // Setup routes
@@ -82,7 +82,7 @@ function checkAuthAndRedirect() {
 }
 // Event listeners
 function setupEventListeners() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
     // Login form
     (_a = document.getElementById('loginForm')) === null || _a === void 0 ? void 0 : _a.addEventListener('submit', (e) => __awaiter(this, void 0, void 0, function* () {
         e.preventDefault();
@@ -127,21 +127,35 @@ function setupEventListeners() {
     (_h = document.getElementById('playGameButton')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
         router.navigate('/game');
     });
+    // Event listener para pesquisa de amigos
+    (_j = document.getElementById('searchFriendsInput')) === null || _j === void 0 ? void 0 : _j.addEventListener('input', (e) => {
+        const target = e.target;
+        console.log("Pesquisa:", target.value);
+        searchUsers(target.value);
+    });
+    // Event listener para o botão adicionar amigo (opcional)
+    (_k = document.getElementById('addFriendButton')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
+        const searchInput = document.getElementById('searchFriendsInput');
+        if (searchInput) {
+            searchInput.focus();
+            alert('Digite o nome do utilizador no campo de pesquisa acima.');
+        }
+    });
     // Navigation bar buttons (for authenticated users)
-    (_j = document.querySelector('[data-route="/dashboard"]')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
+    (_l = document.querySelector('[data-route="/dashboard"]')) === null || _l === void 0 ? void 0 : _l.addEventListener('click', () => {
         router.navigate('/dashboard');
     });
-    (_k = document.querySelector('[data-route="/game"]')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
+    (_m = document.querySelector('[data-route="/game"]')) === null || _m === void 0 ? void 0 : _m.addEventListener('click', () => {
         router.navigate('/game');
     });
-    (_l = document.querySelector('[data-route="/profile"]')) === null || _l === void 0 ? void 0 : _l.addEventListener('click', () => {
+    (_o = document.querySelector('[data-route="/profile"]')) === null || _o === void 0 ? void 0 : _o.addEventListener('click', () => {
         router.navigate('/profile');
     });
-    (_m = document.getElementById('navLogoutButton')) === null || _m === void 0 ? void 0 : _m.addEventListener('click', () => {
+    (_p = document.getElementById('navLogoutButton')) === null || _p === void 0 ? void 0 : _p.addEventListener('click', () => {
         logout();
     });
     // Edit profile actions
-    (_o = document.getElementById('saveProfileChangesButton')) === null || _o === void 0 ? void 0 : _o.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+    (_q = document.getElementById('saveProfileChangesButton')) === null || _q === void 0 ? void 0 : _q.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
         var _a;
         const fileInput = document.getElementById('newAvatar');
         const success = yield updateProfile({
@@ -152,17 +166,17 @@ function setupEventListeners() {
         });
         // updateProfile function handles navigation on success
     }));
-    (_p = document.getElementById('cancelProfileChangesButton')) === null || _p === void 0 ? void 0 : _p.addEventListener('click', () => {
+    (_r = document.getElementById('cancelProfileChangesButton')) === null || _r === void 0 ? void 0 : _r.addEventListener('click', () => {
         router.navigate('/profile');
         clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
     });
     // Game back button
-    (_q = document.getElementById('backToProfileButton')) === null || _q === void 0 ? void 0 : _q.addEventListener('click', () => {
+    (_s = document.getElementById('backToProfileButton')) === null || _s === void 0 ? void 0 : _s.addEventListener('click', () => {
         router.navigate('/profile');
     });
     // Avatar preview handlers
-    (_r = document.getElementById('registerAvatar')) === null || _r === void 0 ? void 0 : _r.addEventListener('change', handleAvatarPreview);
-    (_s = document.getElementById('newAvatar')) === null || _s === void 0 ? void 0 : _s.addEventListener('change', handleAvatarPreviewUpdate);
+    (_t = document.getElementById('registerAvatar')) === null || _t === void 0 ? void 0 : _t.addEventListener('change', handleAvatarPreview);
+    (_u = document.getElementById('newAvatar')) === null || _u === void 0 ? void 0 : _u.addEventListener('change', handleAvatarPreviewUpdate);
 }
 function handleAvatarPreview(event) {
     const target = event.target;

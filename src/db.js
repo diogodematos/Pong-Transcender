@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS friends(
     id INTEGER PRIMARY KEY,
     friend1_id INTEGER NOT NULL,
     friend2_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(friend1_id) REFERENCES users(id),
     FOREIGN KEY(friend2_id) REFERENCES users(id),
     UNIQUE(friend1_id, friend2_id)
@@ -30,7 +31,7 @@ CREATE TABLE IF NOT EXISTS games (
     player2_id INTEGER NOT NULL,
     player1_score INTEGER NOT NULL,
     player2_score INTEGER NOT NULL,
-    winner_id INTEGER,
+    winner_id INTEGER NOT NULL,
     played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(player1_id) REFERENCES users(id),
     FOREIGN KEY(player2_id) REFERENCES users(id),

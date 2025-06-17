@@ -1,5 +1,5 @@
 import { login, register, logout, isAuthenticated } from './auth.js';
-import { updateProfile } from './profile.js';
+import { updateProfile, searchUsers, addFriend } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
 import { router } from './router.js';
 
@@ -123,6 +123,22 @@ function setupEventListeners(): void {
 
     document.getElementById('playGameButton')?.addEventListener('click', () => {
         router.navigate('/game');
+    });
+
+    // Event listener para pesquisa de amigos
+    document.getElementById('searchFriendsInput')?.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement;
+        console.log("Pesquisa:", target.value);
+        searchUsers(target.value);
+    });
+
+    // Event listener para o botão adicionar amigo (opcional)
+    document.getElementById('addFriendButton')?.addEventListener('click', () => {
+        const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
+        if (searchInput) {
+            searchInput.focus();
+            alert('Digite o nome do utilizador no campo de pesquisa acima.');
+        }
     });
 
     // Navigation bar buttons (for authenticated users)

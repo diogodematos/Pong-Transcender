@@ -349,6 +349,192 @@ const usersController = (fastify, options, done) => {
 			return res.status(400).send({error: 'Could not delete user'});
 		}
 	})
+
+	////			TESTE INICIO 
+
+// Adicionar ao teu server.js existente
+
+fastify.get('/games/history', async (req, res) => {
+	const token = req.headers.authorization?.split(' ')[1];
+	if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+	}
+
+	try {
+			const decoded = jwt.verify(token, secretKey);
+			const userId = decoded.id;
+
+			// Query para buscar histórico de jogos
+			const games = db.prepare(`
+					SELECT 
+							g.id,
+							CASE 
+									WHEN g.player1_id = ? THEN u2.username 
+									ELSE u1.username 
+							END as opponent_name,
+							CASE 
+									WHEN g.player1_id = ? THEN g.player1_score 
+									ELSE g.player2_score 
+							END as player_score,
+							CASE 
+									WHEN g.player1_id = ? THEN g.player2_score 
+									ELSE g.player1_score 
+							END as opponent_score,
+							CASE 
+									WHEN (g.player1_id = ? AND g.player1_score > g.player2_score) OR 
+											 (g.player2_id = ? AND g.player2_score > g.player1_score) 
+									THEN 'win' 
+									ELSE 'loss' 
+							END as result,
+							g.played_at
+					FROM games g
+					JOIN users u1 ON g.player1_id = u1.id
+					JOIN users u2 ON g.player2_id = u2.id
+					WHERE g.player1_id = ? OR g.player2_id = ?
+					ORDER BY g.played_at DESC
+					LIMIT 20
+			`).all(userId, userId, userId, userId, userId, userId, userId);
+
+			return { games };
+	} catch (error) {
+			console.error('Error fetching game history:', error);
+			return res.status(500).send({error: 'Internal server error'});
+	}
+});
+
+fastify.get('/friends', async (req, res) => {
+	const token = req.headers.authorization?.split(' ')[1];
+	if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+	}
+
+	try {
+			const decoded = jwt.verify(token, secretKey);
+			const userId = decoded.id;
+
+			const friends = db.prepare(`
+					SELECT 
+							u.id, 
+							u.username, 
+							u.avatar,
+							0 as is_online,
+							datetime('now', '-' || (ABS(RANDOM()) % 24) || ' hours') as last_seen
+					FROM users u
+					INNER JOIN friends f ON (
+							(f.friend1_id = ? AND f.friend2_id = u.id) OR
+							(f.friend2_id = ? AND f.friend1_id = u.id)
+					)
+					WHERE u.id != ?
+					ORDER BY u.username
+			`).all(userId, userId, userId);
+
+			// Simular alguns amigos online (temporário)
+			const friendsWithStatus = friends.map(friend => {
+				const isOnline = Math.random() < 0.3; // 30% de chance de estar online
+				return {
+					...friend,
+					is_online: isOnline,
+					last_seen: isOnline ? null : friend.last_seen
+				};
+			});
+
+			return { friends: friendsWithStatus };
+	} catch (error) {
+			console.error('Error fetching friends:', error);
+			return res.status(500).send({error: 'Internal server error'});
+	}
+});
+
+fastify.post('/friends/add', async (req, res) => {
+	const token = req.headers.authorization?.split(' ')[1];
+	if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+	}
+
+	try {
+			const decoded = jwt.verify(token, secretKey);
+			const userId = decoded.id;
+			const { friendId } = req.body;
+
+			if (!friendId) {
+					return res.status(400).send({error: 'Friend ID is required'});
+			}
+
+			if (userId === friendId) {
+					return res.status(400).send({error: 'Cannot add yourself as friend'});
+			}
+
+			// Verificar se o utilizador existe
+			const friendExists = db.prepare('SELECT id FROM users WHERE id = ?').get(friendId);
+			if (!friendExists) {
+					return res.status(404).send({error: 'User not found'});
+			}
+
+			// Verificar se já são amigos
+			const existingFriendship = db.prepare(`
+					SELECT id FROM friends 
+					WHERE (friend1_id = ? AND friend2_id = ?) 
+						 OR (friend1_id = ? AND friend2_id = ?)
+			`).get(userId, friendId, friendId, userId);
+
+			if (existingFriendship) {
+					return res.status(400).send({error: 'Already friends'});
+			}
+
+			// Adicionar amizade
+			const friend1Id = Math.min(userId, friendId);
+			const friend2Id = Math.max(userId, friendId);
+
+			db.prepare(`
+					INSERT INTO friends (friend1_id, friend2_id, created_at)
+					VALUES (?, ?, datetime('now'))
+			`).run(friend1Id, friend2Id);
+
+			return { message: 'Friend added successfully' };
+	} catch (error) {
+			console.error('Error adding friend:', error);
+			return res.status(500).send({error: 'Internal server error'});
+	}
+});
+
+fastify.get('/friends/search/:username', async (req, res) => {
+	const token = req.headers.authorization?.split(' ')[1];
+	if (!token) {
+			return res.status(401).send({error: 'Unauthorized'});
+	}
+
+	try {
+			const decoded = jwt.verify(token, secretKey);
+			const userId = decoded.id;
+			const { username } = req.params;
+
+			if (!username || username.length < 2) {
+					return res.status(400).send({error: 'Username must be at least 2 characters'});
+			}
+
+			const users = db.prepare(`
+					SELECT 
+							u.id, 
+							u.username, 
+							u.email, 
+							u.avatar,
+							CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as is_friend
+					FROM users u
+					LEFT JOIN friends f ON (
+							(f.friend1_id = ? AND f.friend2_id = u.id) OR
+							(f.friend2_id = ? AND f.friend1_id = u.id)
+					)
+					WHERE u.username LIKE ? AND u.id != ?
+					ORDER BY u.username
+					LIMIT 10
+			`).all(userId, userId, `%${username}%`, userId);
+
+			return { users };
+	} catch (error) {
+			console.error('Error searching users:', error);
+			return res.status(500).send({error: 'Internal server error'});
+	}
+});
 	done();
 };
 

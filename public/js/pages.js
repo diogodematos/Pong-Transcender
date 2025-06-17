@@ -1,4 +1,4 @@
-import { getDashboard, getProfile } from "./profile.js";
+import { getDashboard, getFriendsForProfile, getProfile } from "./profile.js";
 export function showLoginPage() {
     togglePages('loginPage');
     hideNavigation();
@@ -14,6 +14,7 @@ export function showDashboardPage() {
 }
 export function showProfilePage() {
     getProfile();
+    getFriendsForProfile();
     togglePages('profilePage');
     showNavigation();
 }
