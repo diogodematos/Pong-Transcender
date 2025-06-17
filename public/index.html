@@ -14,7 +14,7 @@
             <div class="text-white font-bold text-xl">Pong Game</div>
             <div class="flex items-center space-x-4">
                 <img id="dashboardAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-500">
-                <button class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors"><a href="/#/dashboard">Main Page</a></button>
+                <button data-route="/dashboard" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Main Page</button>
                 <button data-route="/game" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Game</button>
                 <button data-route="/profile" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">
                     <span id="dashboardUsername"></span>
@@ -109,19 +109,240 @@
                 </div>
             </div>
         </div>
+
         <!-- Profile Page -->
-        <div id="profilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
-            <h2 class="text-2xl font-bold text-center mb-4">Perfil</h2>
-            <div class="flex justify-center mb-4">
-                <img id="profileAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
+        <div id="profilePage" class="hidden min-h-screen bg-gray-100 p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Título da página -->
+                <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Perfil do Jogador</h1>
+                
+                <!-- Layout de 3 colunas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <!-- Coluna Esquerda - Informações do Perfil -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Meu Perfil</h2>
+                        
+                        <!-- Avatar -->
+                        <div class="flex justify-center mb-4">
+                            <img id="profileAvatar" src="/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-lg" />
+                        </div>
+                        
+                        <!-- Informações do usuário -->
+                        <div class="space-y-3 mb-6">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Usuário</p>
+                                <p class="font-semibold text-gray-800" id="profileUsername">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Email</p>
+                                <p class="font-semibold text-gray-800" id="profileEmail">-</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Estatísticas -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-green-50 p-3 rounded-lg text-center border border-green-200">
+                                <p class="text-sm text-green-600">Vitórias</p>
+                                <p class="text-2xl font-bold text-green-700" id="profileWins">0</p>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded-lg text-center border border-red-200">
+                                <p class="text-sm text-red-600">Derrotas</p>
+                                <p class="text-2xl font-bold text-red-700" id="profileLosses">0</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Botões de ação -->
+                        <div class="space-y-3">
+                            <button id="playGameButton" class="w-full bg-[#2f9b20] text-white p-3 rounded-lg hover:bg-[#247a1a] transition-colors flex items-center justify-center shadow-md">
+                                <img src="/img/gameboy.png" alt="Gameboy" class="w-6 h-6 mr-2"> 
+                                Jogar Pong
+                            </button>
+                            <button id="editProfileButton" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition-colors shadow-md">
+                                Editar Perfil
+                            </button>
+                            <button id="goToDashboard" class="w-full bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-colors shadow-md">
+                                Voltar ao Dashboard
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Coluna Central - Histórico de Jogos -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Histórico de Jogos</h2>
+                        
+                        <!-- Filtros -->
+                        <div class="flex justify-center mb-4 space-x-2">
+                            <button class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">Todos</button>
+                            <button class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors">Vitórias</button>
+                            <button class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors">Derrotas</button>
+                        </div>
+                        
+                        <!-- Lista de jogos -->
+                        <div id="gameHistory" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- Exemplo de jogo -->
+                            <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-green-700">Vitória</p>
+                                        <p class="text-sm text-gray-600">vs João Silva</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-green-700">7 - 3</p>
+                                        <p class="text-xs text-gray-500">Hoje, 14:30</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-red-50 border border-red-200 p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-red-700">Derrota</p>
+                                        <p class="text-sm text-gray-600">vs Maria Santos</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-red-700">2 - 7</p>
+                                        <p class="text-xs text-gray-500">Ontem, 16:45</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-green-700">Vitória</p>
+                                        <p class="text-sm text-gray-600">vs Pedro Costa</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-green-700">7 - 4</p>
+                                        <p class="text-xs text-gray-500">15/06, 10:20</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mostrar mais jogos -->
+                        <button class="w-full mt-4 bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition-colors">
+                            Carregar mais jogos
+                        </button>
+                    </div>
+                    
+                    <!-- Coluna Direita - Lista de Amigos -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Amigos</h2>
+                        
+                        <!-- Buscar amigos -->
+                        <div class="mb-4">
+                            <input type="text" placeholder="Buscar amigos..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Lista de amigos online -->
+                        <div class="mb-4">
+                            <h3 class="text-sm font-semibold text-green-600 mb-2">Online (3)</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+                                        <span class="text-sm font-medium">João Silva</span>
+                                    </div>
+                                    <button class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
+                                        Desafiar
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+                                        <span class="text-sm font-medium">Maria Santos</span>
+                                    </div>
+                                    <button class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
+                                        Desafiar
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+                                        <span class="text-sm font-medium">Ana Costa</span>
+                                    </div>
+                                    <button class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
+                                        Desafiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista de amigos offline -->
+                        <div class="mb-4">
+                            <h3 class="text-sm font-semibold text-gray-500 mb-2">Offline (2)</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
+                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2 grayscale">
+                                        <span class="text-sm text-gray-600">Pedro Silva</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">Há 2h</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
+                                        <img src="/img/default-avatar.jpg" alt="Avatar" class="w-8 h-8 rounded-full mr-2 grayscale">
+                                        <span class="text-sm text-gray-600">Carla Lima</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">Ontem</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Adicionar amigo -->
+                        <button class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            + Adicionar Amigo
+                        </button>
+                    </div>
+                </div>
             </div>
-            <p><strong>Usuário:</strong> <span id="profileUsername"></span></p>
-            <p><strong>Email:</strong> <span id="profileEmail"></span></p>
-            <p><strong>Wins:</strong> <span id="profileWins"></span> &nbsp;&nbsp;&nbsp; <strong>Losses:</strong> <span id="profileLosses"></span></p>            
-            <button id="playGameButton" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] mb-2 transition-colors flex items-center justify-center">
-                <img src="/img/gameboy.png" alt="Gameboy" class="w-8 h-8 mr-2"> Jogar Pong</button>
-            <button id="editProfileButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 mb-2 transition-colors">Editar Perfil</button>
-            <button id="goToDashboard" class="w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors">Voltar</button>
+        </div>
+
+        <!-- Friends Page -->
+        <div id="friendsPage" class="hidden">
+            <div class="max-w-4xl mx-auto p-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Meus Amigos</h1>
+                
+                <!-- Search Section -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Procurar Utilizadores</h2>
+                    <div class="flex space-x-2">
+                        <input type="text" 
+                            id="searchUsersInput" 
+                            placeholder="Digite o nome do utilizador..." 
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="clearSearchButton" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">
+                            Limpar
+                        </button>
+                    </div>
+                    <div id="searchResults" class="mt-4 space-y-2"></div>
+                </div>
+                
+                <!-- Friends List -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Lista de Amigos</h2>
+                    <div id="friendsList" class="space-y-3"></div>
+                </div>
+                
+                <!-- Back Button -->
+                <div class="mt-6">
+                    <button onclick="router.navigate('/dashboard')" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md">
+                        Voltar ao Dashboard
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Edit Profile Page -->

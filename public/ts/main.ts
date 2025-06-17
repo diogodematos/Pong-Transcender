@@ -126,6 +126,10 @@ function setupEventListeners(): void {
     });
 
     // Navigation bar buttons (for authenticated users)
+    document.querySelector('[data-route="/dashboard"]')?.addEventListener('click', () => {
+        router.navigate('/dashboard');
+    });
+
     document.querySelector('[data-route="/game"]')?.addEventListener('click', () => {
         router.navigate('/game');
     });
