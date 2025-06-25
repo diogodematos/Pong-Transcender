@@ -158,7 +158,7 @@ const usersController = (fastify, options, done) => {
             // Verifica o token de ID com a API do Google
             const ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: '801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com' // <-- ATUALIZE AQUI com a mesma ID de Cliente
+                 // <-- ATUALIZE AQUI com a mesma ID de Cliente
             });
             const payload = ticket.getPayload();
             const { email, name, picture } = payload; // Extrai email, nome e URL da imagem de perfil
