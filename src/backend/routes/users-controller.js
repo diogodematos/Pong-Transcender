@@ -10,10 +10,10 @@ import * as fs from 'fs';
 // ATENÇÃO: Substitua 'YOUR_GOOGLE_CLIENT_ID' pela sua ID de Cliente real da Google.
 // É ALTAMENTE RECOMENDADO carregar esta ID de uma variável de ambiente (ex: process.env.GOOGLE_CLIENT_ID)
 // em vez de a deixar aqui no código.
-const googleClient = new OAuth2Client('801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com');
+const googleClient = new OAuth2Client('xxxx'); 
 // --- FIM DA CONFIGURAÇÃO GOOGLE OAUTH ---
 
-const secretKey = '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';
+const secretKey = 'xxxx';
 
 // Regex for password and email validation
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{7,20}$/;
@@ -159,7 +159,7 @@ const usersController = (fastify, options, done) => {
             // Verifica o token de ID com a API do Google
             const ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: '801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com' // <-- ATUALIZE AQUI com a mesma ID de Cliente
+                audience: 'xxxxxxxx' // <-- ATUALIZE AQUI com a mesma ID de Cliente
             });
             const payload = ticket.getPayload();
             const { email, name, picture } = payload; // Extrai email, nome e URL da imagem de perfil
