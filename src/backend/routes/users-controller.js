@@ -7,27 +7,13 @@ import pump from 'pump';
 import * as fs from 'fs';
 
 // --- CONFIGURAÇÃO DA GOOGLE OAUTH ---
-// Carrega o Google Client ID da variável de ambiente process.env.GOOGLE_CLIENT_ID
-// O .env é carregado uma vez no index.js/app.js do Fastify, tornando as variáveis disponíveis globalmente.
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID; 
-
-// Verificação simples para garantir que a variável de ambiente está definida
-if (!GOOGLE_CLIENT_ID) {
-    console.error('ERRO: GOOGLE_CLIENT_ID não está configurado nas variáveis de ambiente! Verifique seu ficheiro .env');
-    // Em produção, você poderia querer sair do processo ou lançar um erro fatal aqui.
-    // Para desenvolvimento, um log de erro pode ser suficiente.
-}
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+// ATENÇÃO: Substitua 'YOUR_GOOGLE_CLIENT_ID' pela sua ID de Cliente real da Google.
+// É ALTAMENTE RECOMENDADO carregar esta ID de uma variável de ambiente (ex: process.env.GOOGLE_CLIENT_ID)
+// em vez de a deixar aqui no código.
+const googleClient = new OAuth2Client('801178976948-.apps.googleusercontent.com'); 
 // --- FIM DA CONFIGURAÇÃO GOOGLE OAUTH ---
 
-// Carrega a chave secreta JWT da variável de ambiente process.env.JWT_SECRET_KEY
-const secretKey = process.env.JWT_SECRET_KEY; 
-
-// Verificação simples para garantir que a variável de ambiente está definida
-if (!secretKey) {
-    console.error('ERRO: JWT_SECRET_KEY não está configurada nas variáveis de ambiente! Verifique seu ficheiro .env');
-    // Em produção, você poderia querer sair do processo ou lançar um erro fatal aqui.
-}
+const secretKey = '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';
 
 // Regex for password and email validation
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{7,20}$/;
@@ -173,7 +159,7 @@ const usersController = (fastify, options, done) => {
             // Verifica o token de ID com a API do Google
             const ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: GOOGLE_CLIENT_ID // Usa a variável de ambiente GOOGLE_CLIENT_ID
+                audience: '801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com' // <-- ATUALIZE AQUI com a mesma ID de Cliente
             });
             const payload = ticket.getPayload();
             const { email, name, picture } = payload; // Extrai email, nome e URL da imagem de perfil
@@ -197,13 +183,15 @@ const usersController = (fastify, options, done) => {
                 req.log.info(`Utilizador com email ${email} encontrado (ID: ${user.id}).`);
                 // Opcional: Atualizar avatar se for diferente
                 if (picture && user.avatar !== picture && picture !== '/uploads/default-avatar.jpg') {
+                    // Cuidado: Se o utilizador já tiver um avatar personalizado, pode não querer sobrescrevê-lo.
+                    // Para simplificar, vamos atualizar se for diferente do default.
                     db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(picture, user.id);
                     req.log.info(`Avatar do utilizador ${user.username} atualizado para: ${picture}`);
                 }
             }
 
             // Gera um token JWT para o utilizador autenticado
-            const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '1h' }); // Usa a secretKey da variável de ambiente
+            const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '1h' });
             req.log.info(`Token JWT gerado para o utilizador ${user.username}.`);
 
             return reply.send({ success: true, message: 'Google login successful', token });
@@ -225,7 +213,7 @@ const usersController = (fastify, options, done) => {
             return reply.status(401).send({error: 'Unauthorized'});
         }
         try {
-            const decoded = jwt.verify(token, secretKey); // Usa a secretKey da variável de ambiente
+            const decoded = jwt.verify(token, secretKey);
             const user = db.prepare('SELECT id, username, email, avatar FROM users WHERE id = ?').get(decoded.id);
             if (!user) {
                 return reply.status(404).send({error: 'User not found'});
@@ -256,7 +244,7 @@ const usersController = (fastify, options, done) => {
 
         let decoded;
         try {
-            decoded = jwt.verify(token, secretKey); // Usa a secretKey da variável de ambiente
+            decoded = jwt.verify(token, secretKey);
             req.log.info(`Token decodificado para user ID: ${decoded.id}`);
         } catch (authError) {
             req.log.error(`Erro de autenticação ou token inválido: ${authError.message}`);
