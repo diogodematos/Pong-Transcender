@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
+    allowedHosts: ['pokepong.42.fr', 'localhost'],
     proxy: {
       // Proxy para API do backend
       '/api': {
