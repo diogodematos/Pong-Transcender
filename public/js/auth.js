@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
+import { connectWebSocket, disconnectWebSocket } from './ws.js';
 export function login(credentials) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -21,6 +22,8 @@ export function login(credentials) {
             if (res.ok) {
                 localStorage.setItem('authToken', data.token);
                 clearInputs('username', 'password');
+                // Initialize WebSocket connection with the token
+                connectWebSocket(data.token);
                 // Redirect to dashboard using router
                 router.navigate('/dashboard'); // Use router instead of direct page call
                 return true;
@@ -67,6 +70,7 @@ export function register(data) {
     });
 }
 export function logout() {
+    disconnectWebSocket();
     localStorage.removeItem('authToken');
     router.navigate('/login');
 }

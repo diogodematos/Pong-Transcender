@@ -219,6 +219,10 @@ window.onload = () => {
     setupRoutes();
     setupEventListeners();
     checkAuthAndRedirect();
+    // const token = localStorage.getItem('authToken');
+    // if (token) {
+    //     initWebSocket(token);
+    // }
 };
 // Export router for external use if needed
 export { router };

@@ -22,17 +22,120 @@ const deleteSchema = {
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{7,20}$/;
 const emailRegex = /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]{2,}$/;
 
-const usersController = (fastify, options, done) => {
+const usersController = async (fastify, options) => {
 
-	fastify.get('/', async (req, res) => {
-		try {
-			const users = db.prepare('SELECT id, username FROM users').all();
-			return { users };
-		} catch(error) {
-			return(error);
-		};
+	// fastify.get('/ws', { websocket: true }, (connection, req) => {
+		
+	//   const { url } = req;
+  // 	const token = new URLSearchParams(url?.split('?')[1]).get('token');
+	// if (!token) {
+	// 	connection.socket.close(1008, 'Token is required');
+	// 	return;
+	// }
+	// try {
+	// 	const decoded = jwt.verify(token, secretKey);
+	// 	connection.userId = decoded.id; // Armazena o ID do utilizador na conexão
+	// } catch (error) {
+	// 	connection.socket.close(1008, 'Invalid token');
+	// 	return;
+	// }
+
+	// connectedUsers.set(connection.userId, connection);
+	// // connection.socket.on('message', (message) => {
+	// // 	console.log(`Mensagem de ${userId}: ${message}`);
+	// // Aqui você pode processar a mensagem recebida
+	// //})
+
+	// connection.socket.on('close', () => {
+	// 	connectedUsers.delete(connection.userId);
+	// 	console.log(`User ${connection.userId} disconnected`);
+	// });
+	// console.log(`User ${connection.userId} connected`);
+	// });
+
+
+  fastify.get('/', async (req, res) => {
+    try {
+      const users = db.prepare('SELECT id, username FROM users').all();
+      return { users };
+    } catch(error) {
+      return res.status(500).send({ error: error.message });
+    }
+  });
+
+	const connectedUsers = new Map();
+
+	fastify.get('/ws', { websocket: true }, (socket, req) => {
+			console.log('WebSocket connection attempt');
+			
+			// O primeiro parâmetro é diretamente o WebSocket
+			if (!socket) {
+					console.error('WebSocket not available');
+					return;
+			}
+	
+			const params = new URL(req.url, 'http://localhost').searchParams;
+			const token = params.get('token');
+	
+			if (!token) {
+					console.log('No token provided');
+					socket.close(1008, 'Token is required');
+					return;
+			}
+	
+			try {
+					const decoded = jwt.verify(token, secretKey);
+					const userId = decoded.id;
+	
+					if (!userId) {
+							console.log('Invalid user ID in token');
+							socket.close(1008, 'Invalid user ID');
+							return;
+					}
+	
+					// Verificar se o socket está no estado correto
+					if (socket.readyState !== 1) { // WebSocket.OPEN = 1
+							console.log('Socket not ready');
+							socket.close(1008, 'Connection not ready');
+							return;
+					}
+	
+					// Guardar a conexão
+					connectedUsers.set(userId, socket);
+					console.log(`User ${userId} connected successfully`);
+	
+					// Event listeners
+					socket.on('close', () => {
+							connectedUsers.delete(userId);
+							console.log(`User ${userId} disconnected`);
+					});
+	
+					socket.on('message', (message) => {
+							console.log(`Message from ${userId}: ${message}`);
+							// Echo da mensagem de volta
+							socket.send(`Echo: ${message}`);
+					});
+	
+					socket.on('error', (error) => {
+							console.error(`WebSocket error for user ${userId}:`, error);
+							connectedUsers.delete(userId);
+					});
+	
+					// Enviar mensagem de boas-vindas
+					socket.send(JSON.stringify({
+							type: 'welcome',
+							message: 'Connected successfully',
+							userId: userId
+					}));
+	
+			} catch (error) {
+					console.error('JWT verification failed:', error);
+					socket.close(1008, 'Invalid token');
+					return;
+			}
 	});
 	
+
 	
 	
 	// Código do handler para o upload
@@ -121,7 +224,7 @@ const usersController = (fastify, options, done) => {
 				return res.status(401).send({error: 'Invalid password'});
 			}
 			const token = jwt.sign({id: dbUser.id}, secretKey, {expiresIn: '1h'});
-			return {success: true, message: 'User logged in', token};
+			return {success: true, message: 'User logged in', token, dbUser: {id: dbUser.id}};
 		} catch (error) {
 			return res.status(500).send({error: 'Internal server error'});
 		}
@@ -428,9 +531,10 @@ fastify.get('/friends', async (req, res) => {
 					ORDER BY u.username
 			`).all(userId, userId, userId);
 
-			// Simular alguns amigos online (temporário)
+			// Friends online
 			const friendsWithStatus = friends.map(friend => {
-				const isOnline = Math.random() < 0.3; // 30% de chance de estar online
+				const isOnline = connectedUsers.has(friend.id);
+				console.log(typeof friend.id, typeof userId);
 				return {
 					...friend,
 					is_online: isOnline,
@@ -534,8 +638,7 @@ fastify.get('/friends/search/:username', async (req, res) => {
 			console.error('Error searching users:', error);
 			return res.status(500).send({error: 'Internal server error'});
 	}
-});
-	done();
+	});
 };
 
 export default usersController;

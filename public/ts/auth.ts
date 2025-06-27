@@ -1,6 +1,7 @@
 import { UserCredentials, RegisterData } from './types.js';
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
+import { connectWebSocket, disconnectWebSocket } from './ws.js';
 
 export async function login(credentials: UserCredentials): Promise<boolean> {
   try {
@@ -15,6 +16,8 @@ export async function login(credentials: UserCredentials): Promise<boolean> {
     if (res.ok) {
       localStorage.setItem('authToken', data.token);
       clearInputs('username', 'password');
+      // Initialize WebSocket connection with the token
+      connectWebSocket(data.token);
       
       // Redirect to dashboard using router
       router.navigate('/dashboard'); // Use router instead of direct page call
@@ -59,6 +62,7 @@ export async function register(data: RegisterData): Promise<boolean> {
 }
 
 export function logout(): void {
+  disconnectWebSocket();
   localStorage.removeItem('authToken');
   router.navigate('/login');
 }
