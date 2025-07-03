@@ -14,12 +14,14 @@ export function connectWebSocket(token) {
             console.error('Token de autenticação não fornecido.');
             return;
         }
-        //const userId = 'user123'; // Usa o ID do utilizador autenticado
-        const socket = new WebSocket(`ws://localhost:3000/users/ws?token=${token}`);
+        // Remove o "const" para usar a variável global
+        socket = new WebSocket(`ws://localhost:3000/users/ws?token=${token}`);
         socket.onopen = () => {
             console.log('Connected to WebSocket');
-            // Enviar mensagens se quiseres
-            socket.send('Hello from client');
+            if (socket) {
+                // Envia uma mensagem de teste ao conectar
+                socket.send('Hello from client');
+            }
         };
         socket.onmessage = (event) => {
             console.log('Message from server:', event.data);
@@ -34,11 +36,10 @@ export function connectWebSocket(token) {
 }
 export function disconnectWebSocket() {
     return __awaiter(this, void 0, void 0, function* () {
-        // Aqui podes implementar a lógica para fechar a conexão WebSocket
-        // Exemplo:
         if (socket) {
             socket.close();
             console.log('WebSocket connection closed');
+            socket = null; // Limpa a referência
         }
         else {
             console.log('WebSocket is not open or already closed');

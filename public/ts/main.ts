@@ -1,7 +1,8 @@
 import { login, register, logout, isAuthenticated } from './auth.js';
-import { updateProfile, searchUsers, addFriend } from './profile.js';
+import { updateProfile, searchUsers} from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
 import { router } from './router.js';
+import { connectWebSocket } from './ws.js';
 
 // Setup routes
 function setupRoutes(): void {
@@ -226,11 +227,14 @@ window.onload = (): void => {
     setupRoutes();
     setupEventListeners();
     checkAuthAndRedirect();
+    if (isAuthenticated()) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            connectWebSocket(token);
+        }
+    }
 
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //     initWebSocket(token);
-    // }
+    
 };
 
 // Export router for external use if needed

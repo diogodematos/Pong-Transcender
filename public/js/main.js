@@ -11,6 +11,7 @@ import { login, register, logout, isAuthenticated } from './auth.js';
 import { updateProfile, searchUsers } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
 import { router } from './router.js';
+import { connectWebSocket } from './ws.js';
 // Setup routes
 function setupRoutes() {
     // Default route - check authentication
@@ -219,10 +220,12 @@ window.onload = () => {
     setupRoutes();
     setupEventListeners();
     checkAuthAndRedirect();
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //     initWebSocket(token);
-    // }
+    if (isAuthenticated()) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            connectWebSocket(token);
+        }
+    }
 };
 // Export router for external use if needed
 export { router };
