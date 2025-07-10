@@ -1,19 +1,23 @@
-import { getDashboard, getFriendsForProfile, getProfile} from "./profile.js";
+import { getTranslation } from './translations.js';
+import { getDashboard, getFriendsForProfile, getProfile, getProfileByID } from "./profile.js";
 
 export function showLoginPage(): void {
     togglePages('loginPage');
     hideNavigation();
+    updatePageTranslations('loginPage');
 }
 
 export function showRegisterPage(): void {
     togglePages('registerPage');
     hideNavigation();
+    updatePageTranslations('registerPage');
 }
 
 export function showDashboardPage(): void {
     getDashboard();
     togglePages('dashboardPage');
     showNavigation();
+    updatePageTranslations('dashboardPage');
 }
 
 export function showProfilePage(): void {
@@ -21,21 +25,26 @@ export function showProfilePage(): void {
     getFriendsForProfile();
     togglePages('profilePage');
     showNavigation();
+    updatePageTranslations('profilePage');
 }
 
 export function showEditProfilePage(): void {
     togglePages('editProfilePage');
     showNavigation();
+    updatePageTranslations('editProfilePage');
 }
 
-export function showProfilePageByID(): void {
+export function showProfilePageByID(id: string): void {
     togglePages('profilePageByID');
     showNavigation();
+    getProfileByID(id);
+    updatePageTranslations('profilePageByID');
 }
 
 export function showGamePage(): void {
     togglePages('gamePage');
     showNavigation();
+    updatePageTranslations('gamePage');
     // Initialize game if needed
     initializeGame();
 }
@@ -69,6 +78,7 @@ function showNavigation(): void {
     const nav = document.getElementById('mainNavigation');
     if (nav) {
         nav.classList.remove('hidden');
+        console.log('Navigation bar shown'); // Debug log
     }
 }
 
@@ -76,6 +86,7 @@ function hideNavigation(): void {
     const nav = document.getElementById('mainNavigation');
     if (nav) {
         nav.classList.add('hidden');
+        console.log('Navigation bar hidden'); // Debug log
     }
 }
 
@@ -94,14 +105,24 @@ function resetAvatarPreview(inputId: string): void {
 }
 
 function initializeGame(): void {
-    // Initialize your pong game here
-    console.log('Initializing Pong Game...');
-    // You can add your pong game logic here
-    
-    // Example: Get canvas and start game
+    console.log('Initializing Pong Game...'); // Debug log
     const canvas = document.getElementById('pongCanvas') as HTMLCanvasElement;
     if (canvas) {
-        // Initialize your game logic here
-        console.log('Canvas ready for Pong game');
+        console.log('Canvas ready for Pong game'); // Debug log
     }
+}
+
+function updatePageTranslations(pageId: string): void {
+    const elements = document.querySelectorAll(`#${pageId} [data-i18n]`);
+    elements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (key) {
+            const translation = getTranslation(key);
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                (element as HTMLInputElement).placeholder = translation;
+            } else {
+                element.textContent = translation;
+            }
+        }
+    });
 }

@@ -1,17 +1,20 @@
 import { login, register, logout, isAuthenticated } from './auth.js';
-import { updateProfile, searchUsers} from './profile.js';
+import { updateProfile, searchUsers } from './profile.js';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showProfilePageByID } from './pages.js';
-import { router } from './router.js';
+import { router, RouteParams } from './router.js';
 import { connectWebSocket } from './ws.js';
+import { initializeLanguage, setLanguage, getTranslation, Language } from './translations.js';
+
+// Make router globally accessible
+(window as any).router = router;
 
 // Setup routes
 function setupRoutes(): void {
-    // Default route - check authentication
+    console.log('Setting up routes'); // Debug log
     router.addRoute('/', () => {
         checkAuthAndRedirect();
     });
 
-    // Login page
     router.addRoute('/login', () => {
         if (isAuthenticated()) {
             router.navigate('/dashboard');
@@ -20,7 +23,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Register page
     router.addRoute('/register', () => {
         if (isAuthenticated()) {
             router.navigate('/dashboard');
@@ -29,7 +31,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Dashboard page
     router.addRoute('/dashboard', () => {
         if (isAuthenticated()) {
             showDashboardPage();
@@ -38,7 +39,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Profile page (requires auth)
     router.addRoute('/profile', () => {
         if (isAuthenticated()) {
             showProfilePage();
@@ -47,17 +47,20 @@ function setupRoutes(): void {
         }
     });
 
-    // Profile page by ID (requires auth)
-    router.addRoute('/profile/:id', () => {
+    router.addRoute('/profile/:id', (params?: RouteParams) => {
         if (isAuthenticated()) {
-            // Here you would typically fetch the profile by ID and display it
-            showProfilePageByID();
+            if (params && params.id) {
+                console.log('Navigating to profile with ID:', params.id); // Debug log
+                showProfilePageByID(params.id);
+            } else {
+                console.warn('No ID provided for profile route, redirecting to /profile'); // Debug log
+                router.navigate('/profile');
+            }
         } else {
             router.navigate('/login');
         }
     });
-    
-    // Edit profile page (requires auth)
+
     router.addRoute('/edit-profile', () => {
         if (isAuthenticated()) {
             showEditProfilePage();
@@ -66,7 +69,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Game page (requires auth)
     router.addRoute('/game', () => {
         if (isAuthenticated()) {
             showGamePage();
@@ -77,6 +79,7 @@ function setupRoutes(): void {
 }
 
 function checkAuthAndRedirect(): void {
+    console.log('Checking auth and redirecting'); // Debug log
     if (isAuthenticated()) {
         router.navigate('/dashboard');
     } else {
@@ -86,6 +89,7 @@ function checkAuthAndRedirect(): void {
 
 // Event listeners
 function setupEventListeners(): void {
+    console.log('Setting up event listeners'); // Debug log
     // Login form
     document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -93,7 +97,6 @@ function setupEventListeners(): void {
             username: (document.getElementById('username') as HTMLInputElement).value,
             password: (document.getElementById('password') as HTMLInputElement).value
         });
-        // Login function now handles navigation via router
     });
 
     // Register form
@@ -106,7 +109,6 @@ function setupEventListeners(): void {
             email: (document.getElementById('registerEmail') as HTMLInputElement).value,
             avatar: fileInput?.files?.[0],
         });
-        // Register function handles success modal
     });
 
     // Navigation buttons
@@ -115,10 +117,6 @@ function setupEventListeners(): void {
     });
 
     document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
-        router.navigate('/login');
-    });
-
-    document.getElementById('goToLoginButton')?.addEventListener('click', () => {
         router.navigate('/login');
         document.getElementById('registerSuccessModal')?.classList.add('hidden');
     });
@@ -136,23 +134,22 @@ function setupEventListeners(): void {
         router.navigate('/game');
     });
 
-    // Event listener para pesquisa de amigos
+    // Search friends
     document.getElementById('searchFriendsInput')?.addEventListener('input', (e) => {
         const target = e.target as HTMLInputElement;
         console.log("Pesquisa:", target.value);
         searchUsers(target.value);
     });
 
-    // Event listener para o botão adicionar amigo (opcional)
     document.getElementById('addFriendButton')?.addEventListener('click', () => {
         const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
         if (searchInput) {
             searchInput.focus();
-            alert('Digite o nome do utilizador no campo de pesquisa acima.');
+            alert(getTranslation('profile_add_friend')); // Use translation
         }
     });
 
-    // Navigation bar buttons (for authenticated users)
+    // Navigation bar buttons
     document.querySelector('[data-route="/dashboard"]')?.addEventListener('click', () => {
         router.navigate('/dashboard');
     });
@@ -164,8 +161,6 @@ function setupEventListeners(): void {
     document.querySelector('[data-route="/profile"]')?.addEventListener('click', () => {
         router.navigate('/profile');
     });
-
-    //document.querySelector('[data-route')
 
     document.getElementById('navLogoutButton')?.addEventListener('click', () => {
         logout();
@@ -180,7 +175,6 @@ function setupEventListeners(): void {
             newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
             newAvatar: fileInput?.files?.[0],
         });
-        // updateProfile function handles navigation on success
     });
 
     document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
@@ -196,6 +190,15 @@ function setupEventListeners(): void {
     // Avatar preview handlers
     document.getElementById('registerAvatar')?.addEventListener('change', handleAvatarPreview);
     document.getElementById('newAvatar')?.addEventListener('change', handleAvatarPreviewUpdate);
+
+    // Language switcher
+    const languageSwitcher = document.getElementById('languageSwitcher');
+    if (languageSwitcher) {
+        languageSwitcher.addEventListener('change', (e) => {
+            const lang = (e.target as HTMLSelectElement).value as Language;
+            setLanguage(lang);
+        });
+    }
 }
 
 function handleAvatarPreview(event: Event): void {
@@ -236,6 +239,8 @@ function handleAvatarPreviewUpdate(event: Event): void {
 
 // Initialize application
 window.onload = (): void => {
+    console.log('Initializing application'); // Debug log
+    initializeLanguage();
     setupRoutes();
     setupEventListeners();
     checkAuthAndRedirect();
@@ -245,40 +250,7 @@ window.onload = (): void => {
             connectWebSocket(token);
         }
     }
-
-    
 };
 
-// Export router for external use if needed
+// Export router for external use
 export { router };
-
-// Google login
-// function initGoogleSignIn() {
-//   google.accounts.id.initialize({
-//     client_id: "188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com",
-//     callback: handleGoogleLogin,
-//   });
-
-//   google.accounts.id.renderButton(
-//     document.getElementById("googleSignInButton"),
-//     { theme: "outline", size: "large" }
-//   );
-// }
-
-// function handleGoogleLogin(response: google.accounts.id.CredentialResponse) {
-//   fetch('/users/google-login', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ idToken: response.credential }),
-//   })
-//     .then(res => res.json())
-//     .then(data => {
-//       if (data.token) {
-//         localStorage.setItem('authToken', data.token);
-//         getProfile();
-//       } else {
-//         alert('Erro com login do Google');
-//       }
-//     })
-//     .catch(() => alert('Erro ao autenticar com Google.'));
-// }

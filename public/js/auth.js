@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
 import { connectWebSocket, disconnectWebSocket } from './ws.js';
+import { getTranslation } from './translations.js';
 export function login(credentials) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -22,10 +23,8 @@ export function login(credentials) {
             if (res.ok) {
                 localStorage.setItem('authToken', data.token);
                 clearInputs('username', 'password');
-                // Initialize WebSocket connection with the token
                 connectWebSocket(data.token);
-                // Redirect to dashboard using router
-                router.navigate('/dashboard'); // Use router instead of direct page call
+                router.navigate('/dashboard');
                 return true;
             }
             else {
@@ -34,7 +33,7 @@ export function login(credentials) {
             }
         }
         catch (_a) {
-            displayError('loginResponseMessage', 'Erro ao conectar com o servidor.');
+            displayError('loginResponseMessage', getTranslation('login_error_server'));
             return false;
         }
     });
@@ -64,7 +63,7 @@ export function register(data) {
             }
         }
         catch (_a) {
-            displayError('registerResponseMessage', 'Erro ao conectar com o servidor.');
+            displayError('registerResponseMessage', getTranslation('login_error_server'));
             return false;
         }
     });
@@ -74,7 +73,6 @@ export function logout() {
     localStorage.removeItem('authToken');
     router.navigate('/login');
 }
-// Check if user is authenticated
 export function isAuthenticated() {
     return localStorage.getItem('authToken') !== null;
 }

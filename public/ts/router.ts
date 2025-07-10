@@ -1,95 +1,59 @@
-// router.ts
-export class Router {
-  private routes: Map<string, () => void> = new Map();
-  private currentRoute: string = '';
-
-  constructor() {
-      // Listen for browser navigation (back/forward buttons)
-      window.addEventListener('popstate', (event) => {
-          const route = event.state?.route || this.getRouteFromHash();
-          this.navigateToRoute(route, false); // false = don't push to history again
-      });
-
-      // Handle initial page load
-      this.handleInitialRoute();
-  }
-
-  // Register a route with its handler function
-  addRoute(path: string, handler: () => void): void {
-      this.routes.set(path, handler);
-  }
-
-  // Navigate to a route programmatically
-  navigate(path: string): void {
-      this.navigateToRoute(path, true); // true = push to browser history
-  }
-
-  // Get current route
-  getCurrentRoute(): string {
-      return this.currentRoute;
-  }
-
-  private navigateToRoute(path: string, pushToHistory: boolean): void {
-      const handler = this.routes.get(path);
-      
-      if (!handler) {
-          console.warn(`Route not found: ${path}`);
-          // Default to login if route not found
-          const loginHandler = this.routes.get('/login');
-          if (loginHandler) {
-              this.currentRoute = '/login';
-              if (pushToHistory) {
-                  this.updateBrowserHistory('/login');
-              }
-              loginHandler();
-          }
-          return;
-      }
-
-      this.currentRoute = path;
-
-      // Update browser history if needed
-      if (pushToHistory) {
-          this.updateBrowserHistory(path);
-      }
-
-      // Execute the route handler
-      handler();
-  }
-
-  private updateBrowserHistory(path: string): void {
-      const url = path === '/' ? '/' : `#${path}`;
-      window.history.pushState({ route: path }, '', url);
-      
-      // Update document title based on route
-      this.updateDocumentTitle(path);
-  }
-
-  private updateDocumentTitle(path: string): void {
-      const titles: { [key: string]: string } = {
-          '/': 'Pong Game',
-          '/login': 'Login - Pong Game',
-          '/register': 'Register - Pong Game', 
-          '/profile': 'Profile - Pong Game',
-          '/edit-profile': 'Edit Profile - Pong Game',
-          '/game': 'Play Pong - Pong Game',
-          '/dashboard': 'Dashboard - Pong Game'
-      };
-      
-      document.title = titles[path] || 'Pong Game';
-  }
-
-  private getRouteFromHash(): string {
-      const hash = window.location.hash.slice(1);
-      return hash || '/';
-  }
-
-  private handleInitialRoute(): void {
-      // Get route from URL hash or default to '/'
-      const route = this.getRouteFromHash();
-      this.navigateToRoute(route, false);
-  }
+export interface RouteParams {
+  [key: string]: string;
 }
 
-// Create global router instance
-export const router = new Router();
+export interface Router {
+  routes: Map<string, (params?: RouteParams) => void>;
+  addRoute(path: string, callback: (params?: RouteParams) => void): void;
+  navigate(path: string): void;
+  getCurrentRoute(): string;
+  navigateToRoute(path: string, pushState?: boolean): void;
+}
+
+export const router: Router = {
+  routes: new Map<string, (params?: RouteParams) => void>(),
+
+  addRoute(path: string, callback: (params?: RouteParams) => void) {
+    console.log(`Adding route: ${path}`); // Debug log
+    this.routes.set(path, callback);
+  },
+
+  navigate(path: string) {
+    console.log(`Navigating to: ${path}`); // Debug log
+    const pathWithoutHash = path.startsWith('#') ? path.slice(1) : path;
+    const match = Array.from(this.routes.keys()).find(key => {
+      const regex = new RegExp('^' + key.replace(/:([^/]+)/g, '(?<$1>[^/]+)') + '$');
+      return regex.test(pathWithoutHash);
+    });
+    if (match) {
+      const regex = new RegExp('^' + match.replace(/:([^/]+)/g, '(?<$1>[^/]+)') + '$');
+      const result = pathWithoutHash.match(regex);
+      const params = result?.groups || {};
+      console.log('Route params:', params); // Debug log
+      this.routes.get(match)!(params);
+    } else {
+      console.warn(`No route found for: ${pathWithoutHash}`); // Debug log
+      this.routes.get('/')?.();
+    }
+  },
+
+  getCurrentRoute(): string {
+    const path = window.location.hash.slice(1) || '/';
+    console.log('Current route:', path); // Debug log
+    return path;
+  },
+
+  navigateToRoute(path: string, pushState: boolean = true) {
+    console.log(`Navigating to route: ${path}, pushState: ${pushState}`); // Debug log
+    if (pushState) {
+      window.history.pushState({}, '', '#' + path);
+    }
+    this.navigate(path);
+  }
+};
+
+// Handle browser navigation (back/forward)
+window.addEventListener('popstate', () => {
+  console.log('Popstate event triggered'); // Debug log
+  router.navigate(window.location.hash);
+});

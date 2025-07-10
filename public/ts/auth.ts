@@ -2,6 +2,7 @@ import { UserCredentials, RegisterData } from './types.js';
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
 import { connectWebSocket, disconnectWebSocket } from './ws.js';
+import { getTranslation } from './translations.js';
 
 export async function login(credentials: UserCredentials): Promise<boolean> {
   try {
@@ -16,18 +17,15 @@ export async function login(credentials: UserCredentials): Promise<boolean> {
     if (res.ok) {
       localStorage.setItem('authToken', data.token);
       clearInputs('username', 'password');
-      // Initialize WebSocket connection with the token
       connectWebSocket(data.token);
-      
-      // Redirect to dashboard using router
-      router.navigate('/dashboard'); // Use router instead of direct page call
+      router.navigate('/dashboard');
       return true;
     } else {
       displayError('loginResponseMessage', data.error);
       return false;
     }
   } catch {
-    displayError('loginResponseMessage', 'Erro ao conectar com o servidor.');
+    displayError('loginResponseMessage', getTranslation('login_error_server'));
     return false;
   }
 }
@@ -56,7 +54,7 @@ export async function register(data: RegisterData): Promise<boolean> {
       return false;
     }
   } catch {
-    displayError('registerResponseMessage', 'Erro ao conectar com o servidor.');
+    displayError('registerResponseMessage', getTranslation('login_error_server'));
     return false;
   }
 }
@@ -67,7 +65,6 @@ export function logout(): void {
   router.navigate('/login');
 }
 
-// Check if user is authenticated
 export function isAuthenticated(): boolean {
   return localStorage.getItem('authToken') !== null;
 }
