@@ -155,8 +155,9 @@ function showSearchResults(users) {
                        alt="Avatar" 
                        class="w-8 h-8 rounded-full mr-2">
                   <div>
-                      <span class="text-sm font-medium">${user.username}</span>
-                      <p class="text-xs text-gray-500">${user.email}</p>
+                      <a href="#/profile/${user.id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${user.username}
+                      </a>
                   </div>
               </div>
               ${user.is_friend ?
@@ -197,11 +198,7 @@ export function addFriend(friendId) {
                 // Refresh da lista de amigos
                 getFriendsForProfile();
                 // Limpar pesquisa
-                const searchInput = document.getElementById('searchFriendsInput');
-                if (searchInput) {
-                    searchInput.value = '';
-                    hideSearchResults();
-                }
+                clearInputs('searchFriendsInput');
             }
             else {
                 const data = yield res.json();
@@ -311,6 +308,8 @@ window.challengeFriend = (friendId) => {
 //////  TESTE FIM
 export function getProfile() {
     return __awaiter(this, void 0, void 0, function* () {
+        hideSearchResults(); // Esconder resultados de pesquisa ao carregar perfil
+        clearInputs('searchFriendsInput'); // Limpar campo de pesquisa de amigos
         const token = localStorage.getItem('authToken');
         if (!token) {
             router.navigate('/login');

@@ -1,8 +1,10 @@
 import { Profile, UpdateProfileData, GameHistoryResponse, FriendsResponse, GameHistoryItem, Friend } from './types.js';
 import { clearInputs } from './pages.js';
 import { router } from './router.js';
+import { clear } from 'console';
 
 export async function getDashboard() {
+  
   const token = localStorage.getItem('authToken');
   if (!token) {
     router.navigate('/login');
@@ -150,8 +152,9 @@ function showSearchResults(users: any[]): void {
                        alt="Avatar" 
                        class="w-8 h-8 rounded-full mr-2">
                   <div>
-                      <span class="text-sm font-medium">${user.username}</span>
-                      <p class="text-xs text-gray-500">${user.email}</p>
+                      <a href="#/profile/${user.id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${user.username}
+                      </a>
                   </div>
               </div>
               ${user.is_friend ? 
@@ -196,11 +199,7 @@ export async function addFriend(friendId: number): Promise<void> {
           // Refresh da lista de amigos
           getFriendsForProfile();
           // Limpar pesquisa
-          const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
-          if (searchInput) {
-              searchInput.value = '';
-              hideSearchResults();
-          }
+          clearInputs('searchFriendsInput');
       } else {
           const data = await res.json();
           alert(data.error || 'Erro ao adicionar amigo.');
@@ -318,6 +317,9 @@ function formatLastSeen(lastSeen?: string): string {
 //////  TESTE FIM
 
 export async function getProfile(): Promise<void> {
+  hideSearchResults(); // Esconder resultados de pesquisa ao carregar perfil
+  clearInputs('searchFriendsInput'); // Limpar campo de pesquisa de amigos
+
   const token = localStorage.getItem('authToken');
   if (!token) {
     router.navigate('/login');

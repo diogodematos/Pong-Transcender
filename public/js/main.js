@@ -152,6 +152,7 @@ function setupEventListeners() {
     (_o = document.querySelector('[data-route="/profile"]')) === null || _o === void 0 ? void 0 : _o.addEventListener('click', () => {
         router.navigate('/profile');
     });
+    //document.querySelector('[data-route')
     (_p = document.getElementById('navLogoutButton')) === null || _p === void 0 ? void 0 : _p.addEventListener('click', () => {
         logout();
     });

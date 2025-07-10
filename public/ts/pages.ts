@@ -28,6 +28,11 @@ export function showEditProfilePage(): void {
     showNavigation();
 }
 
+export function showProfilePageByID(): void {
+    togglePages('profilePageByID');
+    showNavigation();
+}
+
 export function showGamePage(): void {
     togglePages('gamePage');
     showNavigation();
@@ -51,7 +56,7 @@ export function clearInputs(...ids: string[]): void {
 }
 
 function togglePages(visiblePageId: string): void {
-    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage'];
+    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage', 'profilePageByID'];
     pages.forEach(page => {
         const el = document.getElementById(page);
         if (el) {

@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users(
     email TEXT NOT NULL UNIQUE,
     avatar TEXT,
     wins INTEGER DEFAULT 0,
-    losses INTEGER DEFAULT 0
+    losses INTEGER DEFAULT 0,
+    nick TEXT DEFAULT ''
 )`;
 
 const createFriends = `
@@ -38,8 +39,23 @@ CREATE TABLE IF NOT EXISTS games (
     FOREIGN KEY(winner_id) REFERENCES users(id)
 )`;
 
+const createTournaments = `
+CREATE TABLE IF NOT EXISTS tournaments (
+    id INTEGER PRIMARY KEY,
+    game1_id INTEGER NOT NULL,
+    game2_id INTEGER NOT NULL,
+    game3_id INTEGER NOT NULL,
+    winner_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(game1_id) REFERENCES games(id),
+    FOREIGN KEY(game2_id) REFERENCES games(id),
+    FOREIGN KEY(game3_id) REFERENCES games(id),
+    FOREIGN KEY(winner_id) REFERENCES users(id)
+)`;
+
 db.exec(createUsers);
 db.exec(createFriends);
 db.exec(createGames);
+db.exec(createTournaments);
 
 export default db;

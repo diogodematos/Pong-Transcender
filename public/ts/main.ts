@@ -1,6 +1,6 @@
 import { login, register, logout, isAuthenticated } from './auth.js';
 import { updateProfile, searchUsers} from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.js';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showProfilePageByID } from './pages.js';
 import { router } from './router.js';
 import { connectWebSocket } from './ws.js';
 
@@ -42,6 +42,16 @@ function setupRoutes(): void {
     router.addRoute('/profile', () => {
         if (isAuthenticated()) {
             showProfilePage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+    // Profile page by ID (requires auth)
+    router.addRoute('/profile/:id', () => {
+        if (isAuthenticated()) {
+            // Here you would typically fetch the profile by ID and display it
+            showProfilePageByID();
         } else {
             router.navigate('/login');
         }
@@ -154,6 +164,8 @@ function setupEventListeners(): void {
     document.querySelector('[data-route="/profile"]')?.addEventListener('click', () => {
         router.navigate('/profile');
     });
+
+    //document.querySelector('[data-route')
 
     document.getElementById('navLogoutButton')?.addEventListener('click', () => {
         logout();
