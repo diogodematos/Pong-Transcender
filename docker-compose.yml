@@ -22,8 +22,6 @@ services:
     build:
       context: ./src/backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
     volumes:
       - ./src/backend:/app
       - /app/node_modules
@@ -34,12 +32,13 @@ services:
       - PORT=8000
       - DATABASE_URL=sqlite:./data/app.db
       - CORS_ORIGIN=https://localhost,http://localhost
+      - JWT_SECRET=sua_secret_jwt_muito_segura_aqui_1234567890abcdef 
     depends_on:
       database:
         condition: service_started
       blockchain:
         condition: service_started
-    healthcheck: # <-- ADICIONADO: Healthcheck para o Backend
+    healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"] # Testa o endpoint /health
       interval: 10s # Verifica a cada 10 segundos
       timeout: 5s   # Tempo limite para a verificação
@@ -95,8 +94,8 @@ services:
     depends_on:
       frontend:
         condition: service_started
-      backend: # <-- ALTERADO: Agora depende do healthcheck do backend
-        condition: service_healthy # <-- Garante que o backend está pronto antes do Nginx
+      backend:
+        condition: service_healthy
     networks:
       - pong-network
     restart: unless-stopped

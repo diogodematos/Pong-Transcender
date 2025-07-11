@@ -10,13 +10,13 @@ export default defineConfig({
     proxy: {
       // Proxy para API do backend
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        target: 'http://backend:8000',
         changeOrigin: true,
         secure: false,
       },
       // Proxy para uploads
       '/uploads': {
-        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        target: 'http://backend:8000',
         changeOrigin: true,
         secure: false,
       }

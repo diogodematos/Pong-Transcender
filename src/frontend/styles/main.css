@@ -59,3 +59,84 @@
 .text-glow {
   animation: glow 2s ease-in-out infinite alternate;
 }
+
+/*div */
+body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      font-family: 'Orbitron', monospace;
+      color: white;
+      overflow: hidden;
+    }
+
+    #renderCanvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    #score-display {
+      position: absolute;
+      top: 50px;
+      width: 100%;
+      text-align: center;
+      font-size: 48px;
+      font-weight: bold;
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    #player-score {
+      color: #7DF9FF;
+      position: absolute;
+      left: 45%;
+    }
+
+    #computer-score {
+      color: #FF073A;
+      position: absolute;
+      right: 45%;
+    }
+
+    #controls {
+      position: absolute;
+      top: 3%;
+      right: 80%;
+      pointer-events: auto;
+    }
+
+    .difficulty-btn {
+      margin: 0 3px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #7DF9FF;
+      color: #7DF9FF;
+      font-family: 'Orbitron', monospace;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .difficulty-btn:hover {
+      background: rgba(125, 249, 255, 0.2);
+      box-shadow: 0 0 20px #7DF9FF;
+    }
+
+    #instructions {
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: 16px;
+      opacity: 0.8;
+    }

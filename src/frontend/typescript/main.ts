@@ -1,176 +1,291 @@
-declare namespace google {
-  namespace accounts {
-    namespace id {
-      interface CredentialResponse {
-        credential: string;
-        select_by: string;
-      }
-      function initialize(config: any): void;
-      function renderButton(element: HTMLElement | null, options: any): void;
-      function prompt(): void;
-      function revoke(args: any, callback: any): void;
-    }
-  }
+import { login, register, logout, isAuthenticated } from './auth.ts';
+import { updateProfile, searchUsers, addFriend } from './profile.ts';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.ts';
+import { router } from './router.ts';
+import { connectWebSocket } from './ws.ts'; // Conexão WebSocket para o frontend
+import { startGame3D } from './3d.ts';  
+
+// Setup routes
+function setupRoutes(): void {
+    // Default route - check authentication
+    router.addRoute('/', () => {
+        checkAuthAndRedirect();
+    });
+
+    // Login page
+    router.addRoute('/login', () => {
+        if (isAuthenticated()) {
+            router.navigate('/dashboard');
+        } else {
+            showLoginPage();
+        }
+    });
+
+    // Register page
+    router.addRoute('/register', () => {
+        if (isAuthenticated()) {
+            router.navigate('/dashboard');
+        } else {
+            showRegisterPage();
+        }
+    });
+
+    // Dashboard page
+    router.addRoute('/dashboard', () => {
+        if (isAuthenticated()) {
+            showDashboardPage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+    // Profile page (requires auth)
+    router.addRoute('/profile', () => {
+        if (isAuthenticated()) {
+            showProfilePage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+    
+    // Edit profile page (requires auth)
+    router.addRoute('/edit-profile', () => {
+        if (isAuthenticated()) {
+            showEditProfilePage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+    // Game page (requires auth)
+    router.addRoute('/game', () => {
+        if (isAuthenticated()) {
+            //showGamePage();
+            startGame3D();
+        } else {
+            router.navigate('/login');
+        }
+    });
 }
 
-import { login, register } from './auth.js';
-import { getProfile, updateProfile } from './profile.js';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage } from './pages.js';
+function checkAuthAndRedirect(): void {
+    if (isAuthenticated()) {
+        router.navigate('/dashboard');
+    } else {
+        router.navigate('/login');
+    }
+}
 
-
-// Adiciona ouvintes de eventos
-window.onload = () => {
-  checkAuth();
-  // Inicializa o Google Sign-In
-  initGoogleSignIn(); 
-
-  document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    login({
-      username: (document.getElementById('username') as HTMLInputElement).value,
-      password: (document.getElementById('password') as HTMLInputElement).value
+// Event listeners
+function setupEventListeners(): void {
+    // Login form
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const success = await login({
+            username: (document.getElementById('username') as HTMLInputElement).value,
+            password: (document.getElementById('password') as HTMLInputElement).value
+        });
+        // Login function now handles navigation via router and WebSocket connection
     });
-  });
 
-  document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
-    showRegisterPage();
-    clearInputs('username', 'password');
-  });
+    // Register form
+    document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
+        const success = await register({
+            username: (document.getElementById('registerUsername') as HTMLInputElement).value,
+            password: (document.getElementById('registerPassword') as HTMLInputElement).value,
+            email: (document.getElementById('registerEmail') as HTMLInputElement).value,
+            avatar: fileInput?.files?.[0],
+        });
+        // Register function handles success modal and navigation
+    });
 
-  document.getElementById('registerAvatar')?.addEventListener('change', function(event: Event) {
+    // Game buttons (mantidos, mas pode refatorar para um módulo de jogo)
+    document.getElementById('startOneVsOneButton')?.addEventListener('click', () => {
+        console.log('Botão "Duel" clicado!');
+        router.navigate('/game');
+    });
+
+    document.getElementById('startTournamentButton')?.addEventListener('click', () => {
+        console.log('Botão "League" clicado!');
+        router.navigate('/game');
+    });
+
+    document.getElementById('startVsComputerButton')?.addEventListener('click', () => {
+        console.log('Botão "IA Battle" clicado!');
+        router.navigate('/game');
+    });
+
+    // Navigation buttons
+    document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
+        router.navigate('/register');
+    });
+
+    document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
+        router.navigate('/login');
+    });
+
+    document.getElementById('goToLoginButton')?.addEventListener('click', () => {
+        router.navigate('/login');
+        document.getElementById('registerSuccessModal')?.classList.add('hidden');
+    });
+
+    // Profile actions
+    document.getElementById('goToDashboard')?.addEventListener('click', () => {
+        router.navigate('/dashboard');
+    });
+
+    document.getElementById('editProfileButton')?.addEventListener('click', () => {
+        router.navigate('/edit-profile');
+    });
+
+    document.getElementById('playGameButton')?.addEventListener('click', () => {
+        router.navigate('/game');
+    });
+
+    // Event listener para pesquisa de amigos
+    document.getElementById('searchFriendsInput')?.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement;
+        console.log("Pesquisa:", target.value);
+        searchUsers(target.value);
+    });
+
+    // Event listener para o botão adicionar amigo (opcional)
+    document.getElementById('addFriendButton')?.addEventListener('click', () => {
+        const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
+        if (searchInput) {
+            // Este botão precisaria de saber o ID do amigo para adicionar.
+            // Provavelmente você chamaria addFriend(friendId) com o ID obtido da pesquisa.
+            alert('Digite o nome do utilizador no campo de pesquisa e selecione um para adicionar.');
+        }
+    });
+
+    // Navigation bar buttons (for authenticated users)
+    document.querySelector('[data-route="/dashboard"]')?.addEventListener('click', () => {
+        router.navigate('/dashboard');
+    });
+
+    document.querySelector('[data-route="/game"]')?.addEventListener('click', () => {
+        router.navigate('/game');
+    });
+
+    document.querySelector('[data-route="/profile"]')?.addEventListener('click', () => {
+        router.navigate('/profile');
+    });
+
+    document.getElementById('navLogoutButton')?.addEventListener('click', () => {
+        logout();
+    });
+
+    // Edit profile actions
+    document.getElementById('saveProfileChangesButton')?.addEventListener('click', async () => {
+        const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
+        const success = await updateProfile({
+            newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
+            newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
+            newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
+            newAvatar: fileInput?.files?.[0],
+        });
+    });
+
+    document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
+        router.navigate('/profile');
+        clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+    });
+    document.getElementById('backToProfileButton')?.addEventListener('click', () => {
+        router.navigate('/profile');
+    });
+    document.getElementById('registerAvatar')?.addEventListener('change', handleAvatarPreview);
+    document.getElementById('newAvatar')?.addEventListener('change', handleAvatarPreviewUpdate);
+}
+
+function handleAvatarPreview(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files ? target.files[0] : null;
     const preview = document.getElementById('avatarImage') as HTMLImageElement;
-
+    
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function(e: ProgressEvent<FileReader>) {
-            preview.src = e.target?.result as string;
+            if (preview && e.target?.result) {
+                preview.src = e.target.result as string;
+            }
         };
         reader.readAsDataURL(file);
-    } else {
+    } else if (preview) {
         preview.src = '/img/default-avatar.jpg';
     }
-  });
+}
 
-    document.getElementById('newAvatar')?.addEventListener('change', function(event: Event) {
+function handleAvatarPreviewUpdate(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files ? target.files[0] : null;
     const preview = document.getElementById('avatarImageUpdate') as HTMLImageElement;
-
+    
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function(e: ProgressEvent<FileReader>) {
-            preview.src = e.target?.result as string;
+            if (preview && e.target?.result) {
+                preview.src = e.target.result as string;
+            }
         };
         reader.readAsDataURL(file);
-    } else {
-        preview.src = ''; // Limpa a pré-visualização se o ficheiro não for uma imagem
+    } else if (preview) {
+        preview.src = '';
     }
-  });
-
-  document.getElementById('goToLoginButton')?.addEventListener('click', () => {
-    showLoginPage();
-    document.getElementById('registerSuccessModal')?.classList.add('hidden'); // Oculta o modal
-  });
-
-  document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
-    showLoginPage();
-    clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
-  });
-
-  document.getElementById('registerForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
-    register({
-      username: (document.getElementById('registerUsername') as HTMLInputElement).value,
-      password: (document.getElementById('registerPassword') as HTMLInputElement).value,
-      email: (document.getElementById('registerEmail') as HTMLInputElement).value,
-      avatar: fileInput?.files?.[0],
-    });
-  });
-  
-  document.getElementById('logoutButton')?.addEventListener('click', () => {
-    localStorage.removeItem('authToken');
-    showLoginPage();
-  });
-
-  document.getElementById('editProfileButton')?.addEventListener('click', showEditProfilePage);
-
-  document.getElementById('saveProfileChangesButton')?.addEventListener('click', () => {
-        const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
-    updateProfile({
-      newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
-      newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
-      newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,
-      newAvatar: fileInput?.files?.[0],
-    });
-  });
-
-  document.getElementById('cancelProfileChangesButton')?.addEventListener('click', () => {
-    showProfilePage();
-    clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
-  });
-
-};
-
-function checkAuth() {
-  const token = localStorage.getItem('authToken');
-  token ? showProfilePage() : showLoginPage();
 }
 
-// Google login
+window.onload = (): void => {
+    setupRoutes();
+    setupEventListeners();
+    router.handleInitialRoute();
+    if (isAuthenticated()) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            connectWebSocket(token);
+        }
+    }
+    checkAuthAndRedirect();
+};
+
+
+export { router };
+
+// Google login (mantido comentado como no seu código, mas com nota para o WebSocket)
+/*
 function initGoogleSignIn() {
   google.accounts.id.initialize({
-    client_id: "801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com", 
+    client_id: "188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com", // Seu client_id
     callback: handleGoogleLogin,
-    auto_select: false, // Define para false para desativar o "One-Tap" automático
   });
 
-  // Renderiza o botão de login do Google
   google.accounts.id.renderButton(
     document.getElementById("googleSignInButton"),
     { theme: "outline", size: "large" }
   );
-
-  // **NÃO** chame google.accounts.id.prompt() aqui se quiser evitar o pop-up automático
-  // Se quiser que o pop-up apareça em algum momento, chame-o dentro de um listener de evento, por exemplo.
 }
 
-function handleGoogleLogin(response: google.accounts.id.CredentialResponse) {
-  fetch('api/users/google-login', { // Certifique-se que o endpoint do backend está correto
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken: response.credential }),
-  })
-    .then(res => {
-        // Verifica se a resposta é OK (2xx) e se o conteúdo é JSON
-        if (!res.ok) {
-            // Se a resposta não for OK, tenta ler como texto ou JSON para depuração
-            return res.text().then(text => {
-                try {
-                    // Tenta fazer parse como JSON se parecer JSON
-                    const errorJson = JSON.parse(text);
-                    throw new Error(errorJson.message || 'Erro desconhecido do servidor.');
-                } catch {
-                    // Caso contrário, retorna o texto bruto
-                    throw new Error(`Erro do servidor: ${res.status} ${res.statusText} - ${text}`);
-                }
-            });
-        }
-        return res.json();
-    })
-    .then(data => {
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        getProfile(); // Carrega os dados do perfil após o login bem-sucedido
-        showProfilePage(); // Navega para a página de perfil após o login
-      } else {
-        alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos'));
-      }
-    })
-    .catch(error => {
-        console.error('Erro ao autenticar com Google:', error);
-        alert('Erro ao autenticar com Google. Verifique a consola para mais detalhes: ' + error.message);
+async function handleGoogleLogin(response: google.accounts.id.CredentialResponse) {
+  try {
+    const res = await fetch('/api/users/google-login', { // CORRIGIDO: Adicionado /api/users
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: response.credential }),
     });
+    const data = await res.json();
+
+    if (data.token) {
+      localStorage.setItem('authToken', data.token);
+      // Conectar WebSocket após login Google também
+      connectWebSocket(data.token); 
+      router.navigate('/dashboard'); // Redireciona para o dashboard após login bem-sucedido
+    } else {
+      alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos.'));
+    }
+  } catch (error) {
+    console.error('Erro ao autenticar com Google:', error);
+    alert('Erro ao autenticar com Google.');
+  }
 }
+*/

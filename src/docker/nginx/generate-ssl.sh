@@ -8,8 +8,8 @@ SSL_DOMAIN="${SSL_DOMAIN:-localhost}"
 # Ensure SSL directory exists
 mkdir -p "${SSL_DIR}"
 SSL_COUNTRY="${SSL_COUNTRY:-PT}"
-SSL_STATE="${SSL_STATE:-Lisboa}"
-SSL_CITY="${SSL_CITY:-Lisboa}"
+SSL_STATE="${SSL_STATE:-Porto}"
+SSL_CITY="${SSL_CITY:-Porto}"
 SSL_ORG="${SSL_ORG:-ft_transcendence}"
 SSL_OU="${SSL_OU:-Development}"
 
