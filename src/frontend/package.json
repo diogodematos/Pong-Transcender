@@ -13,6 +13,8 @@
     "axios": "^1.6.0"
   },
   "devDependencies": {
+    "@types/babylonjs": "^2.3.31",
+    "@types/google-one-tap": "^1.2.6",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

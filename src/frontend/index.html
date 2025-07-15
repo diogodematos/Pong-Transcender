@@ -8,7 +8,6 @@
 </head>
 <body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('assets/img/background.png'); background-size: cover; background-position: center;">
 
-    <!-- Navigation (visible when logged in) -->
     <nav id="mainNavigation" class="hidden bg-black bg-opacity-50 p-4">
         <div class="container mx-auto flex justify-between items-center">
             <div class="text-white font-bold text-xl">Pong Game</div>
@@ -26,7 +25,6 @@
 
     <div id="app" class="flex-1 flex items-center justify-center">
         
-        <!-- Login Page -->
         <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
                 <img src="assets/img/pokeball.png" alt="Pikachu" class="w-8 h-8 mr-2">
@@ -45,11 +43,23 @@
             </form>
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registe-se</button>
-        </div>
+
+            <div class="my-4 text-center text-gray-500">OR</div> <div id="g_id_onload"
+                 data-client_id="801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com"
+                 data-callback="handleGoogleLogin">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
+            </div>
 
         <div id="error-message"></div>
 
-        <!-- Register Page -->
         <div id="registerPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
                 <img src="/img/pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
@@ -80,7 +90,6 @@
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
             <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
         </div>
-        <!-- Dashboard Page -->
         <div id="dashboardPage" class="page">
             <div class="flex flex-col items-center justify-center min-h-screen p-8">
                 <h2 class="text-3xl font-bold text-gray-800 mb-8 bg-white p-4 rounded-xl shadow-md border border-gray-200 text-center">
@@ -110,25 +119,19 @@
             </div>
         </div>
 
-        <!-- Profile Page -->
         <div id="profilePage" class="hidden min-h-screen bg-gray-100 p-8">
             <div class="max-w-7xl mx-auto">
-                <!-- Título da página -->
                 <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Perfil do Jogador</h1>
                 
-                <!-- Layout de 3 colunas -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     
-                    <!-- Coluna Esquerda - Informações do Perfil -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Meu Perfil</h2>
                         
-                        <!-- Avatar -->
                         <div class="flex justify-center mb-4">
                             <img id="profileAvatar" src="assets/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-lg" />
                         </div>
                         
-                        <!-- Informações do usuário -->
                         <div class="space-y-3 mb-6">
                             <div class="bg-gray-50 p-3 rounded-lg">
                                 <p class="text-sm text-gray-600">Usuário</p>
@@ -140,7 +143,6 @@
                             </div>
                         </div>
                         
-                        <!-- Estatísticas -->
                         <div class="grid grid-cols-2 gap-4 mb-6">
                             <div class="bg-green-50 p-3 rounded-lg text-center border border-green-200">
                                 <p class="text-sm text-green-600">Vitórias</p>
@@ -152,7 +154,6 @@
                             </div>
                         </div>
                         
-                        <!-- Botões de ação -->
                         <div class="space-y-3">
                             <button id="playGameButton" class="w-full bg-[#2f9b20] text-white p-3 rounded-lg hover:bg-[#247a1a] transition-colors flex items-center justify-center shadow-md">
                                 <img src="assets/img/gameboy.png" alt="Gameboy" class="w-6 h-6 mr-2"> 
@@ -167,71 +168,26 @@
                         </div>
                     </div>
                     
-                    <!-- Coluna Central - Histórico de Jogos -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Histórico de Jogos</h2>
                         
-                        <!-- Filtros -->
                         <div class="flex justify-center mb-4 space-x-2">
                             <button class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">Todos</button>
                             <button class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors">Vitórias</button>
                             <button class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors">Derrotas</button>
                         </div>
                         
-                        <!-- Lista de jogos -->
                         <div id="gameHistory" class="space-y-3 max-h-96 overflow-y-auto">
-                            <!-- Exemplo de jogo 
-                            <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-green-700">Vitória</p>
-                                        <p class="text-sm text-gray-600">vs João Silva</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-green-700">7 - 3</p>
-                                        <p class="text-xs text-gray-500">Hoje, 14:30</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-red-50 border border-red-200 p-3 rounded-lg">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-red-700">Derrota</p>
-                                        <p class="text-sm text-gray-600">vs Maria Santos</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-red-700">2 - 7</p>
-                                        <p class="text-xs text-gray-500">Ontem, 16:45</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-green-700">Vitória</p>
-                                        <p class="text-sm text-gray-600">vs Pedro Costa</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-green-700">7 - 4</p>
-                                        <p class="text-xs text-gray-500">15/06, 10:20</p>
-                                    </div>
-                                </div>
-                            </div> -->
                         </div>
                         
-                        <!-- Mostrar mais jogos -->
                         <button class="w-full mt-4 bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition-colors">
                             Carregar mais jogos
                         </button>
                     </div>
                     
-                    <!-- Coluna Direita - Lista de Amigos -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Amigos</h2>
                         
-                        <!-- Buscar amigos -->
                         <div class="mb-4">
                             <input type="text" 
                                    id="searchFriendsInput" 
@@ -239,25 +195,21 @@
                                    class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         
-                        <!-- Resultados da pesquisa -->
                         <div id="searchResults" class="mb-4 space-y-2 hidden">
                             <h4 class="text-sm font-semibold text-gray-700">Resultados da Pesquisa:</h4>
                             <div id="searchResultsList" class="space-y-2"></div>
                         </div>
                         
-                        <!-- Lista de amigos online -->
                         <div class="mb-4">
                             <h3 class="text-sm font-semibold text-green-600 mb-2" id="onlineFriendsTitle">Online (0)</h3>
                             <div id="onlineFriendsList" class="space-y-2"></div>
                         </div>
                         
-                        <!-- Lista de amigos offline -->
                         <div class="mb-4">
                             <h3 class="text-sm font-semibold text-gray-500 mb-2" id="offlineFriendsTitle">Offline (0)</h3>
                             <div id="offlineFriendsList" class="space-y-2"></div>
                         </div>
                         
-                        <!-- Botão adicionar amigo (pode ser removido se só vais usar a pesquisa) -->
                         <button id="addFriendButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors">
                             + Procurar Utilizadores
                         </button>
@@ -267,44 +219,6 @@
             </div>
         </div>
 
-        <!-- Friends Page 
-        <div id="friendsPage" class="hidden">
-            <div class="max-w-4xl mx-auto p-6">
-                <h1 class="text-3xl font-bold text-gray-900 mb-6">Meus Amigos</h1>
-                
-                !-- Search Section --
-                <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-4">Procurar Utilizadores</h2>
-                    <div class="flex space-x-2">
-                        <input type="text" 
-                            id="searchUsersInput" 
-                            placeholder="Digite o nome do utilizador..." 
-                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button id="clearSearchButton" 
-                                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">
-                            Limpar
-                        </button>
-                    </div>
-                    <div id="searchResults" class="mt-4 space-y-2"></div>
-                </div>
-                
-                !-- Friends List --
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-semibold mb-4">Lista de Amigos</h2>
-                    <div id="friendsList" class="space-y-3"></div>
-                </div> --
-                
-                !-- Back Button --
-                <div class="mt-6">
-                    <button onclick="router.navigate('/dashboard')" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md">
-                        Voltar ao Dashboard
-                    </button>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- Edit Profile Page -->
         <div id="editProfilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4">Editar Perfil</h2>
             
@@ -334,7 +248,6 @@
         </div>
 
     </div>
-        <!-- Modal de Sucesso de registo -->
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
                 <h3 class="text-lg font-bold text-center mb-4">Registo Concluído!</h3>
@@ -344,6 +257,7 @@
         </div>
     </div>
 
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script type="module" src="typescript/main.ts"></script>
 </body>
 </html>

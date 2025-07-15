@@ -94,8 +94,8 @@ function initializeGame(): void {
     // You can add your pong game logic here
     
     // Example: Get canvas and start game
-    const canvas = document.getElementById('pongCanvas') as HTMLCanvasElement;
-    if (canvas) {
+    const canvas = document.getElementById('pongCanvas');
+    if (canvas instanceof HTMLCanvasElement) {
         // Initialize your game logic here
         console.log('Canvas ready for Pong game');
     }

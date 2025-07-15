@@ -47,7 +47,7 @@ export async function connectWebSocket(token: string): Promise<void> {
         console.warn('Existing WebSocket connection in a non-closed state. Closing before establishing a new one.');
         socket.close(); 
         // Pequena pausa para garantir o fechamento antes de abrir um novo, se necessário.
-        await new Promise(resolve => setTimeout(100)); 
+        await new Promise(resolve => setTimeout(resolve, 100)); 
     }
 
     try {

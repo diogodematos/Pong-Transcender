@@ -53,7 +53,11 @@ class Game3D {
   private isGoalScored: boolean = false;
 
   constructor() {
-    this.canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+    const canvasEl = document.getElementById("renderCanvas");
+    if (!(canvasEl instanceof HTMLCanvasElement)) {
+      throw new Error("renderCanvas element not found or is not a canvas");
+    }
+    this.canvas = canvasEl;
     this.engine = new BABYLON.Engine(this.canvas, true);
     this.scene = null!; // Will be initialized in createScene
     this.camera = null!; // Will be initialized in createScene
@@ -341,8 +345,6 @@ class Game3D {
     this.particleSystem.direction2 = new BABYLON.Vector3(2, 2, 2);
     this.particleSystem.minAngularSpeed = 0;
     this.particleSystem.maxAngularSpeed = Math.PI;
-    this.particleSystem.minInitialRotation = 0;
-    this.particleSystem.maxInitialRotation = Math.PI;
   }
 
   createBallFragments(position: BABYLON.Vector3): void {

@@ -3,7 +3,7 @@ import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import path from 'path';
-import pump from 'pump';
+import pump from 'pump';    
 import * as fs from 'fs';
 
 const googleClient = new OAuth2Client('801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com');
@@ -223,6 +223,13 @@ const usersController = async (fastify, options) => {
             });
             const payload = ticket.getPayload();
             const { email, name, picture } = payload;
+            
+            let avatarUrlFromGoogle = picture;
+            if (avatarUrlFromGoogle && avatarUrlFromGoogle.startsWith('http://')) {
+                avatarUrlFromGoogle = avatarUrlFromGoogle.replace('http://', 'https://');
+                req.log.info(`Avatar URL do Google convertido para HTTPS: ${avatarUrlFromGoogle}`);
+            }
+
             const username = name || email.split('@')[0];
 
             req.log.info(`Token Google verificado para email: ${email}`);

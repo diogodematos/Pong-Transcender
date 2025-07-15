@@ -2,17 +2,28 @@ import { login, register, logout, isAuthenticated } from './auth.ts';
 import { updateProfile, searchUsers, addFriend } from './profile.ts';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.ts';
 import { router } from './router.ts';
-import { connectWebSocket } from './ws.ts'; // Conexão WebSocket para o frontend
-import { startGame3D } from './3d.ts';  
+import { connectWebSocket } from './ws.ts';
+import { startGame3D } from './3d.ts';
 
-// Setup routes
+// Importa a interface CredentialResponse diretamente do pacote de tipos do Google One Tap
+// Isso garante que o TypeScript use a definição correta para esta interface específica.
+import { CredentialResponse } from 'google-one-tap'; // <--- Nova linha aqui!
+
+// IMPORTANTE para o TypeScript: Declara a função handleGoogleLogin no escopo global
+// para que o script do Google no HTML possa chamá-la.
+declare global {
+    interface Window {
+        // Usa a CredentialResponse importada, que é a definição exata esperada.
+        handleGoogleLogin: (response: CredentialResponse) => void;
+    }
+}
+
+// Funções de configuração de rotas
 function setupRoutes(): void {
-    // Default route - check authentication
     router.addRoute('/', () => {
         checkAuthAndRedirect();
     });
 
-    // Login page
     router.addRoute('/login', () => {
         if (isAuthenticated()) {
             router.navigate('/dashboard');
@@ -21,7 +32,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Register page
     router.addRoute('/register', () => {
         if (isAuthenticated()) {
             router.navigate('/dashboard');
@@ -30,7 +40,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Dashboard page
     router.addRoute('/dashboard', () => {
         if (isAuthenticated()) {
             showDashboardPage();
@@ -39,7 +48,6 @@ function setupRoutes(): void {
         }
     });
 
-    // Profile page (requires auth)
     router.addRoute('/profile', () => {
         if (isAuthenticated()) {
             showProfilePage();
@@ -48,7 +56,6 @@ function setupRoutes(): void {
         }
     });
     
-    // Edit profile page (requires auth)
     router.addRoute('/edit-profile', () => {
         if (isAuthenticated()) {
             showEditProfilePage();
@@ -57,10 +64,8 @@ function setupRoutes(): void {
         }
     });
 
-    // Game page (requires auth)
     router.addRoute('/game', () => {
         if (isAuthenticated()) {
-            //showGamePage();
             startGame3D();
         } else {
             router.navigate('/login');
@@ -68,6 +73,7 @@ function setupRoutes(): void {
     });
 }
 
+// Função para verificar autenticação e redirecionar
 function checkAuthAndRedirect(): void {
     if (isAuthenticated()) {
         router.navigate('/dashboard');
@@ -76,19 +82,46 @@ function checkAuthAndRedirect(): void {
     }
 }
 
+// Função de callback para o Google Sign-In
+// Agora, CredentialResponse refere-se à interface importada.
+async function handleGoogleLogin(response: CredentialResponse) { // <--- Alteração aqui!
+    try {
+        const res = await fetch('/api/users/google-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: response.credential }),
+        });
+        const data = await res.json();
+
+        if (data.token) {
+            localStorage.setItem('authToken', data.token);
+            console.log('Login Google bem-sucedido. Token recebido.');
+            connectWebSocket(data.token); 
+            router.navigate('/dashboard');
+        } else {
+            alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos.'));
+            console.error('Erro no login Google (backend response):', data.error);
+        }
+    } catch (error) {
+        console.error('Erro ao autenticar com Google:', error);
+        alert('Erro ao autenticar com Google.');
+    }
+}
+
+// Atribui a função ao objeto window para que o script do Google a possa invocar
+window.handleGoogleLogin = handleGoogleLogin;
+
+
 // Event listeners
 function setupEventListeners(): void {
-    // Login form
     document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const success = await login({
             username: (document.getElementById('username') as HTMLInputElement).value,
             password: (document.getElementById('password') as HTMLInputElement).value
         });
-        // Login function now handles navigation via router and WebSocket connection
     });
 
-    // Register form
     document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
@@ -98,26 +131,23 @@ function setupEventListeners(): void {
             email: (document.getElementById('registerEmail') as HTMLInputElement).value,
             avatar: fileInput?.files?.[0],
         });
-        // Register function handles success modal and navigation
     });
 
-    // Game buttons (mantidos, mas pode refatorar para um módulo de jogo)
-    document.getElementById('startOneVsOneButton')?.addEventListener('click', () => {
+    document.getElementById('startOneVsOne')?.addEventListener('click', () => {
         console.log('Botão "Duel" clicado!');
         router.navigate('/game');
     });
 
-    document.getElementById('startTournamentButton')?.addEventListener('click', () => {
+    document.getElementById('startTournament')?.addEventListener('click', () => {
         console.log('Botão "League" clicado!');
         router.navigate('/game');
     });
 
-    document.getElementById('startVsComputerButton')?.addEventListener('click', () => {
+    document.getElementById('startVsComputer')?.addEventListener('click', () => {
         console.log('Botão "IA Battle" clicado!');
         router.navigate('/game');
     });
 
-    // Navigation buttons
     document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
         router.navigate('/register');
     });
@@ -131,7 +161,6 @@ function setupEventListeners(): void {
         document.getElementById('registerSuccessModal')?.classList.add('hidden');
     });
 
-    // Profile actions
     document.getElementById('goToDashboard')?.addEventListener('click', () => {
         router.navigate('/dashboard');
     });
@@ -144,24 +173,19 @@ function setupEventListeners(): void {
         router.navigate('/game');
     });
 
-    // Event listener para pesquisa de amigos
     document.getElementById('searchFriendsInput')?.addEventListener('input', (e) => {
         const target = e.target as HTMLInputElement;
         console.log("Pesquisa:", target.value);
         searchUsers(target.value);
     });
 
-    // Event listener para o botão adicionar amigo (opcional)
     document.getElementById('addFriendButton')?.addEventListener('click', () => {
         const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
         if (searchInput) {
-            // Este botão precisaria de saber o ID do amigo para adicionar.
-            // Provavelmente você chamaria addFriend(friendId) com o ID obtido da pesquisa.
             alert('Digite o nome do utilizador no campo de pesquisa e selecione um para adicionar.');
         }
     });
 
-    // Navigation bar buttons (for authenticated users)
     document.querySelector('[data-route="/dashboard"]')?.addEventListener('click', () => {
         router.navigate('/dashboard');
     });
@@ -178,7 +202,6 @@ function setupEventListeners(): void {
         logout();
     });
 
-    // Edit profile actions
     document.getElementById('saveProfileChangesButton')?.addEventListener('click', async () => {
         const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
         const success = await updateProfile({
@@ -214,7 +237,7 @@ function handleAvatarPreview(event: Event): void {
         };
         reader.readAsDataURL(file);
     } else if (preview) {
-        preview.src = '/img/default-avatar.jpg';
+        preview.src = 'assets/img/default-avatar.jpg';
     }
 }
 
@@ -236,6 +259,7 @@ function handleAvatarPreviewUpdate(event: Event): void {
     }
 }
 
+// Função executada quando a página é carregada
 window.onload = (): void => {
     setupRoutes();
     setupEventListeners();
@@ -249,43 +273,4 @@ window.onload = (): void => {
     checkAuthAndRedirect();
 };
 
-
 export { router };
-
-// Google login (mantido comentado como no seu código, mas com nota para o WebSocket)
-/*
-function initGoogleSignIn() {
-  google.accounts.id.initialize({
-    client_id: "188335469204-dff0bjf48ubspckenk92t6730ade1o0i.apps.googleusercontent.com", // Seu client_id
-    callback: handleGoogleLogin,
-  });
-
-  google.accounts.id.renderButton(
-    document.getElementById("googleSignInButton"),
-    { theme: "outline", size: "large" }
-  );
-}
-
-async function handleGoogleLogin(response: google.accounts.id.CredentialResponse) {
-  try {
-    const res = await fetch('/api/users/google-login', { // CORRIGIDO: Adicionado /api/users
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken: response.credential }),
-    });
-    const data = await res.json();
-
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-      // Conectar WebSocket após login Google também
-      connectWebSocket(data.token); 
-      router.navigate('/dashboard'); // Redireciona para o dashboard após login bem-sucedido
-    } else {
-      alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos.'));
-    }
-  } catch (error) {
-    console.error('Erro ao autenticar com Google:', error);
-    alert('Erro ao autenticar com Google.');
-  }
-}
-*/
