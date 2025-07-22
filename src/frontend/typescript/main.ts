@@ -5,9 +5,7 @@ import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
 import { startGame3D } from './3d.ts';
 
-// Importa a interface CredentialResponse diretamente do pacote de tipos do Google One Tap
-// Isso garante que o TypeScript use a definição correta para esta interface específica.
-import { CredentialResponse } from 'google-one-tap'; // <--- Nova linha aqui!
+import { CredentialResponse } from 'google-one-tap';
 
 // IMPORTANTE para o TypeScript: Declara a função handleGoogleLogin no escopo global
 // para que o script do Google no HTML possa chamá-la.

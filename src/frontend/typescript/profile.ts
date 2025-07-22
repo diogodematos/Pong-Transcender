@@ -21,7 +21,7 @@ export async function getDashboard() {
       const avatarDash = document.getElementById('dashboardAvatar') as HTMLImageElement;
       
       if (usernameDash) usernameDash.textContent = userData.username;
-      if (avatarDash) avatarDash.src = userData.avatar || '/img/default-avatar.jpg';
+      if (avatarDash) avatarDash.src = userData.avatar || 'assets/img/default-avatar.jpg';
     } else {
       alert('Erro ao aceder ao Dashboard.');
       if (res.status === 401) {
@@ -146,7 +146,7 @@ function showSearchResults(users: any[]): void {
       searchResultsList.innerHTML = users.map(user => `
           <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
               <div class="flex items-center">
-                  <img src="${user.avatar || '/img/default-avatar.jpg'}" 
+                  <img src="${user.avatar || 'assets/img/default-avatar.jpg'}" 
                        alt="Avatar" 
                        class="w-8 h-8 rounded-full mr-2">
                   <div>
@@ -246,7 +246,7 @@ function updateOnlineFriends(friends: Friend[]): void {
       <div class="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
         <div class="flex items-center">
           <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-          <img src="${friend.avatar || '/img/default-avatar.jpg'}" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+          <img src="${friend.avatar || 'assets/img/default-avatar.jpg'}" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
           <span class="text-sm font-medium">${friend.username}</span>
         </div>
         <button id="challengeFriend(${friend.id})" class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
@@ -270,7 +270,7 @@ function updateOfflineFriends(friends: Friend[]): void {
         <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
           <div class="flex items-center">
             <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
-            <img src="${friend.avatar || '/img/default-avatar.jpg'}" 
+            <img src="${friend.avatar || 'assets/img/default-avatar.jpg'}" 
                  alt="Avatar" 
                  class="w-8 h-8 rounded-full mr-2 grayscale">
             <span class="text-sm text-gray-600">${friend.username}</span>
@@ -384,7 +384,7 @@ function updateProfileUI(profile: Profile): void {
 
   if (usernameEl) usernameEl.textContent = profile.username;
   if (emailEl) emailEl.textContent = profile.email;
-  if (avatarEl) avatarEl.src = profile.avatar || '/img/default-avatar.jpg';
+  if (avatarEl) avatarEl.src = profile.avatar || 'assets/img/default-avatar.jpg';
   if (winsEl) winsEl.textContent = profile.wins.toString();
   if (lossesEl) lossesEl.textContent = profile.losses.toString();
 
@@ -399,5 +399,5 @@ function prefillEditForm(profile: Profile): void {
 
   if (newUsernameInput) newUsernameInput.placeholder = profile.username;
   if (newEmailInput) newEmailInput.placeholder = profile.email;
-  if (avatarPreview) avatarPreview.src = profile.avatar || '/img/default-avatar.jpg';
+  if (avatarPreview) avatarPreview.src = profile.avatar || 'aseets/img/default-avatar.jpg';
 }

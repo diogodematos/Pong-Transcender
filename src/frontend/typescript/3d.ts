@@ -296,7 +296,7 @@ class Game3D {
 
     // Ball material with dynamic glow
     const ballMaterial = new BABYLON.StandardMaterial("ballMat", this.scene);
-    ballMaterial.ambientTexture = new BABYLON.Texture("../textures/pokeball2.png", this.scene);
+    ballMaterial.ambientTexture = new BABYLON.Texture("../assets/img/pokeball2.png", this.scene);
 
     ballMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
     ballMaterial.emissiveColor = new BABYLON.Color3(0.3, 0.3, 0.3);

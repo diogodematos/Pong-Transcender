@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong Game - SPA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('assets/img/background.png'); background-size: cover; background-position: center;">
 
@@ -12,7 +14,9 @@
         <div class="container mx-auto flex justify-between items-center">
             <div class="text-white font-bold text-xl">Pong Game</div>
             <div class="flex items-center space-x-4">
-                <img id="dashboardAvatar" src="assets/img/default-avatar.jpg" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-500">
+                <img id="dashboardAvatar" src="/assets/img/default-avatar.jpg" alt="Avatar" 
+                     class="w-10 h-10 rounded-full border-2 border-blue-500 object-cover"
+                     onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';">
                 <button data-route="/dashboard" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Main Page</button>
                 <button data-route="/game" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Game</button>
                 <button data-route="/profile" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">
@@ -27,7 +31,7 @@
         
         <div id="loginPage" class="bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="assets/img/pokeball.png" alt="Pikachu" class="w-8 h-8 mr-2">
+                <img src="/assets/img/pokeball.png" alt="Pikachu" class="w-8 h-8 mr-2">
                 Login
             </h2>
             <form id="loginForm">
@@ -62,7 +66,7 @@
 
         <div id="registerPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="/img/pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
+                <img src="/assets/img/pokedex.png" alt="Pokedex" class="w-8 h-8 mr-2">
                 New User
             </h2>
             <form id="registerForm" enctype="multipart/form-data">
@@ -82,7 +86,9 @@
                     <label for="registerAvatar" class="block text-sm font-medium text-gray-700">Avatar</label>
                     <input type="file" id="registerAvatar" name="avatar" accept="image/*" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
                     <div id="avatarPreview" class="mt-2 flex justify-center">
-                        <img src="assets/img/default-avatar.jpg" alt="Avatar Preview" id="avatarImage" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
+                        <img src="/assets/img/default-avatar.jpg" alt="Avatar Preview" id="avatarImage" 
+                             class="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                             onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';"/>
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] transition-colors">Registar</button>
@@ -129,7 +135,9 @@
                         <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Meu Perfil</h2>
                         
                         <div class="flex justify-center mb-4">
-                            <img id="profileAvatar" src="assets/img/default-avatar.jpg" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-lg" />
+                            <img id="profileAvatar" src="/assets/img/default-avatar.jpg" alt="Avatar" 
+                                 class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-lg"
+                                 onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';"/>
                         </div>
                         
                         <div class="space-y-3 mb-6">
@@ -156,7 +164,7 @@
                         
                         <div class="space-y-3">
                             <button id="playGameButton" class="w-full bg-[#2f9b20] text-white p-3 rounded-lg hover:bg-[#247a1a] transition-colors flex items-center justify-center shadow-md">
-                                <img src="assets/img/gameboy.png" alt="Gameboy" class="w-6 h-6 mr-2"> 
+                                <img src="/assets/img/gameboy.png" alt="Gameboy" class="w-6 h-6 mr-2"> 
                                 Jogar Pong
                             </button>
                             <button id="editProfileButton" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition-colors shadow-md">
@@ -240,7 +248,9 @@
                 <label for="newAvatar" class="block text-sm font-medium text-gray-700">New Avatar</label>
                 <input type="file" id="newAvatar" name="avatar" accept="image/*" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
                 <div id="avatarPreview" class="mt-2 flex justify-center">
-                    <img src="" alt="Avatar Preview" id="avatarImageUpdate" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" />
+                    <img src="/assets/img/default-avatar.jpg" alt="Avatar Preview" id="avatarImageUpdate" 
+                         class="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                         onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';"/>
                 </div>
             </div>
             <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 mb-2 transition-colors">Guardar Alterações</button>
