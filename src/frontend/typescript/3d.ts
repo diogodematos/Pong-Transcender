@@ -4,6 +4,7 @@ class Game3D {
   private isHost: boolean = false;
   private gameId: string = '';
   private isConnected: boolean = false;
+  private useMultiplayer: boolean = false;
 
   // Canvas and engine
   private canvas: HTMLCanvasElement;
@@ -33,7 +34,7 @@ class Game3D {
   private speedMultiplier: number = 1.4;
   private ballSpeed: number = 0.3;
   private ballDiameter: number = 1;
-  private isPlayerMoving : "UP" | "DOWN" | "NO" = "NO";
+  private isPlayerMoving: "UP" | "DOWN" | "NO" = "NO";
   private playerWidth: number = 6;
   private computerWidth: number = 6;
 
@@ -53,11 +54,7 @@ class Game3D {
   private isGoalScored: boolean = false;
 
   constructor() {
-    const canvasEl = document.getElementById("renderCanvas");
-    if (!(canvasEl instanceof HTMLCanvasElement)) {
-      throw new Error("renderCanvas element not found or is not a canvas");
-    }
-    this.canvas = canvasEl;
+    this.canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
     this.engine = new BABYLON.Engine(this.canvas, true);
     this.scene = null!; // Will be initialized in createScene
     this.camera = null!; // Will be initialized in createScene
@@ -74,61 +71,154 @@ class Game3D {
   }
 
   // Connections
-  async connectToGame(gameId: string, isHost: boolean) {
+  async connectToGame(gameId: string, isHost: boolean, useMultiplayer: boolean = false): Promise<boolean> {
     this.isHost = isHost;
-    let type: string = "create";
+    this.useMultiplayer = useMultiplayer;
 
-    if(isHost && !this.gameId)
-    {
-      console.log("Generating game ID...");
-      this.gameId = this.generateUniqueGameId();
+    // Only set up WebSocket for multiplayer
+    if (!useMultiplayer) {
+      console.log("Starting single player game");
+      return true;
     }
-    else if (!isHost && gameId)
-    {
-      console.log("Connecting to existing game...");
-      this.gameId = gameId;
+
+    let type: string;
+    let targetGameId: string;
+
+    // Determine connection type and game ID
+    if (isHost) {
+      if (!this.gameId) {
+        console.log("Generating game ID...");
+        this.gameId = this.generateUniqueGameId();
+        alert("Game ID: " + this.gameId);
+      }
+      targetGameId = this.gameId;
+      type = "create";
+    } else {
+      // Non-host trying to join
+      if (!gameId || gameId.trim() === "") {
+        console.error("Error: Game ID is required to join a game");
+        return false;
+      }
+      targetGameId = gameId.trim();
+      this.gameId = targetGameId;
       type = "join";
     }
-    else
-      console.log("Error: Connection unsuccessful!");
 
-    this.socket = new WebSocket(`ws://localhost:3000/game/${gameId}`);
-    console.log("Socket active at " + gameId);
+    try {
+      console.log(`${isHost ? 'Creating' : 'Joining'} game with ID: ${targetGameId}`);
 
-    this.socket.onopen = () => {
-      console.log("Socket Open");
-      this.isConnected = true;
-      this.socket?.send(JSON.stringify({
-        type: type,
-        isHost: this.isHost,
-        gameId: this.gameId
-      }));
-    };
+      // Create WebSocket connection
+      this.socket = new WebSocket(`ws://localhost:3000/game/${targetGameId}`);
+      console.log("Socket connection initiated for game:", targetGameId);
 
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      this.handleNetworkMessage(data);
-    };
+      // Store socket reference to avoid null issues
+      const socket = this.socket;
+
+      // Return a promise that resolves when connection is established or rejects on error
+      return new Promise((resolve, reject) => {
+        // Set up connection timeout
+        const connectionTimeout = setTimeout(() => {
+          console.error("Connection timeout");
+          socket.close();
+          reject(new Error("Connection timeout"));
+        }, 10000); // 10 second timeout
+
+        socket.onopen = () => {
+          clearTimeout(connectionTimeout);
+          console.log("Socket connection established");
+          this.isConnected = true;
+
+          // Send initial message to server
+          socket.send(JSON.stringify({
+            type: type,
+            isHost: this.isHost,
+            gameId: targetGameId
+          }));
+
+          resolve(true);
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            // Handle connection-specific responses
+            if (data.type === "error") {
+              console.error("Server error:", data.message);
+              if (data.message.includes("Game not found") || data.message.includes("does not exist")) {
+                clearTimeout(connectionTimeout);
+                reject(new Error("Game not found"));
+                return;
+              }
+            }
+
+            if (data.type === "joined" || data.type === "created") {
+              console.log(`Successfully ${data.type} game:`, targetGameId);
+            }
+
+            // Pass to your existing message handler
+            this.handleNetworkMessage(data);
+          } catch (parseError) {
+            console.error("Error parsing message:", parseError);
+          }
+        };
+
+        socket.onerror = (error) => {
+          clearTimeout(connectionTimeout);
+          console.error("WebSocket error:", error);
+          this.isConnected = false;
+          reject(new Error("WebSocket connection failed"));
+        };
+
+        socket.onclose = (event) => {
+          clearTimeout(connectionTimeout);
+          console.log("WebSocket closed:", event.code, event.reason);
+          this.isConnected = false;
+
+          // Only reject if we haven't already resolved
+          if (!this.isConnected) {
+            reject(new Error(`Connection closed: ${event.reason || 'Unknown reason'}`));
+          }
+        };
+      });
+
+    } catch (error) {
+      console.error("Failed to create WebSocket connection:", error);
+      return false;
+    }
   }
 
   handleNetworkMessage(data: any) {
-    switch(data.type) {
+    switch (data.type) {
       case 'player-move':
-        if (!this.isHost) {
+        // Host controls left paddle (player), Client controls right paddle (computer)
+        if (this.isHost) {
+          // Host receives Client's moves -> update right paddle (computer)
           this.computer.position.z = data.position;
         } else {
+          // Client receives Host's moves -> update left paddle (player)
           this.player.position.z = data.position;
         }
         break;
+
       case 'ball-update':
+        // Only non-host (client) receives ball updates
         if (!this.isHost) {
           this.ball.position.copyFrom(data.position);
           (this.ball as any).velocity.copyFrom(data.velocity);
         }
         break;
+
       case 'score-update':
         this.playerScore = data.playerScore;
         this.computerScore = data.computerScore;
+        break;
+
+      case 'game-reset':
+        // Handle game reset from host
+        if (!this.isHost) {
+          this.resetFromNetwork(data);
+        }
         break;
     }
   }
@@ -192,7 +282,10 @@ class Game3D {
 
   createArena() {
     // Arena floor
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: this.arenaSize[0], height: this.arenaSize[1]}, this.scene);
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {
+      width: this.arenaSize[0],
+      height: this.arenaSize[1]
+    }, this.scene);
     const groundMaterial = new BABYLON.StandardMaterial("groundMat", this.scene);
     groundMaterial.diffuseColor = new BABYLON.Color3(0.05, 0.05, 0.1);
     groundMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.4);
@@ -203,7 +296,11 @@ class Game3D {
     this.createWalls();
 
     // Center line
-    const centerLine = BABYLON.MeshBuilder.CreateBox("centerLine", {width: 0.2, height: 0.5, depth: this.arenaSize[0] / 2}, this.scene);
+    const centerLine = BABYLON.MeshBuilder.CreateBox("centerLine", {
+      width: 0.2,
+      height: 0.5,
+      depth: this.arenaSize[0] / 2
+    }, this.scene);
     const centerMaterial = new BABYLON.StandardMaterial("centerMat", this.scene);
     centerMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
     centerMaterial.disableLighting = true;
@@ -220,13 +317,21 @@ class Game3D {
     wallMaterial.emissiveColor = new BABYLON.Color3(0.1, 0.3, 0.5);
     wallMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.4, 0.6);
 
-    const topWall = BABYLON.MeshBuilder.CreateBox("topWall", {width: this.arenaSize[0], height: wallHeight, depth:1}, this.scene);
+    const topWall = BABYLON.MeshBuilder.CreateBox("topWall", {
+      width: this.arenaSize[0],
+      height: wallHeight,
+      depth: 1
+    }, this.scene);
     topWall.position.z = this.arenaSize[1] / 2;
     topWall.position.y = wallHeight / 2;
     topWall.material = wallMaterial;
     this.topWallZ = topWall.position.z;
 
-    const bottomWall = BABYLON.MeshBuilder.CreateBox("bottomWall", {width: this.arenaSize[0], height: wallHeight, depth: 1}, this.scene);
+    const bottomWall = BABYLON.MeshBuilder.CreateBox("bottomWall", {
+      width: this.arenaSize[0],
+      height: wallHeight,
+      depth: 1
+    }, this.scene);
     bottomWall.position.z = this.arenaSize[1] / -2;
     bottomWall.position.y = wallHeight / 2;
     bottomWall.material = wallMaterial;
@@ -235,7 +340,11 @@ class Game3D {
 
   createGoalAreas() {
     // Player goal (left side)
-    const playerGoal = BABYLON.MeshBuilder.CreateBox("playerGoal", {width: 0.3, height: 0.5 , depth: this.arenaSize[1] - 1}, this.scene);
+    const playerGoal = BABYLON.MeshBuilder.CreateBox("playerGoal", {
+      width: 0.3,
+      height: 0.5,
+      depth: this.arenaSize[1] - 1
+    }, this.scene);
     playerGoal.position.x = (this.arenaSize[0] / -2) + 0.5;
     playerGoal.position.y = 0.1;
     const playerGoalMat = new BABYLON.StandardMaterial("playerGoalMat", this.scene);
@@ -244,7 +353,11 @@ class Game3D {
     playerGoal.material = playerGoalMat;
 
     // Computer goal (right side)
-    const computerGoal = BABYLON.MeshBuilder.CreateBox("computerGoal", {width: 0.3, height: 0.5, depth: this.arenaSize[1] + 1}, this.scene);
+    const computerGoal = BABYLON.MeshBuilder.CreateBox("computerGoal", {
+      width: 0.3,
+      height: 0.5,
+      depth: this.arenaSize[1] + 1
+    }, this.scene);
     computerGoal.position.x = (this.arenaSize[0] / 2) + 0.5;
     computerGoal.position.y = 0.1;
     const computerGoalMat = new BABYLON.StandardMaterial("computerGoalMat", this.scene);
@@ -259,7 +372,7 @@ class Game3D {
   createPaddles() {
     // Player paddle (left side)
     this.playerWidth = 6 * this.diffMultiplier;
-    this.player = BABYLON.MeshBuilder.CreateBox("player", {width: 1, height: 1, depth: this.playerWidth}, this.scene);
+    this.player = BABYLON.MeshBuilder.CreateBox("player", { width: 1, height: 1, depth: this.playerWidth }, this.scene);
     this.player.position.x = this.playerGoal.position.x + 1;
     this.player.position.y = 1.6;
     this.player.position.z = 0;
@@ -273,7 +386,11 @@ class Game3D {
 
     // Computer paddle (right side)
     this.computerWidth = 6 * this.diffMultiplier;
-    this.computer = BABYLON.MeshBuilder.CreateBox("computer", {width: 1, height: 1, depth: this.computerWidth}, this.scene);
+    this.computer = BABYLON.MeshBuilder.CreateBox("computer", {
+      width: 1,
+      height: 1,
+      depth: this.computerWidth
+    }, this.scene);
     this.computer.position.x = this.computerGoal.position.x - 1;
     this.computer.position.y = 1;
     this.computer.position.z = 0;
@@ -291,7 +408,7 @@ class Game3D {
   }
 
   createBall() {
-    this.ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: this.ballDiameter}, this.scene);
+    this.ball = BABYLON.MeshBuilder.CreateSphere("ball", { diameter: this.ballDiameter }, this.scene);
     this.ball.position = new BABYLON.Vector3(0, this.computer.position.y + this.ballDiameter / 2, 0);
 
     // Ball material with dynamic glow
@@ -345,6 +462,8 @@ class Game3D {
     this.particleSystem.direction2 = new BABYLON.Vector3(2, 2, 2);
     this.particleSystem.minAngularSpeed = 0;
     this.particleSystem.maxAngularSpeed = Math.PI;
+    this.particleSystem.minInitialRotation = 0;
+    this.particleSystem.maxInitialRotation = Math.PI;
   }
 
   createBallFragments(position: BABYLON.Vector3): void {
@@ -353,7 +472,7 @@ class Game3D {
     const fragmentSize = 0.2;
 
     for (let i = 0; i < fragmentCount; i++) {
-      const fragment = BABYLON.MeshBuilder.CreateSphere(`ballFragment_${i}`, {diameter: fragmentSize}, this.scene);
+      const fragment = BABYLON.MeshBuilder.CreateSphere(`ballFragment_${i}`, { diameter: fragmentSize }, this.scene);
       fragment.position = position.clone();
 
       // Copy ball material properties
@@ -514,34 +633,31 @@ class Game3D {
   updatePlayer() {
     const speed = 0.2 * this.speedMultiplier;
     this.isPlayerMoving = "NO";
+    let previousZ = this.player.position.z;
 
-    if (this.keysPressed[38] || this.keysPressed[37]) // Down/Right arrows
-    {
+    if (this.keysPressed[38] || this.keysPressed[37]) { // Down/Right arrows
       this.isPlayerMoving = "DOWN";
       (this.player as any).velocity.z = speed;
-      if (this.player.position.z + (this.playerWidth / 2) >= this.topWallZ - 1)
-      {
+      if (this.player.position.z + (this.playerWidth / 2) >= this.topWallZ - 1) {
         (this.player as any).velocity.z = 0;
         this.isPlayerMoving = "NO";
       }
-    }
-    else if (this.keysPressed[40] || this.keysPressed[39]) // Up/Left arrows
-    {
+    } else if (this.keysPressed[40] || this.keysPressed[39]) { // Up/Left arrows
       this.isPlayerMoving = "UP";
       (this.player as any).velocity.z = -speed;
-      if (this.player.position.z - (this.playerWidth / 2) <= this.bottomWallZ + 1)
-      {
+      if (this.player.position.z - (this.playerWidth / 2) <= this.bottomWallZ + 1) {
         (this.player as any).velocity.z = 0;
         this.isPlayerMoving = "NO";
       }
-    } else
-    {
+    } else {
       (this.player as any).velocity.z = 0;
     }
-    console.log("player moving: " + this.isPlayerMoving);
+
     this.player.position.z += (this.player as any).velocity.z;
 
-    if (this.isConnected && this.socket) {
+    // FIXED: Only send if position actually changed and we're connected
+    if (this.useMultiplayer && this.isConnected && this.socket &&
+      this.player.position.z !== previousZ) {
       this.socket.send(JSON.stringify({
         type: 'player-move',
         position: this.player.position.z
@@ -549,72 +665,50 @@ class Game3D {
     }
   }
 
+
   updateComputer() {
-    if (this.isConnected && this.socket) {
-      // Only the host controls the "computer" (which is now player 2)
-      if (!this.isHost) {
-        const speed = 0.2 * this.speedMultiplier;
-
-        // Use same controls as player but different keys (WASD)
-        if (this.keysPressed[87]) { // W key
-          this.computer.position.z += speed;
-        }
-        if (this.keysPressed[83]) { // S key
-          this.computer.position.z -= speed;
-        }
-
-        // Send position update
-        if (this.isConnected && this.socket) {
-          this.socket.send(JSON.stringify({
-            type: 'player-move',
-            position: this.computer.position.z
-          }));
-        }
-      }
+    // In multiplayer, computer paddle is controlled by the other player
+    if (this.useMultiplayer) {
+      // Computer paddle position is updated via network messages
+      // No local AI logic needed
+      return;
     }
-    else { // If there's no socket active, it's against AI
-      const speed = 0.1 * this.speedMultiplier;
-      const ballZ = this.ball.position.z;
-      const paddleZ = this.computer.position.z;
-      const paddleHeight = 3 * this.diffMultiplier;
 
-      // AI: Follow ball when it's moving towards computer
-      if ((this.ball as any).velocity.x > 0) {
-        if (ballZ < paddleZ - paddleHeight/2)
-        {
-          (this.computer as any).velocity.z = -speed;
-          if (this.computer.position.z - (this.computerWidth / 2) <= this.bottomWallZ + 1)
-          {
-            (this.computer as any).velocity.z = 0;
-          }
-        }
-        else if (ballZ > paddleZ + paddleHeight/2)
-        {
-          (this.computer as any).velocity.z = speed;
-          if (this.computer.position.z + (this.computerWidth / 2) >= this.topWallZ - 1)
-          {
-            (this.computer as any).velocity.z = 0;
-          }
-        }
-        else
-        {
+    // Single player AI logic
+    const speed = 0.1 * this.speedMultiplier;
+    const ballZ = this.ball.position.z;
+    const paddleZ = this.computer.position.z;
+    const paddleHeight = 3 * this.diffMultiplier;
+
+    // AI: Follow ball when it's moving towards computer
+    if ((this.ball as any).velocity.x > 0) {
+      if (ballZ < paddleZ - paddleHeight / 2) {
+        (this.computer as any).velocity.z = -speed;
+        if (this.computer.position.z - (this.computerWidth / 2) <= this.bottomWallZ + 1) {
           (this.computer as any).velocity.z = 0;
         }
-      }
-      else
-      {
+      } else if (ballZ > paddleZ + paddleHeight / 2) {
+        (this.computer as any).velocity.z = speed;
+        if (this.computer.position.z + (this.computerWidth / 2) >= this.topWallZ - 1) {
+          (this.computer as any).velocity.z = 0;
+        }
+      } else {
         (this.computer as any).velocity.z = 0;
       }
-
-      this.computer.position.z += (this.computer as any).velocity.z;
+    } else {
+      (this.computer as any).velocity.z = 0;
     }
+
+    this.computer.position.z += (this.computer as any).velocity.z;
   }
 
   updateBall() {
-    if (!this.isHost) return; // Only host simulates ball
+    // Only host simulates ball in multiplayer
+    if (this.useMultiplayer && !this.isHost) return;
 
     // Wall bouncing (top and bottom)
-    if (this.ball.position.z <= this.arenaSize[1] / -2 + 1 || this.ball.position.z >= this.arenaSize[1] / 2 - 1){
+    if (this.ball.position.z <= this.arenaSize[1] / -2 + 1 ||
+      this.ball.position.z >= this.arenaSize[1] / 2 - 1) {
       (this.ball as any).velocity.z *= -1;
     }
 
@@ -628,23 +722,27 @@ class Game3D {
     this.ball.position.x += (this.ball as any).velocity.x;
     this.ball.position.z += (this.ball as any).velocity.z;
 
-
     const rotationSpeed = 0.1;
     this.ball.rotation.x += (this.ball as any).velocity.z * rotationSpeed;
-    this.ball.rotation.y +=   rotationSpeed;
+    this.ball.rotation.y += rotationSpeed;
     this.ball.rotation.z -= (this.ball as any).velocity.x * rotationSpeed;
 
-    // Send ball state to other player
-    if (this.isConnected && this.socket) {
+    // Send ball state to other player (host only)
+    if (this.useMultiplayer && this.isConnected && this.socket) {
       this.socket.send(JSON.stringify({
         type: 'ball-update',
-        position: this.ball.position,
-        velocity: (this.ball as any).velocity
+        position: {
+          x: this.ball.position.x,
+          y: this.ball.position.y,
+          z: this.ball.position.z
+        },
+        velocity: {
+          x: (this.ball as any).velocity.x,
+          y: (this.ball as any).velocity.y,
+          z: (this.ball as any).velocity.z
+        }
       }));
     }
-
-    // Update ball trail
-    this.updateBallTrail();
   }
 
   checkPaddleCollisions() {
@@ -659,13 +757,10 @@ class Game3D {
         console.log("player collision");
         (this.ball as any).velocity.x = Math.abs((this.ball as any).velocity.x);
 
-        if (this.isPlayerMoving != "NO")
-        {
+        if (this.isPlayerMoving != "NO") {
           (this.ball as any).velocity.x += 0.1;
           (this.ball as any).velocity.z += this.isPlayerMoving == "UP" ? -0.15 : 0.15;
-        }
-        else
-        {
+        } else {
           if ((this.ball as any).velocity.x >= this.ballSpeed)
             (this.ball as any).velocity.x = Math.abs((this.ball as any).velocity.x - 0.1);
         }
@@ -713,7 +808,8 @@ class Game3D {
       this.resetBallDelayed();
     }
 
-    if (this.isConnected && this.socket) {
+    // Send score update to other player
+    if (this.useMultiplayer && this.isConnected && this.socket) {
       this.socket.send(JSON.stringify({
         type: 'score-update',
         playerScore: this.playerScore,
@@ -730,13 +826,10 @@ class Game3D {
     this.ball.setEnabled(true); // Show the ball again
     this.isGoalScored = false;
 
-    if (this.ball.position.x > 0)
-    {
+    if (this.ball.position.x > 0) {
       this.ball.position = new BABYLON.Vector3(this.computer.position.x - 2, this.computer.position.y + this.ballDiameter / 2, this.computer.position.z);
       (this.ball as any).velocity = new BABYLON.Vector3(-this.ballSpeed, 0, (Math.random()) * this.ballSpeed);
-    }
-    else
-    {
+    } else {
       this.ball.position = new BABYLON.Vector3(this.player.position.x + 2, this.computer.position.y + this.ballDiameter / 2, this.player.position.z);
       (this.ball as any).velocity = new BABYLON.Vector3(this.ballSpeed, 0, (Math.random()) * this.ballSpeed);
     }
@@ -855,9 +948,47 @@ class Game3D {
       this.scene.render();
     });
   }
+
+  resetFromNetwork(data: any) {
+    this.ball.position.copyFrom(data.ballPosition);
+    (this.ball as any).velocity.copyFrom(data.ballVelocity);
+    this.ball.setEnabled(true);
+    this.isGoalScored = false;
+    this.ballLastHitBy = null;
+    this.ballGlowIntensity = 0;
+  }
+}
+// FIXED: Updated startGame3D function
+export async function startGame3D(gameId: string = '', isHost: boolean = false, useMultiplayer: boolean = false) {
+  console.log('3D Game selected');
+  const game = new Game3D();
+
+/*  // Connect with proper multiplayer flag
+  game.connectToGame(gameId, isHost, useMultiplayer).then(() => {
+    console.log("Initializing...");
+    game.init();
+  });*/
+
+  try {
+    const success = await game.connectToGame(gameId, isHost, useMultiplayer);
+    if (success) {
+      console.log("Successfully connected to game!");
+      console.log("Initializing...");
+      game.init();
+    }
+  } catch (error: any) {
+    console.error("Failed to connect to game:", error.message);
+    // Show user-friendly error message
+    if (error.message === "Game not found")
+      alert("The game you're trying to join doesn't exist. Please check the Game ID.");
+    else if (error.message === "Connection timeout")
+      alert("Connection timed out. Please check your internet connection and try again.");
+    else
+      alert("Failed to connect to game. Please try again.");
+  }
 }
 
-export function startGame3D() {
+/*export function startGame3D() {
   console.log('3D Game selected');
   const game = new Game3D();
   let gameId;
@@ -874,22 +1005,23 @@ export function startGame3D() {
     game.connectToGame("", isHost);
   console.log("Initializing...");
   game.init();
-}
+}*/
 
-// Initialize the game
-/*window.addEventListener("DOMContentLoaded", () => {
+
+/*export function startGame3D(gameId: string = '', isHost: boolean = false, useMultiplayer: boolean = false) {
+  console.log('3D Game selected');
   const game = new Game3D();
-  let gameId;
-  let isHost: boolean = true;
 
-  document.getElementById("get")?.addEventListener("click", () => {
-    gameId = document.getElementById("gameId")?.textContent;
-  });
-
-  if (!isHost && gameId) {
+  // Connect to game with the provided parameters
+  if (useMultiplayer && (gameId || isHost)) {
+    console.log('Starting multiplayer 3D game.');
     game.connectToGame(gameId, isHost);
-  }
-  else
+  } else {
+    console.log('Starting single player 3D game.');
     game.connectToGame("", isHost);
+    // Don't connect to WebSocket for single player
+  }
+
+  console.log("Initializing...");
   game.init();
-});*/
+}*/

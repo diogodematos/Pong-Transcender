@@ -1,4 +1,4 @@
-import { Profile, UpdateProfileData, GameHistoryResponse, FriendsResponse, GameHistoryItem, Friend } from './types.ts';
+import { Profile, ProfileId, UpdateProfileData, GameHistoryResponse, FriendsResponse, GameHistoryItem, Friend } from './types.ts';
 import { clearInputs } from './pages.ts';
 import { router } from './router.ts';
 
@@ -150,8 +150,9 @@ function showSearchResults(users: any[]): void {
                        alt="Avatar" 
                        class="w-8 h-8 rounded-full mr-2">
                   <div>
-                      <span class="text-sm font-medium">${user.username}</span>
-                      <p class="text-xs text-gray-500">${user.email}</p>
+                        <a href="#/profile/${user.id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${user.username}
+                        </a>                  
                   </div>
               </div>
               ${user.is_friend ? 
@@ -400,4 +401,51 @@ function prefillEditForm(profile: Profile): void {
   if (newUsernameInput) newUsernameInput.placeholder = profile.username;
   if (newEmailInput) newEmailInput.placeholder = profile.email;
   if (avatarPreview) avatarPreview.src = profile.avatar || 'aseets/img/default-avatar.jpg';
+}
+
+export async function getUserProfile(userId: string): Promise<void> {
+
+  const token = localStorage.getItem('authToken');
+  console.log('Token:', userId);
+  if (!token) {
+    router.navigate('/login');
+    return;
+  }
+
+  try {
+    const res = await fetch(`api/users/profile/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    const data: Profile = await res.json();
+
+    if (res.ok) {
+      updateUserProfileUI(data);
+      //getGameHistory(); // Fetch game history after profile is loaded
+    } else {
+      alert('Erro ao obter perfil.');
+      if (res.status === 401) {
+        // Token invalid, redirect to login
+        localStorage.removeItem('authToken');
+        router.navigate('/login');
+      }
+      else {
+        router.navigate('/dashboard');
+      }
+    }
+  } catch {
+    alert('Erro de conexão ao buscar perfil.');
+  }
+}
+
+function updateUserProfileUI(profile: ProfileId): void {
+  const usernameEl = document.getElementById('profileUsernameId') as HTMLElement;
+  const avatarEl = document.getElementById('profileAvatarId') as HTMLImageElement;
+  const winsEl = document.getElementById('profileWinsId') as HTMLElement;
+  const lossesEl = document.getElementById('profileLossesId') as HTMLElement;
+
+  if (usernameEl) usernameEl.textContent = profile.username;
+  if (avatarEl) avatarEl.src = profile.avatar || 'assets/img/default-avatar.jpg';
+  if (winsEl) winsEl.textContent = profile.wins.toString();
+  if (lossesEl) lossesEl.textContent = profile.losses.toString();
 }

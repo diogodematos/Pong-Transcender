@@ -33,6 +33,8 @@ class Game {
       throw new Error("Canvas element with id 'renderCanvas' not found");
     }
     this.gameCanvas = canvas;
+    this.gameCanvas.width = window.innerWidth;
+    this.gameCanvas.height = window.innerHeight;
 
     // Creating context
     const context = canvas.getContext("2d");
@@ -99,8 +101,8 @@ class Game {
   }
 
   reset() {
-    var paddleWidth: number = 15,
-      paddleHeight: number = 120 * Game.diffMultiplier,
+    var paddleWidth: number = this.gameCanvas.height / 100,
+      paddleHeight: number = (this.gameCanvas.height / 10) * Game.diffMultiplier,
       ballSize: number = 10,
       wallOffset: number = 50;
 
@@ -345,7 +347,6 @@ class Paddle extends Entity {
     else {
       this.yVel = 0;
     }
-
     this.y += this.yVel * this.speed;
   }
 }
@@ -399,6 +400,7 @@ class ComputerPaddle extends Entity {
 class Ball extends Entity {
   public speed: number = 6;
   public glowColor = "#FFFFFF";
+  public isWaiting: boolean = false;
   private lastHitBy: 'player' | 'computer' | null = null;
   private glowIntensity: number = 0;
   private maxGlowIntensity: number = 7;
@@ -445,7 +447,6 @@ class Ball extends Entity {
   }
 
   update(player: Paddle, computer: ComputerPaddle, canvas : HTMLCanvasElement, particleSystem: ParticleSystem) {
-
     // Canvas upper
     if (this.y <= 10) {
       this.yVel = 1;
@@ -464,8 +465,22 @@ class Ball extends Entity {
         -1,
         "#7DF9FF"
       );
-      this.x = canvas.width / 2 - this.width / 2;
+      this.isWaiting = true;
       Game.computerScore += 1;
+      this.x = player.x + 18;
+      this.y = canvas.height / 2;
+
+      let tmpx = this.xVel;
+      let tmpy = this.yVel;
+
+      this.xVel = 0;
+      this.yVel = 0;
+
+      setTimeout(() => {
+        this.xVel = tmpx * -1;
+        this.yVel = tmpy;
+        this.isWaiting = false;
+      }, 800);
 
       // make the score glow
       game.triggerComputerScorePulse();
@@ -483,8 +498,23 @@ class Ball extends Entity {
         1,
         "#FF073A"
       );
-      this.x = canvas.width / 2 - this.width / 2;
+      this.isWaiting = true;
       Game.playerScore += 1;
+
+      this.x = computer.x - 18;
+      this.y = canvas.height / 2;
+
+      let tmpx = this.xVel;
+      let tmpy = this.yVel;
+
+      this.xVel = 0;
+      this.yVel = 0;
+
+      setTimeout(() => {
+        this.xVel = tmpx * -1;
+        this.yVel = tmpy;
+        this.isWaiting = false;
+      }, 800);
 
       // make the score glow
       game.triggerPlayerScorePulse();
@@ -519,8 +549,19 @@ class Ball extends Entity {
       }
     }
 
-    this.x += this.xVel * this.speed;
-    this.y += this.yVel * this.speed;
+    if (!this.isWaiting)
+    {
+      this.x += this.xVel * this.speed;
+      this.y += this.yVel * this.speed;
+    }
+    else if (this.x <= canvas.width / 2) {
+      this.x = player.x + 18;
+      this.y = player.y + player.height / 2;
+    }
+    else {
+      this.x = computer.x - 18;
+      this.y = computer.y + computer.height / 2;
+    }
     //console.log("x: " + this.x + ", y: " + this.y);
   }
 }
@@ -613,10 +654,6 @@ class ParticleSystem {
 
 export function startGame2D() {
   console.log('2D Game started!');
-  try {
-    game = new Game();
-    game.gameLoop();
-  } catch (error) {
-    console.error('Error starting game:', error);
-  }
+  game = new Game();
+  game.gameLoop();
 }

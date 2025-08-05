@@ -10,7 +10,12 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "@babylonjs/core": "^8.17.2",
+    "@babylonjs/gui": "^8.17.2",
+    "@babylonjs/loaders": "^8.17.2",
+    "axios": "^1.6.0",
+    "babylonjs": "^8.17.2",
+    "babylonjs-loaders": "^8.17.2"
   },
   "devDependencies": {
     "@types/babylonjs": "^2.3.31",

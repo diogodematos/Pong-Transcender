@@ -1,10 +1,12 @@
+// src/frontend/typescript/main.ts
+
 import { login, register, logout, isAuthenticated } from './auth.ts';
 import { updateProfile, searchUsers, addFriend } from './profile.ts';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage } from './pages.ts';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage } from './pages.ts';
 import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
-import { startGame3D } from './3d.ts';
-
+// import { startGame3D } from './3d.ts'; // No longer directly used here, game.ts handles it
+import { initializeMainMenu, cleanupCurrentGame } from './game.ts'; // Correctly imported
 import { CredentialResponse } from 'google-one-tap';
 
 // IMPORTANTE para o TypeScript: Declara a função handleGoogleLogin no escopo global
@@ -23,6 +25,8 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/login', () => {
+        // Cleanup any game before showing login
+        cleanupCurrentGame(); 
         if (isAuthenticated()) {
             router.navigate('/dashboard');
         } else {
@@ -31,6 +35,8 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/register', () => {
+        // Cleanup any game before showing register
+        cleanupCurrentGame();
         if (isAuthenticated()) {
             router.navigate('/dashboard');
         } else {
@@ -39,6 +45,8 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/dashboard', () => {
+        // Cleanup any game before showing dashboard
+        cleanupCurrentGame();
         if (isAuthenticated()) {
             showDashboardPage();
         } else {
@@ -47,6 +55,8 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/profile', () => {
+        // Cleanup any game before showing profile
+        cleanupCurrentGame();
         if (isAuthenticated()) {
             showProfilePage();
         } else {
@@ -55,6 +65,8 @@ function setupRoutes(): void {
     });
     
     router.addRoute('/edit-profile', () => {
+        // Cleanup any game before showing edit profile
+        cleanupCurrentGame();
         if (isAuthenticated()) {
             showEditProfilePage();
         } else {
@@ -64,7 +76,18 @@ function setupRoutes(): void {
 
     router.addRoute('/game', () => {
         if (isAuthenticated()) {
-            startGame3D();
+            showGamePage();
+            // initializeMainMenu() is called here because we are entering the game "section"
+            // It will handle internal game UI states (dimension, difficulty, multiplayer)
+            initializeMainMenu(); 
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+        router.addRoute('/profile/:id', (params) => {
+        if (isAuthenticated()) {
+            showUserProfilePage(params.id);
         } else {
             router.navigate('/login');
         }
@@ -81,8 +104,7 @@ function checkAuthAndRedirect(): void {
 }
 
 // Função de callback para o Google Sign-In
-// Agora, CredentialResponse refere-se à interface importada.
-async function handleGoogleLogin(response: CredentialResponse) { // <--- Alteração aqui!
+async function handleGoogleLogin(response: CredentialResponse) {
     try {
         const res = await fetch('/api/users/google-login', {
             method: 'POST',
@@ -114,7 +136,7 @@ window.handleGoogleLogin = handleGoogleLogin;
 function setupEventListeners(): void {
     document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const success = await login({
+        await login({
             username: (document.getElementById('username') as HTMLInputElement).value,
             password: (document.getElementById('password') as HTMLInputElement).value
         });
@@ -123,7 +145,7 @@ function setupEventListeners(): void {
     document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('registerAvatar') as HTMLInputElement;
-        const success = await register({
+        await register({
             username: (document.getElementById('registerUsername') as HTMLInputElement).value,
             password: (document.getElementById('registerPassword') as HTMLInputElement).value,
             email: (document.getElementById('registerEmail') as HTMLInputElement).value,
@@ -147,19 +169,27 @@ function setupEventListeners(): void {
     });
 
     document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
+        clearInputs('username', 'password');
         router.navigate('/register');
     });
 
     document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
+        clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
         router.navigate('/login');
     });
 
     document.getElementById('goToLoginButton')?.addEventListener('click', () => {
+        clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
         router.navigate('/login');
         document.getElementById('registerSuccessModal')?.classList.add('hidden');
     });
 
     document.getElementById('goToDashboard')?.addEventListener('click', () => {
+        clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
+        router.navigate('/dashboard');
+    });
+
+    document.getElementById('goToDashboardId')?.addEventListener('click', () => {
         router.navigate('/dashboard');
     });
 
@@ -184,11 +214,13 @@ function setupEventListeners(): void {
         }
     });
 
+    // Navigation items should also trigger cleanup when leaving /game
     document.querySelector('[data-route="/dashboard"]')?.addEventListener('click', () => {
         router.navigate('/dashboard');
     });
 
     document.querySelector('[data-route="/game"]')?.addEventListener('click', () => {
+        // This will navigate to /game, which then calls initializeMainMenu()
         router.navigate('/game');
     });
 
@@ -197,12 +229,12 @@ function setupEventListeners(): void {
     });
 
     document.getElementById('navLogoutButton')?.addEventListener('click', () => {
-        logout();
+        logout(); // Logout will typically redirect to /login, triggering cleanup
     });
 
     document.getElementById('saveProfileChangesButton')?.addEventListener('click', async () => {
         const fileInput = document.getElementById('newAvatar') as HTMLInputElement;
-        const success = await updateProfile({
+        await updateProfile({
             newUsername: (document.getElementById('newUsername') as HTMLInputElement).value,
             newPassword: (document.getElementById('newPassword') as HTMLInputElement).value,
             newEmail: (document.getElementById('newEmail') as HTMLInputElement).value,

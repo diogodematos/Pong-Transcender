@@ -66,13 +66,13 @@ body {
       padding: 0;
       background: #000;
       font-family: 'Orbitron', monospace;
-      color: white;
+      color: black;
       overflow: hidden;
     }
 
     #renderCanvas {
-      width: 100vw;
-      height: 100vh;
+      width: 80vw;
+      height: 80vh;
       display: block;
     }
 
@@ -88,7 +88,7 @@ body {
 
     #score-display {
       position: absolute;
-      top: 50px;
+      top: 1vh;
       width: 100%;
       text-align: center;
       font-size: 48px;
@@ -110,8 +110,8 @@ body {
 
     #controls {
       position: absolute;
-      top: 3%;
-      right: 80%;
+      top: 9vh;
+      right: 155vh;
       pointer-events: auto;
     }
 
@@ -139,4 +139,20 @@ body {
       text-align: center;
       font-size: 16px;
       opacity: 0.8;
+    }
+
+    .button {
+      margin: 0 3px;
+      padding: 10px 20px;
+      background: rgba(12, 34, 95, 0.7);
+      border: 2px solid #7DF9FF;
+      color: #7DF9FF;
+      font-family: 'Orbitron', monospace;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .button:hover {
+      background: rgba(125, 249, 255, 0.2);
+      box-shadow: 0 0 20px #7DF9FF;
     }

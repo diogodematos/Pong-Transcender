@@ -1,4 +1,7 @@
-import { getDashboard, getFriendsForProfile, getProfile} from "./profile.ts";
+// src/frontend/typescript/pages.ts
+
+import { getDashboard, getFriendsForProfile, getProfile, getUserProfile} from "./profile.ts";
+import { initializeMainMenu, cleanupCurrentGame } from './game.ts'; // Importe as funções do game.ts
 
 export function showLoginPage(): void {
     togglePages('loginPage');
@@ -31,8 +34,16 @@ export function showEditProfilePage(): void {
 export function showGamePage(): void {
     togglePages('gamePage');
     showNavigation();
-    // Initialize game if needed
-    initializeGame();
+    // Inicialize o menu principal do jogo e os controles (botões de dificuldade, etc.)
+    console.log('Attempting to initialize game main menu from showGamePage...');
+    initializeMainMenu();
+}
+
+export function showUserProfilePage(userId: string): void {
+    // Assuming you have a function to fetch and display user profile by ID
+    getUserProfile(userId);
+    togglePages('userProfilePage');
+    showNavigation();
 }
 
 export function clearInputs(...ids: string[]): void {
@@ -51,10 +62,15 @@ export function clearInputs(...ids: string[]): void {
 }
 
 function togglePages(visiblePageId: string): void {
-    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage'];
+    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage', 'userProfilePage'];
+    
     pages.forEach(page => {
         const el = document.getElementById(page);
         if (el) {
+            if (page === 'gamePage' && visiblePageId !== 'gamePage' && !el.classList.contains('hidden')) {
+                console.log("Leaving game page, cleaning up current game...");
+                cleanupCurrentGame(); // Chama a função de limpeza do game.ts
+            }
             el.classList.toggle('hidden', page !== visiblePageId);
         }
     });
@@ -88,15 +104,4 @@ function resetAvatarPreview(inputId: string): void {
     }
 }
 
-function initializeGame(): void {
-    // Initialize your pong game here
-    console.log('Initializing Pong Game...');
-    // You can add your pong game logic here
-    
-    // Example: Get canvas and start game
-    const canvas = document.getElementById('pongCanvas');
-    if (canvas instanceof HTMLCanvasElement) {
-        // Initialize your game logic here
-        console.log('Canvas ready for Pong game');
-    }
-}
+// A função initializeGame() antiga foi removida conforme discutido.

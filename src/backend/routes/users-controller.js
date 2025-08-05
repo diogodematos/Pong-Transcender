@@ -327,6 +327,34 @@ const usersController = async (fastify, options) => {
         }
     });
 
+     // --- GET /api/users/profile/id - Obter dados do perfil dum utilizador a partir dum id---
+    fastify.get('/profile/:id', {
+        onRequest: [fastify.authenticate], // Protegida por autenticação JWT
+        handler: async (req, reply) => {
+            try {
+                const {id} = req.params;
+                const userId = req.user.id;
+                console.log(`Fetching profile for user ID: ${id} by authenticated user ID: ${userId}`);
+                const user = db.prepare('SELECT id, username, avatar, wins, losses FROM users WHERE id = ?').get(id);
+                if (!user) {
+                    return reply.status(404).send({ error: 'User not found' });
+                }
+                return reply.send({
+                    username: user.username,
+                    avatar: user.avatar || '/uploads/default-avatar.jpg',
+                    wins: user.wins || 0,
+                    losses: user.losses || 0,
+                });
+            } catch (error) {
+                req.log.error(`Error fetching profile: ${error.message}`);
+                if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+                    return reply.status(401).send({ error: 'Unauthorized: Invalid or expired token', details: error.message });
+                }
+                return reply.status(500).send({ error: 'Internal server error', details: error.message });
+            }
+        }
+    });
+
     // --- PUT /api/users/updateProfile - Atualizar perfil do utilizador (incluindo avatar) ---
     fastify.put('/updateProfile', { onRequest: [fastify.authenticate] }, async (req, reply) => {
         try {

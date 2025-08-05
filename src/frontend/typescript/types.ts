@@ -16,6 +16,13 @@ export interface Profile {
   losses: number;
 }
 
+export interface ProfileId {
+  username: string;
+  avatar: string;
+  wins: number;
+  losses: number;
+}
+
 export interface UpdateProfileData {
   newUsername?: string;
   newPassword?: string;
