@@ -1,133 +1,187 @@
+import { WebSocket } from 'ws';
 import db from '../db.js';
 
-const gameController = async (fastify, options) => {
-  const connectedGames = new Map(); // Map<gameId, Set<socket>>
-  const gamePlayers = new Map(); // Map<gameId, {player1Id, player2Id}>
+// Store active games and their sockets
+const connectedGames = new Map();
+const gamePlayers = new Map();
+const socketToUserId = new Map(); // Map each socket to its user ID
 
-  // WebSocket endpoint for game
+export default async function gameRoutes(fastify, options) {
+  fastify.log.info('🎮 Game controller routes being registered');
+  
+  // WebSocket upgrade handler for game connections
   fastify.get('/ws', { websocket: true }, (connection, req) => {
+    fastify.log.info('🔌 Game WebSocket connection attempt received');
+    fastify.log.info('Request query params:', req.query);
+    
+    // In Fastify WebSocket, the connection object itself is the socket
     const socket = connection;
-    const params = new URL(req.url, 'http://localhost').searchParams;
-    const token = params.get('token');
-    const gameId = params.get('gameId');
-
-    if (!token || !gameId) {
-      req.log.warn('Missing token or gameId for game WebSocket connection.');
-      socket.close(1008, 'Token and gameId are required');
-      return;
-    }
+    
+    const token = req.query.token;
+    const gameId = req.query.gameId || 'default-game';
 
     try {
+      req.log.info(`Starting game WebSocket connection for gameId: ${gameId}`);
+      
+      // Verify JWT token
+      if (!token) {
+        throw new Error('No token provided');
+      }
+      
+      req.log.info(`Verifying JWT token for game connection`);
       const decoded = fastify.jwt.verify(token);
       const userId = decoded.id;
-
+      req.log.info(`JWT verified successfully for user: ${userId}`);
+      
+      // Set up game state
       if (!connectedGames.has(gameId)) {
         connectedGames.set(gameId, new Set());
-        gamePlayers.set(gameId, { player1Id: userId, player2Id: null });
+        gamePlayers.set(gameId, {
+          player1Id: null,
+          player2Id: null,
+          countdownStarted: false,
+          gameState: {
+            paddle1Y: 0,
+            paddle2Y: 0,
+            ballX: 0,
+            ballY: 0,
+            ballZ: 0,
+            ballVelX: 0, // Start with 0 velocity
+            ballVelZ: 0, // Start with 0 velocity
+            player1Score: 0,
+            player2Score: 0,
+            gameStarted: false, // Track if game has actually started
+            gameEnded: false,
+            updateInterval: null
+          }
+        });
       }
+
       const gameSockets = connectedGames.get(gameId);
       const players = gamePlayers.get(gameId);
-
-      if (gameSockets.size >= 2) {
-        socket.close(1008, 'Game is full');
-        return;
-      }
-
+      const gameState = players.gameState; // Use shared game state
+      
+      req.log.info(`🔍 Debug - Before adding socket: Set size = ${gameSockets.size}`);
       gameSockets.add(socket);
-      if (gameSockets.size === 2) {
+      socketToUserId.set(socket, userId); // Map this socket to the user ID
+      req.log.info(`🔍 Debug - After adding socket: Set size = ${gameSockets.size}`);
+      req.log.info(`🔍 Debug - Socket mapped to user ID: ${userId}`);
+      
+      // Assign player IDs
+      if (!players.player1Id) {
+        players.player1Id = userId;
+      } else if (!players.player2Id && players.player1Id !== userId) {
         players.player2Id = userId;
       }
-      req.log.info(`User ${userId} joined game ${gameId}`);
 
-      // Game state
-      let gameState = {
-        paddle1Y: 0,
-        paddle2Y: 0,
-        ballX: 0,
-        ballY: 0,
-        player1Score: 0,
-        player2Score: 0,
-      };
+      // Start countdown when 2nd player joins
+      if (gameSockets.size === 2 && !players.countdownStarted) {
+        players.countdownStarted = true;
+        let countdown = 3;
+        
+        const countdownInterval = setInterval(() => {
+          // Broadcast countdown to all clients
+          gameSockets.forEach(client => {
+            if (client && client.readyState === 1) {
+              client.send(JSON.stringify({
+                type: 'countdown',
+                count: countdown
+              }));
+            }
+          });
+          
+          countdown--;
+          
+          if (countdown < 0) {
+            clearInterval(countdownInterval);
+            
+            // Start the game after countdown
+            gameState.gameStarted = true;
+            gameState.ballVelX = Math.random() > 0.5 ? 0.3 : -0.3;
+            gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+            req.log.info(`Game started! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
+            
+            // Notify clients game has started
+            gameSockets.forEach(client => {
+              if (client && client.readyState === 1) {
+                client.send(JSON.stringify({
+                  type: 'game_started',
+                  message: 'Game has started!'
+                }));
+              }
+            });
+          }
+        }, 1000); // Update every second
+      }
+      
+      req.log.info(`User ${userId} joined game ${gameId}. Players connected: ${gameSockets.size}/2`);
 
       socket.on('message', (message) => {
         try {
           const data = JSON.parse(message.toString());
-          if (data.type === 'game_init') {
-            if (data.isHost) {
-              req.log.info(`Game ${gameId} initialized by host ${userId}`);
-            }
-          } else if (data.type === 'player_update') {
-            if (gameSockets.size === 1) {
-              // Single-player (AI opponent)
-              gameState.paddle1Y = data.paddleY;
-              gameState.paddle2Y = -data.paddleY; // Simple AI
-              gameState.ballX += 0.1 * (gameState.ballX < 0 ? 1 : -1);
-              if (gameState.ballX > 4 || gameState.ballX < -4) {
-                gameState.ballX = 0;
-                gameState.ballY = 0;
-                if (gameState.ballX > 4) gameState.player1Score++;
-                else gameState.player2Score++;
-              }
-            } else {
-              // Multiplayer
-              if (Array.from(gameSockets)[0] === socket) {
-                gameState.paddle1Y = data.paddleY;
-              } else {
-                gameState.paddle2Y = data.paddleY;
-              }
-              gameState.ballX += 0.1 * (gameState.ballX < 0 ? 1 : -1);
-              if (gameState.ballX > 4 || gameState.ballX < -4) {
-                gameState.ballX = 0;
-                gameState.ballY = 0;
-                if (gameState.ballX > 4) gameState.player1Score++;
-                else gameState.player2Score++;
-              }
-            }
+          req.log.info(`Received message from user ${userId}:`, data);
 
-            // Check for game end (e.g., score reaches 5)
-            if (gameState.player1Score >= 5 || gameState.player2Score >= 5) {
-              const winnerId = gameState.player1Score >= 5 ? players.player1Id : players.player2Id;
-              // Save game result to database
-              db.prepare(`
-                INSERT INTO games (player1_id, player2_id, player1_score, player2_score, winner_id, played_at)
-                VALUES (?, ?, ?, ?, ?, datetime('now'))
-              `).run(
-                players.player1Id,
-                players.player2Id || 0, // 0 for AI opponent
-                gameState.player1Score,
-                gameState.player2Score,
-                winnerId
-              );
-              // Update user stats
-              db.prepare('UPDATE users SET wins = wins + 1 WHERE id = ?').run(winnerId);
-              db.prepare('UPDATE users SET losses = losses + 1 WHERE id = ?').run(
-                winnerId === players.player1Id && players.player2Id ? players.player2Id : players.player1Id
-              );
+          if (data.type === 'game_init') {
+            req.log.info(`Game ${gameId} initialized by user ${userId}, isHost: ${data.isHost}`);
+            // Don't initialize ball movement - wait for countdown to complete
+            
+            // Send immediate game state after initialization
+            setTimeout(() => {
               gameSockets.forEach(client => {
-                if (client.readyState === 1) {
+                if (client && client.readyState === 1) {
+                  // Find which user this client belongs to using the socket mapping
+                  const clientUserId = socketToUserId.get(client);
+                  const isClientPlayer1 = clientUserId === players.player1Id;
+                  
+                  req.log.info(`📡 Sending game state to user ${clientUserId}, isPlayer1: ${isClientPlayer1}`);
+                  
+                  // Mirror ball position for Player 2 so they see it from their perspective
+                  const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
+                  
                   client.send(JSON.stringify({
-                    type: 'game_end',
-                    winnerId,
-                    player1Score: gameState.player1Score,
-                    player2Score: gameState.player2Score,
+                    type: 'game_state',
+                    opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                    ballX: ballXForClient,
+                    ballY: gameState.ballZ,
+                    playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
+                    opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
+                    playersConnected: gameSockets.size,
+                    gameStarted: gameState.gameStarted,
                   }));
                 }
               });
-              connectedGames.delete(gameId);
-              gamePlayers.delete(gameId);
-              return;
+            }, 100);
+            
+          } else if (data.type === 'player_update') {
+            // Update paddle position based on user ID (host vs non-host)
+            // Host (player1) is always the first player who joined
+            const isPlayer1 = players.player1Id === userId;
+            
+            if (isPlayer1) {
+              gameState.paddle1Y = data.paddleY;
+            } else {
+              gameState.paddle2Y = data.paddleY;
             }
 
-            // Broadcast game state
+            // Send game state to each client with proper player mapping
             gameSockets.forEach(client => {
-              if (client.readyState === 1) {
+              if (client && client.readyState === 1) {
+                // Find which user this client belongs to using the socket mapping
+                const clientUserId = socketToUserId.get(client);
+                const isClientPlayer1 = clientUserId === players.player1Id;
+                
+                // Mirror ball position for Player 2 so they see it from their perspective
+                const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
+                
                 client.send(JSON.stringify({
                   type: 'game_state',
-                  opponentPaddleY: client === Array.from(gameSockets)[0] ? gameState.paddle2Y : gameState.paddle1Y,
-                  ballX: gameState.ballX,
-                  ballY: gameState.ballY,
-                  playerScore: client === Array.from(gameSockets)[0] ? gameState.player1Score : gameState.player2Score,
-                  opponentScore: client === Array.from(gameSockets)[0] ? gameState.player2Score : gameState.player1Score,
+                  opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                  ballX: ballXForClient,
+                  ballY: gameState.ballZ,
+                  playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
+                  opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
+                  playersConnected: gameSockets.size,
+                  gameStarted: gameState.gameStarted,
                 }));
               }
             });
@@ -137,10 +191,158 @@ const gameController = async (fastify, options) => {
         }
       });
 
+      // Start periodic game state broadcast for this game if not already started
+      if (!gameState.updateInterval) {
+        gameState.updateInterval = setInterval(() => {
+          if (gameSockets.size > 0 && gameState.gameStarted && !gameState.gameEnded) {
+            // Only update ball position if game has actually started
+            if (gameState.ballVelX !== 0 || gameState.ballVelZ !== 0) {
+              // Update ball position
+              gameState.ballX += gameState.ballVelX;
+              gameState.ballZ += gameState.ballVelZ;
+
+              // Wall bouncing
+              const arenaHalfHeight = 15;
+              if (gameState.ballZ <= -arenaHalfHeight + 1 || gameState.ballZ >= arenaHalfHeight - 1) {
+                gameState.ballVelZ *= -1;
+              }
+
+              // Paddle collision detection
+              const paddleHeight = 3;
+              const arenaHalfWidth = 25;
+
+              // Player 1 paddle collision (left side)
+              if (gameState.ballX <= -arenaHalfWidth + 2 && gameState.ballX >= -arenaHalfWidth + 1) {
+                if (gameState.ballZ >= gameState.paddle1Y - paddleHeight && 
+                    gameState.ballZ <= gameState.paddle1Y + paddleHeight) {
+                  gameState.ballVelX = Math.abs(gameState.ballVelX) + 0.02; // Increase speed slightly
+                  gameState.ballVelZ += (gameState.ballZ - gameState.paddle1Y) * 0.1; // Add spin
+                  req.log.info(`Player 1 paddle hit! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
+                }
+              }
+
+              // Player 2 paddle collision (right side)
+              if (gameState.ballX >= arenaHalfWidth - 2 && gameState.ballX <= arenaHalfWidth - 1) {
+                if (gameState.ballZ >= gameState.paddle2Y - paddleHeight && 
+                    gameState.ballZ <= gameState.paddle2Y + paddleHeight) {
+                  gameState.ballVelX = -Math.abs(gameState.ballVelX) - 0.02; // Increase speed slightly
+                  gameState.ballVelZ += (gameState.ballZ - gameState.paddle2Y) * 0.1; // Add spin
+                  req.log.info(`Player 2 paddle hit! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
+                }
+              }
+
+              // Goal detection
+              if (gameState.ballX > arenaHalfWidth) {
+                // Ball went past right side of arena (from server perspective)
+                // Player 1 (host) scores because ball went past Player 2's goal
+                gameState.player1Score++;
+                gameState.ballX = 0;
+                gameState.ballZ = 0;
+                gameState.ballVelX = -0.3;
+                gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+                req.log.info(`Player 1 scored! Score: ${gameState.player1Score}-${gameState.player2Score}`);
+              } else if (gameState.ballX < -arenaHalfWidth) {
+                // Ball went past left side of arena (from server perspective)
+                // Player 2 (non-host) scores because ball went past Player 1's goal
+                gameState.player2Score++;
+                gameState.ballX = 0;
+                gameState.ballZ = 0;
+                gameState.ballVelX = 0.3;
+                gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+                req.log.info(`Player 2 scored! Score: ${gameState.player1Score}-${gameState.player2Score}`);
+              }
+
+              // Check for game end (first to 5 points wins)
+              if (!gameState.gameEnded && (gameState.player1Score >= 5 || gameState.player2Score >= 5)) {
+                gameState.gameEnded = true;
+                const winnerId = gameState.player1Score >= 5 ? players.player1Id : players.player2Id;
+                
+                req.log.info(`Game ended! Winner: ${winnerId}, Final Score: ${gameState.player1Score}-${gameState.player2Score}`);
+                
+                // Save game result to database
+                try {
+                  db.prepare(`
+                    INSERT INTO games (player1_id, player2_id, player1_score, player2_score, winner_id, played_at)
+                    VALUES (?, ?, ?, ?, ?, datetime('now'))
+                  `).run(
+                    players.player1Id,
+                    players.player2Id || 0,
+                    gameState.player1Score,
+                    gameState.player2Score,
+                    winnerId
+                  );
+                  
+                  // Update user stats
+                  db.prepare('UPDATE users SET wins = wins + 1 WHERE id = ?').run(winnerId);
+                  const loserId = winnerId === players.player1Id ? players.player2Id : players.player1Id;
+                  if (loserId) {
+                    db.prepare('UPDATE users SET losses = losses + 1 WHERE id = ?').run(loserId);
+                  }
+                  
+                  req.log.info(`Database updated: Winner ${winnerId} got +1 win, Loser ${loserId} got +1 loss`);
+                } catch (dbError) {
+                  req.log.error(`Database error when saving game result: ${dbError.message}`);
+                }
+                
+                // Broadcast game end
+                gameSockets.forEach(client => {
+                  if (client && client.readyState === 1) {
+                    client.send(JSON.stringify({
+                      type: 'game_end',
+                      winnerId,
+                      player1Score: gameState.player1Score,
+                      player2Score: gameState.player2Score,
+                    }));
+                  }
+                });
+                
+                // Clean up game resources
+                connectedGames.delete(gameId);
+                gamePlayers.delete(gameId);
+                clearInterval(gameState.updateInterval);
+                return;
+              }
+            }
+
+            // Broadcast updated state to all clients
+            gameSockets.forEach(client => {
+              if (client && client.readyState === 1) {
+                // Find which user this client belongs to using the socket mapping
+                const clientUserId = socketToUserId.get(client);
+                const isClientPlayer1 = clientUserId === players.player1Id;
+                
+                req.log.info(`📡 Broadcasting game state to user ${clientUserId}, isPlayer1: ${isClientPlayer1}`);
+                
+                // Mirror ball position for Player 2 so they see it from their perspective
+                const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
+                
+                client.send(JSON.stringify({
+                  type: 'game_state',
+                  opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                  ballX: ballXForClient,
+                  ballY: gameState.ballZ,
+                  playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
+                  opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
+                  playersConnected: gameSockets.size,
+                  gameStarted: gameState.gameStarted,
+                }));
+              }
+            });
+          }
+        }, 100); // Reduced to 10 FPS server updates to prevent glitching
+      }
+
       socket.on('close', (code, reason) => {
         gameSockets.delete(socket);
+        socketToUserId.delete(socket); // Clean up socket mapping
         req.log.info(`User ${userId} left game ${gameId}. Code: ${code}, Reason: ${reason || 'N/A'}`);
         if (gameSockets.size === 0) {
+          // Clean up the update interval if it exists
+          const gameState = connectedGames.get(gameId);
+          if (gameState && gameState.updateInterval) {
+            clearInterval(gameState.updateInterval);
+            gameState.updateInterval = null;
+          }
           connectedGames.delete(gameId);
           gamePlayers.delete(gameId);
         }
@@ -149,7 +351,14 @@ const gameController = async (fastify, options) => {
       socket.on('error', (error) => {
         req.log.error(`Game WebSocket error for user ${userId}: ${error.message}`);
         gameSockets.delete(socket);
+        socketToUserId.delete(socket); // Clean up socket mapping
         if (gameSockets.size === 0) {
+          // Clean up the update interval if it exists
+          const gameState = connectedGames.get(gameId);
+          if (gameState && gameState.updateInterval) {
+            clearInterval(gameState.updateInterval);
+            gameState.updateInterval = null;
+          }
           connectedGames.delete(gameId);
           gamePlayers.delete(gameId);
         }
@@ -160,9 +369,18 @@ const gameController = async (fastify, options) => {
         gameId,
         userId,
       }));
+      
     } catch (error) {
       req.log.error(`Error verifying game WebSocket token: ${error.message}`);
-      socket.close(1008, `Authentication error: ${error.message}`);
+      try {
+        if (socket && typeof socket.close === 'function') {
+          socket.close(1008, `Authentication error: ${error.message}`);
+        } else if (connection && connection.socket && typeof connection.socket.close === 'function') {
+          connection.socket.close(1008, `Authentication error: ${error.message}`);
+        }
+      } catch (closeError) {
+        req.log.error(`Error closing WebSocket: ${closeError.message}`);
+      }
     }
   });
 
@@ -180,14 +398,19 @@ const gameController = async (fastify, options) => {
   fastify.post('/join', {
     onRequest: [fastify.authenticate],
     handler: async (req, reply) => {
-      const userId = req.user.id;
       const { gameId } = req.body;
-      if (!gameId || !connectedGames.has(gameId)) {
-        return reply.status(404).send({ error: 'Game not found' });
+      const userId = req.user.id;
+      
+      if (!connectedGames.has(gameId)) {
+        throw new Error('Game not found');
       }
-      return { gameId };
+      
+      const gameSockets = connectedGames.get(gameId);
+      if (gameSockets.size >= 2) {
+        throw new Error('Game is full');
+      }
+      
+      return { success: true, gameId };
     }
   });
 };
-
-export default gameController;

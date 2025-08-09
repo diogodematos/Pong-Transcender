@@ -5,6 +5,7 @@ class Game3D {
   private gameId: string = '';
   private isConnected: boolean = false;
   private useMultiplayer: boolean = false;
+  private gameUpdateInterval: number | null = null;
 
   // Canvas and engine
   private canvas: HTMLCanvasElement;
@@ -54,7 +55,11 @@ class Game3D {
   private isGoalScored: boolean = false;
 
   constructor() {
-    this.canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+    const canvasEl = document.getElementById("renderCanvas");
+    if (!(canvasEl instanceof HTMLCanvasElement)) {
+      throw new Error('Element with id "renderCanvas" is not a canvas element.');
+    }
+    this.canvas = canvasEl;
     this.engine = new BABYLON.Engine(this.canvas, true);
     this.scene = null!; // Will be initialized in createScene
     this.camera = null!; // Will be initialized in createScene
@@ -81,34 +86,136 @@ class Game3D {
       return true;
     }
 
-    let type: string;
     let targetGameId: string;
+
+    // Get authentication token
+    const token = this.getAuthToken();
+    if (!token) {
+      throw new Error("Authentication token not found. Please log in first.");
+    }
+
+    // Test authentication first
+    try {
+      console.log('Testing authentication...');
+      const authTestResponse = await fetch('/api/users/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Auth test response status:', authTestResponse.status);
+      
+      if (!authTestResponse.ok) {
+        const authErrorText = await authTestResponse.text();
+        console.error('Auth test failed:', authTestResponse.status, authTestResponse.statusText, authErrorText);
+        throw new Error("Authentication failed. Please log in again.");
+      }
+      
+      const profileData = await authTestResponse.json();
+      console.log('Authentication test passed, user profile:', profileData);
+    } catch (error) {
+      console.error('Auth test error:', error);
+      throw new Error("Authentication failed. Please log in again.");
+    }
 
     // Determine connection type and game ID
     if (isHost) {
-      if (!this.gameId) {
-        console.log("Generating game ID...");
-        this.gameId = this.generateUniqueGameId();
-        alert("Game ID: " + this.gameId);
+      // Create a new game using the API
+      try {
+        console.log('Making request to /api/game/create with token:', token);
+        console.log('Request method: POST');
+        console.log('Request headers:', {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        });
+        
+        const response = await fetch('/api/game/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({}) // Add empty body to ensure it's treated as POST
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        // Log response headers as an object
+        const responseHeaders: any = {};
+        response.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+        console.log('Response headers:', responseHeaders);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response body:', errorText);
+          
+          // Try to parse error as JSON for better error message
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.error('Parsed error:', errorJson);
+            throw new Error(`Failed to create game: ${response.status} ${response.statusText} - ${errorJson.message || errorJson.error || errorText}`);
+          } catch (parseError) {
+            throw new Error(`Failed to create game: ${response.status} ${response.statusText} - ${errorText}`);
+          }
+        }
+
+        const result = await response.json();
+        targetGameId = result.gameId;
+        this.gameId = targetGameId;
+        console.log("Created game with ID:", targetGameId);
+        alert("Game created! Share this ID with others to join: " + targetGameId);
+      } catch (error) {
+        console.error("Failed to create game:", error);
+        throw new Error(`Failed to create game. Please try again. Error: ${error}`);
       }
-      targetGameId = this.gameId;
-      type = "create";
     } else {
-      // Non-host trying to join
+      // Join existing game
       if (!gameId || gameId.trim() === "") {
         console.error("Error: Game ID is required to join a game");
         return false;
       }
+      
       targetGameId = gameId.trim();
       this.gameId = targetGameId;
-      type = "join";
+
+      // Validate game exists using the API
+      try {
+        const response = await fetch('/api/game/join', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ gameId: targetGameId })
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Game not found");
+          }
+          throw new Error(`Failed to join game: ${response.statusText}`);
+        }
+
+        console.log("Game validated, proceeding to join:", targetGameId);
+      } catch (error) {
+        console.error("Failed to validate game:", error);
+        throw error;
+      }
     }
 
     try {
       console.log(`${isHost ? 'Creating' : 'Joining'} game with ID: ${targetGameId}`);
 
-      // Create WebSocket connection
-      this.socket = new WebSocket(`ws://localhost:3000/game/${targetGameId}`);
+      // Create WebSocket connection using your existing infrastructure
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const hostname = window.location.hostname;
+      // Use the same host as the current page (nginx proxy will handle routing)
+      const wsUrl = `${protocol}//${hostname}/api/game/ws?token=${encodeURIComponent(token)}&gameId=${encodeURIComponent(targetGameId)}`;
+      
+      this.socket = new WebSocket(wsUrl);
       console.log("Socket connection initiated for game:", targetGameId);
 
       // Store socket reference to avoid null issues
@@ -128,9 +235,10 @@ class Game3D {
           console.log("Socket connection established");
           this.isConnected = true;
 
-          // Send initial message to server
+          // Send game initialization message
+          console.log('Sending game_init message, isHost:', this.isHost);
           socket.send(JSON.stringify({
-            type: type,
+            type: 'game_init',
             isHost: this.isHost,
             gameId: targetGameId
           }));
@@ -141,19 +249,16 @@ class Game3D {
         socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+            console.log("Received WebSocket message:", data);
 
             // Handle connection-specific responses
-            if (data.type === "error") {
-              console.error("Server error:", data.message);
-              if (data.message.includes("Game not found") || data.message.includes("does not exist")) {
-                clearTimeout(connectionTimeout);
-                reject(new Error("Game not found"));
-                return;
-              }
+            if (data.type === "game_joined") {
+              console.log(`Successfully joined game:`, targetGameId);
             }
 
-            if (data.type === "joined" || data.type === "created") {
-              console.log(`Successfully ${data.type} game:`, targetGameId);
+            if (data.type === "game_end") {
+              console.log("Game ended:", data);
+              // Handle game end logic here
             }
 
             // Pass to your existing message handler
@@ -174,9 +279,17 @@ class Game3D {
           clearTimeout(connectionTimeout);
           console.log("WebSocket closed:", event.code, event.reason);
           this.isConnected = false;
+          
+          // Clean up game update interval
+          if (this.gameUpdateInterval) {
+            clearInterval(this.gameUpdateInterval);
+            this.gameUpdateInterval = null;
+          }
 
-          // Only reject if we haven't already resolved
-          if (!this.isConnected) {
+          // Handle specific close codes
+          if (event.code === 1008) {
+            reject(new Error("Authentication failed or game is full"));
+          } else if (!this.isConnected) {
             reject(new Error(`Connection closed: ${event.reason || 'Unknown reason'}`));
           }
         };
@@ -188,37 +301,166 @@ class Game3D {
     }
   }
 
+  // Helper method to get authentication token - implement based on your auth system
+  private getAuthToken(): string | null {
+    // This should return the JWT token from your authentication system
+    // You might store it in localStorage, sessionStorage, or a cookie
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || null;
+  }
+
   handleNetworkMessage(data: any) {
+    console.log('🔄 Processing network message:', data.type, data);
+    
     switch (data.type) {
-      case 'player-move':
-        // Host controls left paddle (player), Client controls right paddle (computer)
-        if (this.isHost) {
-          // Host receives Client's moves -> update right paddle (computer)
-          this.computer.position.z = data.position;
-        } else {
-          // Client receives Host's moves -> update left paddle (player)
-          this.player.position.z = data.position;
+      case 'game_joined':
+        console.log('✅ Successfully joined game:', data.gameId);
+        console.log('🔌 WebSocket connected, isHost:', this.isHost, 'useMultiplayer:', this.useMultiplayer);
+        
+        // Send our initial position to sync with other player
+        if (this.useMultiplayer && this.isConnected && this.socket) {
+          console.log('Sending initial position sync');
+          this.socket.send(JSON.stringify({
+            type: 'player_update',
+            paddleY: this.player.position.z,
+            ballX: this.ball.position.x,
+            ballY: this.ball.position.z
+          }));
+          
+          // If we're the host, send periodic updates to ensure ball starts moving
+          if (this.isHost) {
+            console.log('Host: Starting ball movement trigger interval');
+            if (!this.gameUpdateInterval) {
+              let updateCount = 0;
+              this.gameUpdateInterval = window.setInterval(() => {
+                if (this.useMultiplayer && this.isConnected && this.socket) {
+                  updateCount++;
+                  console.log(`Host trigger update #${updateCount}`);
+                  this.socket.send(JSON.stringify({
+                    type: 'player_update',
+                    paddleY: this.player.position.z,
+                    ballX: this.ball.position.x,
+                    ballY: this.ball.position.z
+                  }));
+                  
+                  // Stop after 10 updates (5 seconds) to let natural gameplay take over
+                  if (updateCount >= 10) {
+                    console.log('Host trigger interval completed');
+                    if (this.gameUpdateInterval) {
+                      clearInterval(this.gameUpdateInterval);
+                      this.gameUpdateInterval = null;
+                    }
+                  }
+                }
+              }, 500); // Send updates every 500ms for the first 5 seconds
+            }
+          }
         }
         break;
 
-      case 'ball-update':
-        // Only non-host (client) receives ball updates
-        if (!this.isHost) {
-          this.ball.position.copyFrom(data.position);
-          (this.ball as any).velocity.copyFrom(data.velocity);
+      case 'game_state':
+        console.log('Received game state:', {
+          opponentPaddleY: data.opponentPaddleY,
+          ballX: data.ballX,
+          ballY: data.ballY,
+          playerScore: data.playerScore,
+          opponentScore: data.opponentScore,
+          playersConnected: data.playersConnected,
+          gameStarted: data.gameStarted
+        });
+        
+        // Handle game state updates from server
+        if (this.useMultiplayer) {
+          // Only update opponent paddle position, don't touch our own paddle
+          if (data.opponentPaddleY !== undefined) {
+            this.computer.position.z = data.opponentPaddleY;
+          }
+          
+          // Update ball position ONLY from server authority - disable all client ball physics
+          if (data.ballX !== undefined && data.ballY !== undefined) {
+            // Always update ball position from server, no client-side ball movement at all
+            this.ball.position.x = data.ballX;
+            this.ball.position.z = data.ballY; // Note: server ballY maps to our ballZ
+            
+            // Show the ball if it was hidden
+            if (!this.ball.isEnabled()) {
+              this.ball.setEnabled(true);
+              this.isGoalScored = false;
+            }
+            
+            // Ball is moving, stop the host interval if it exists
+            if (this.gameUpdateInterval && this.isHost) {
+              console.log('🎾 Ball started moving, stopping host trigger interval');
+              clearInterval(this.gameUpdateInterval);
+              this.gameUpdateInterval = null;
+            }
+          } else {
+            console.log('❌ No ball position data received');
+          }
+          
+          // Update scores - server sends playerScore (your score) and opponentScore (opponent's score)
+          // Always display your score on left, opponent score on right, regardless of host status
+          this.playerScore = data.playerScore;  // Your score (always on left display)
+          this.computerScore = data.opponentScore;  // Opponent score (always on right display)
+          
+          console.log(`Score update - My score (left): ${this.playerScore}, Opponent score (right): ${this.computerScore}`);
+          
+          // Check if we're waiting for players or if game hasn't started yet
+          if (data.playersConnected < 2) {
+            console.log(`Waiting for players: ${data.playersConnected}/2 connected`);
+            this.showWaitingMessage(`Waiting for opponent... (${data.playersConnected}/2 players)`);
+          } else if (data.gameStarted === false) {
+            console.log('Both players connected, waiting for countdown to complete...');
+            this.hideWaitingMessage(); // Hide waiting message when both players are connected
+          } else {
+            this.hideWaitingMessage(); // Hide waiting message when game is active
+          }
+          
+          console.log('Updated scores - Player (left):', this.playerScore, 'Opponent (right):', this.computerScore);
         }
         break;
 
-      case 'score-update':
-        this.playerScore = data.playerScore;
-        this.computerScore = data.computerScore;
+      case 'countdown':
+        console.log('Countdown:', data.count);
+        // Display countdown to user
+        this.showCountdown(data.count);
         break;
 
-      case 'game-reset':
-        // Handle game reset from host
-        if (!this.isHost) {
-          this.resetFromNetwork(data);
+      case 'game_started':
+        console.log('Game has officially started!');
+        // Hide countdown display and show that game is active
+        this.hideCountdown();
+        break;
+
+      case 'game_end':
+        console.log('Game ended:', data);
+        
+        // Clean up game update interval
+        if (this.gameUpdateInterval) {
+          clearInterval(this.gameUpdateInterval);
+          this.gameUpdateInterval = null;
         }
+        
+        // Show game over message
+        const winnerMessage = data.winnerId ? `Winner: ${data.winnerId}` : 'Game Over';
+        alert(`${winnerMessage}! Final Score: ${data.player1Score} - ${data.player2Score}`);
+        
+        // Gracefully close ONLY the game WebSocket (not the user WebSocket)
+        if (this.socket) {
+          console.log('Closing game WebSocket connection');
+          this.socket.close(1000, 'Game ended normally'); // Normal closure
+          this.socket = null;
+          this.isConnected = false;
+        }
+        
+        // Navigate to dashboard after a short delay without full page reload
+        setTimeout(() => {
+          console.log('Navigating back to profile page');
+          window.location.href = '/profile.html';
+        }, 2000); // Increased delay to ensure cleanup
+        break;
+
+      default:
+        console.log('Unknown message type:', data.type);
         break;
     }
   }
@@ -232,9 +474,15 @@ class Game3D {
     console.log("Setting up...");
     this.setupEventListeners();
     this.setupDifficultyButtons();
+    
+    // Set up score colors based on host status for multiplayer
+    if (this.useMultiplayer) {
+      this.setupScoreColors();
+    }
+    
     console.log("Rendering...");
     this.startRenderLoop();
-    console.log("Done!");
+    console.log("Done! Multiplayer mode:", this.useMultiplayer);
   }
 
   async createScene() {
@@ -348,10 +596,7 @@ class Game3D {
     playerGoal.position.x = (this.arenaSize[0] / -2) + 0.5;
     playerGoal.position.y = 0.1;
     const playerGoalMat = new BABYLON.StandardMaterial("playerGoalMat", this.scene);
-    playerGoalMat.emissiveColor = new BABYLON.Color3(0.49, 0.976, 1);
-    playerGoalMat.disableLighting = true;
-    playerGoal.material = playerGoalMat;
-
+    
     // Computer goal (right side)
     const computerGoal = BABYLON.MeshBuilder.CreateBox("computerGoal", {
       width: 0.3,
@@ -361,8 +606,31 @@ class Game3D {
     computerGoal.position.x = (this.arenaSize[0] / 2) + 0.5;
     computerGoal.position.y = 0.1;
     const computerGoalMat = new BABYLON.StandardMaterial("computerGoalMat", this.scene);
-    computerGoalMat.emissiveColor = new BABYLON.Color3(1, 0.027, 0.227);
+    
+    // Set goal colors to match player colors consistently
+    // Blue = Host (Player 1), Red = Non-host (Player 2)
+    if (this.useMultiplayer) {
+      if (this.isHost) {
+        // Host sees: Left goal (yours) = blue, Right goal (opponent's) = red
+        playerGoalMat.emissiveColor = new BABYLON.Color3(0.49, 0.976, 1); // Blue
+        computerGoalMat.emissiveColor = new BABYLON.Color3(1, 0.027, 0.227); // Red
+        console.log('HOST: Left goal BLUE (yours), Right goal RED (opponent)');
+      } else {
+        // Non-host sees: Left goal (yours) = red, Right goal (opponent's) = blue
+        // This means when non-host scores into right goal (blue), their left score (red) increases
+        playerGoalMat.emissiveColor = new BABYLON.Color3(1, 0.027, 0.227); // Red
+        computerGoalMat.emissiveColor = new BABYLON.Color3(0.49, 0.976, 1); // Blue
+        console.log('CLIENT: Left goal RED (yours), Right goal BLUE (opponent)');
+      }
+    } else {
+      // Single player: default colors
+      playerGoalMat.emissiveColor = new BABYLON.Color3(0.49, 0.976, 1); // Blue
+      computerGoalMat.emissiveColor = new BABYLON.Color3(1, 0.027, 0.227); // Red
+    }
+    
+    playerGoalMat.disableLighting = true;
     computerGoalMat.disableLighting = true;
+    playerGoal.material = playerGoalMat;
     computerGoal.material = computerGoalMat;
 
     this.playerGoal = playerGoal;
@@ -405,9 +673,20 @@ class Game3D {
     // Add physics properties (extending the mesh objects)
     (this.player as any).velocity = new BABYLON.Vector3(0, 0, 0);
     (this.computer as any).velocity = new BABYLON.Vector3(0, 0, 0);
+
+    // In multiplayer, keep paddle colors normal - we'll change goal colors instead
+    if (this.useMultiplayer) {
+      console.log('Multiplayer paddle setup - Everyone controls LEFT paddle, sees opponent on RIGHT');
+      console.log('Goal colors will indicate host (blue) vs client (red)');
+    }
   }
 
   createBall() {
+    // Dispose existing ball if it exists to prevent duplicates
+    if (this.ball) {
+      this.ball.dispose();
+    }
+    
     this.ball = BABYLON.MeshBuilder.CreateSphere("ball", { diameter: this.ballDiameter }, this.scene);
     this.ball.position = new BABYLON.Vector3(0, this.computer.position.y + this.ballDiameter / 2, 0);
 
@@ -420,16 +699,22 @@ class Game3D {
     ballMaterial.specularColor = new BABYLON.Color3(1, 1, 1);
     this.ball.material = ballMaterial;
 
-    // Ball stopped
+    // Ball stopped initially
     (this.ball as any).velocity = new BABYLON.Vector3(0, 0, 0);
 
-    setTimeout(() => {
-      (this.ball as any).velocity = new BABYLON.Vector3(
-        Math.random() > 0.5 ? this.ballSpeed : -this.ballSpeed,
-        0,
-        (Math.random() - 0.5) * this.ballSpeed
-      );
-    }, 800);
+    // In multiplayer, let the server handle ball movement
+    // In single player, start ball movement after delay
+    if (!this.useMultiplayer) {
+      setTimeout(() => {
+        (this.ball as any).velocity = new BABYLON.Vector3(
+          Math.random() > 0.5 ? this.ballSpeed : -this.ballSpeed,
+          0,
+          (Math.random() - 0.5) * this.ballSpeed
+        );
+      }, 800);
+    } else {
+      console.log('Multiplayer mode: Ball movement will be controlled by server');
+    }
 
     // Ball trail effect
     this.createBallTrail();
@@ -462,8 +747,8 @@ class Game3D {
     this.particleSystem.direction2 = new BABYLON.Vector3(2, 2, 2);
     this.particleSystem.minAngularSpeed = 0;
     this.particleSystem.maxAngularSpeed = Math.PI;
-    this.particleSystem.minInitialRotation = 0;
-    this.particleSystem.maxInitialRotation = Math.PI;
+    // this.particleSystem.minInitialRotation = 0;
+    // this.particleSystem.maxInitialRotation = Math.PI;
   }
 
   createBallFragments(position: BABYLON.Vector3): void {
@@ -591,6 +876,25 @@ class Game3D {
     });
   }
 
+  setupScoreColors() {
+    const playerScoreEl = document.getElementById('player-score');
+    const computerScoreEl = document.getElementById('computer-score');
+    
+    if (playerScoreEl && computerScoreEl) {
+      if (this.isHost) {
+        // Host: Left score (yours) = blue, Right score (opponent's) = red
+        playerScoreEl.style.color = '#7DF9FF';  // Blue
+        computerScoreEl.style.color = '#FF073A'; // Red
+        console.log('HOST: Score colors set - Left: BLUE (yours), Right: RED (opponent)');
+      } else {
+        // Non-host: Left score (yours) = red, Right score (opponent's) = blue
+        playerScoreEl.style.color = '#FF073A';  // Red
+        computerScoreEl.style.color = '#7DF9FF'; // Blue
+        console.log('CLIENT: Score colors set - Left: RED (yours), Right: BLUE (opponent)');
+      }
+    }
+  }
+
   reset() {
     // Reset positions
     this.player.position.z = 0;
@@ -633,35 +937,54 @@ class Game3D {
   updatePlayer() {
     const speed = 0.2 * this.speedMultiplier;
     this.isPlayerMoving = "NO";
-    let previousZ = this.player.position.z;
+    
+    // In multiplayer, always control the left paddle (player) regardless of host/client
+    // The server will map this correctly
+    let controlledPaddle = this.player;
+    let paddleWidth = this.playerWidth;
 
     if (this.keysPressed[38] || this.keysPressed[37]) { // Down/Right arrows
       this.isPlayerMoving = "DOWN";
-      (this.player as any).velocity.z = speed;
-      if (this.player.position.z + (this.playerWidth / 2) >= this.topWallZ - 1) {
-        (this.player as any).velocity.z = 0;
+      (controlledPaddle as any).velocity.z = speed;
+      if (controlledPaddle.position.z + (paddleWidth / 2) >= this.topWallZ - 1) {
+        (controlledPaddle as any).velocity.z = 0;
         this.isPlayerMoving = "NO";
       }
     } else if (this.keysPressed[40] || this.keysPressed[39]) { // Up/Left arrows
       this.isPlayerMoving = "UP";
-      (this.player as any).velocity.z = -speed;
-      if (this.player.position.z - (this.playerWidth / 2) <= this.bottomWallZ + 1) {
-        (this.player as any).velocity.z = 0;
+      (controlledPaddle as any).velocity.z = -speed;
+      if (controlledPaddle.position.z - (paddleWidth / 2) <= this.bottomWallZ + 1) {
+        (controlledPaddle as any).velocity.z = 0;
         this.isPlayerMoving = "NO";
       }
     } else {
-      (this.player as any).velocity.z = 0;
+      (controlledPaddle as any).velocity.z = 0;
     }
 
-    this.player.position.z += (this.player as any).velocity.z;
+    // Only update position if not in multiplayer mode
+    if (!this.useMultiplayer) {
+      controlledPaddle.position.z += (controlledPaddle as any).velocity.z;
+    } else {
+      // In multiplayer, always update position locally for responsive controls
+      // Server updates will override this for the opponent paddle only
+      controlledPaddle.position.z += (controlledPaddle as any).velocity.z;
+    }
 
-    // FIXED: Only send if position actually changed and we're connected
-    if (this.useMultiplayer && this.isConnected && this.socket &&
-      this.player.position.z !== previousZ) {
-      this.socket.send(JSON.stringify({
-        type: 'player-move',
-        position: this.player.position.z
-      }));
+    // Send player updates to server (compatible with your backend protocol)
+    // Send when actively moving only to reduce conflicts
+    if (this.useMultiplayer && this.isConnected && this.socket) {
+      // Only send updates when actually moving to prevent paddle conflicts
+      const shouldSendUpdate = (controlledPaddle as any).velocity.z !== 0;
+      
+      if (shouldSendUpdate) {
+        console.log('📤 Sending paddle update:', controlledPaddle.position.z.toFixed(3), 'velocity:', (controlledPaddle as any).velocity.z.toFixed(3));
+        this.socket.send(JSON.stringify({
+          type: 'player_update',
+          paddleY: controlledPaddle.position.z, // Send current paddle position
+          ballX: this.ball.position.x,          // Include ball position for server-side collision detection
+          ballY: this.ball.position.z           // Your server expects ballY, we use ballZ
+        }));
+      }
     }
   }
 
@@ -703,9 +1026,17 @@ class Game3D {
   }
 
   updateBall() {
-    // Only host simulates ball in multiplayer
-    if (this.useMultiplayer && !this.isHost) return;
+    // In multiplayer, NEVER handle ball physics on client - server is 100% authoritative
+    if (this.useMultiplayer) {
+      // Only handle visual effects like rotation, no position updates
+      if (!this.isGoalScored && this.ball.isEnabled()) {
+        const rotationSpeed = 0.1;
+        this.ball.rotation.y += rotationSpeed;
+      }
+      return;
+    }
 
+    // Single player ball physics
     // Wall bouncing (top and bottom)
     if (this.ball.position.z <= this.arenaSize[1] / -2 + 1 ||
       this.ball.position.z >= this.arenaSize[1] / 2 - 1) {
@@ -726,23 +1057,6 @@ class Game3D {
     this.ball.rotation.x += (this.ball as any).velocity.z * rotationSpeed;
     this.ball.rotation.y += rotationSpeed;
     this.ball.rotation.z -= (this.ball as any).velocity.x * rotationSpeed;
-
-    // Send ball state to other player (host only)
-    if (this.useMultiplayer && this.isConnected && this.socket) {
-      this.socket.send(JSON.stringify({
-        type: 'ball-update',
-        position: {
-          x: this.ball.position.x,
-          y: this.ball.position.y,
-          z: this.ball.position.z
-        },
-        velocity: {
-          x: (this.ball as any).velocity.x,
-          y: (this.ball as any).velocity.y,
-          z: (this.ball as any).velocity.z
-        }
-      }));
-    }
   }
 
   checkPaddleCollisions() {
@@ -788,6 +1102,13 @@ class Game3D {
   checkGoals() {
     const ballPos = this.ball.position;
 
+    // Only handle goals in single player mode
+    if (this.useMultiplayer) {
+      // Goals and scoring are handled by the server
+      return;
+    }
+
+    // Single player goal detection
     // Player scores (ball goes past computer goal)
     if (ballPos.x >= this.computerGoal.position.x) {
       this.playerScore++;
@@ -796,6 +1117,15 @@ class Game3D {
       this.createGoalExplosion(ballPos, 'player');
       this.vaporizeBall(ballPos);
       this.resetBallDelayed();
+      
+      // Check for game end (first to 5 points wins)
+      if (this.playerScore >= 5) {
+        setTimeout(() => {
+          alert(`Game Over! You Win! Final Score: ${this.playerScore} - ${this.computerScore}`);
+          this.reset();
+        }, 2000);
+        return;
+      }
     }
 
     // Computer scores (ball goes past player goal)
@@ -806,15 +1136,15 @@ class Game3D {
       this.createGoalExplosion(ballPos, 'computer');
       this.vaporizeBall(ballPos);
       this.resetBallDelayed();
-    }
-
-    // Send score update to other player
-    if (this.useMultiplayer && this.isConnected && this.socket) {
-      this.socket.send(JSON.stringify({
-        type: 'score-update',
-        playerScore: this.playerScore,
-        computerScore: this.computerScore
-      }));
+      
+      // Check for game end (first to 5 points wins)
+      if (this.computerScore >= 5) {
+        setTimeout(() => {
+          alert(`Game Over! Computer Wins! Final Score: ${this.playerScore} - ${this.computerScore}`);
+          this.reset();
+        }, 2000);
+        return;
+      }
     }
   }
 
@@ -937,8 +1267,90 @@ class Game3D {
   updateUI() {
     const playerScoreEl = document.getElementById('player-score');
     const computerScoreEl = document.getElementById('computer-score');
+    
+    // playerScore = your score (always displayed on left)
+    // computerScore = opponent score (always displayed on right)
+    // Server already sends the correct mapping based on your player role
     if (playerScoreEl) playerScoreEl.textContent = this.playerScore.toString();
     if (computerScoreEl) computerScoreEl.textContent = this.computerScore.toString();
+  }
+
+  showCountdown(count: number) {
+    // Create or update countdown display
+    let countdownEl = document.getElementById('countdown-display');
+    if (!countdownEl) {
+      countdownEl = document.createElement('div');
+      countdownEl.id = 'countdown-display';
+      countdownEl.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 4rem;
+        color: #7DF9FF;
+        text-shadow: 0 0 20px #7DF9FF;
+        z-index: 1000;
+        font-family: 'Orbitron', monospace;
+        font-weight: bold;
+        text-align: center;
+      `;
+      document.body.appendChild(countdownEl);
+    }
+    
+    if (count > 0) {
+      countdownEl.textContent = count.toString();
+      countdownEl.style.display = 'block';
+    } else {
+      countdownEl.textContent = 'GO!';
+      countdownEl.style.color = '#FF073A';
+      countdownEl.style.textShadow = '0 0 20px #FF073A';
+      setTimeout(() => {
+        this.hideCountdown();
+      }, 1000);
+    }
+  }
+
+  hideCountdown() {
+    const countdownEl = document.getElementById('countdown-display');
+    if (countdownEl) {
+      countdownEl.style.display = 'none';
+    }
+  }
+
+  showWaitingMessage(message: string) {
+    let waitingEl = document.getElementById('waiting-display');
+    if (!waitingEl) {
+      waitingEl = document.createElement('div');
+      waitingEl.id = 'waiting-display';
+      waitingEl.style.cssText = `
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        color: #7DF9FF;
+        text-shadow: 0 0 10px #7DF9FF;
+        z-index: 999;
+        font-family: 'Orbitron', monospace;
+        font-weight: bold;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+        border: 2px solid #7DF9FF;
+      `;
+      document.body.appendChild(waitingEl);
+    }
+    
+    waitingEl.textContent = message;
+    waitingEl.style.display = 'block';
+  }
+
+  hideWaitingMessage() {
+    const waitingEl = document.getElementById('waiting-display');
+    if (waitingEl) {
+      waitingEl.style.display = 'none';
+    }
   }
 
   startRenderLoop() {
@@ -947,15 +1359,6 @@ class Game3D {
       this.update();
       this.scene.render();
     });
-  }
-
-  resetFromNetwork(data: any) {
-    this.ball.position.copyFrom(data.ballPosition);
-    (this.ball as any).velocity.copyFrom(data.ballVelocity);
-    this.ball.setEnabled(true);
-    this.isGoalScored = false;
-    this.ballLastHitBy = null;
-    this.ballGlowIntensity = 0;
   }
 }
 // FIXED: Updated startGame3D function
@@ -978,13 +1381,19 @@ export async function startGame3D(gameId: string = '', isHost: boolean = false, 
     }
   } catch (error: any) {
     console.error("Failed to connect to game:", error.message);
-    // Show user-friendly error message
-    if (error.message === "Game not found")
+    // Show user-friendly error message and redirect to dashboard
+    if (error.message === "Game not found") {
       alert("The game you're trying to join doesn't exist. Please check the Game ID.");
-    else if (error.message === "Connection timeout")
+    } else if (error.message === "Connection timeout") {
       alert("Connection timed out. Please check your internet connection and try again.");
-    else
+    } else {
       alert("Failed to connect to game. Please try again.");
+    }
+    
+    // Redirect to dashboard/profile page on connection failure
+    setTimeout(() => {
+      window.location.href = '/profile.html';
+    }, 1000);
   }
 }
 
