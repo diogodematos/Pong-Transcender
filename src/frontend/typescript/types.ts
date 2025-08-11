@@ -37,6 +37,7 @@ export interface GameHistoryItem {
   opponent_score: number;
   result: 'win' | 'loss';
   played_at: string;
+  opponent_id: number;
 }
 
 export interface GameHistoryResponse {

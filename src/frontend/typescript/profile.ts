@@ -67,6 +67,8 @@ function updateGameHistoryUI(games: GameHistoryItem[]): void {
   }
 
   gameHistory.innerHTML = games.map(game => {
+      console.log('Opponent ID:', game.opponent_id);
+
       const isWin = game.result === 'win';
       const bgColor = isWin ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
       const textColor = isWin ? 'text-green-700' : 'text-red-700';
@@ -79,7 +81,65 @@ function updateGameHistoryUI(games: GameHistoryItem[]): void {
               <div class="flex justify-between items-center">
                   <div>
                       <p class="font-semibold ${textColor}">${resultText}</p>
-                      <p class="text-sm text-gray-600">vs ${game.opponent_name}</p>
+                      <a href="#/profile/${game.opponent_id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${game.opponent_name}
+                        </a>      
+                  </div>
+                  <div class="text-right">
+                      <p class="font-bold ${textColor}">${score}</p>
+                      <p class="text-xs text-gray-500">${date}</p>
+                  </div>
+              </div>
+          </div>
+      `;
+  }).join('');
+}
+
+export async function getUserGameHistory(userID: string): Promise<void> {
+  const token = localStorage.getItem('authToken');
+  if (!token) return;
+
+  try {
+      const res = await fetch(`api/users/games/history/${userID}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+          const data: GameHistoryResponse = await res.json();
+          updateUserGameHistoryUI(data.games);
+      }
+  } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+  }
+}
+
+function updateUserGameHistoryUI(games: GameHistoryItem[]): void {
+  const gameHistory = document.getElementById('gameUserHistory');
+  if (!gameHistory) return;
+
+  if (games.length === 0) {
+      gameHistory.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum jogo jogado ainda.</p>';
+      return;
+  }
+
+  gameHistory.innerHTML = games.map(game => {
+      console.log('Opponent ID:', game.opponent_id);
+
+      const isWin = game.result === 'win';
+      const bgColor = isWin ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+      const textColor = isWin ? 'text-green-700' : 'text-red-700';
+      const resultText = isWin ? 'Vitória' : 'Derrota';
+      const score = `${game.player_score} - ${game.opponent_score}`;
+      const date = formatGameDate(game.played_at);
+
+      return `
+          <div class="${bgColor} border p-3 rounded-lg">
+              <div class="flex justify-between items-center">
+                  <div>
+                      <p class="font-semibold ${textColor}">${resultText}</p>
+                      <a href="#/profile/${game.opponent_id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${game.opponent_name}
+                        </a>      
                   </div>
                   <div class="text-right">
                       <p class="font-bold ${textColor}">${score}</p>
@@ -197,11 +257,7 @@ export async function addFriend(friendId: number): Promise<void> {
           // Refresh da lista de amigos
           getFriendsForProfile();
           // Limpar pesquisa
-          const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
-          if (searchInput) {
-              searchInput.value = '';
-              hideSearchResults();
-          }
+          clearInputs('searchFriendsInput');
       } else {
           const data = await res.json();
           alert(data.error || 'Erro ao adicionar amigo.');
@@ -248,7 +304,9 @@ function updateOnlineFriends(friends: Friend[]): void {
         <div class="flex items-center">
           <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
           <img src="${friend.avatar || 'assets/img/default-avatar.jpg'}" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
-          <span class="text-sm font-medium">${friend.username}</span>
+          <a href="#/profile/${friend.id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${friend.username}
+          </a>  
         </div>
         <button id="challengeFriend(${friend.id})" class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
           Desafiar
@@ -274,7 +332,9 @@ function updateOfflineFriends(friends: Friend[]): void {
             <img src="${friend.avatar || 'assets/img/default-avatar.jpg'}" 
                  alt="Avatar" 
                  class="w-8 h-8 rounded-full mr-2 grayscale">
-            <span class="text-sm text-gray-600">${friend.username}</span>
+            <a href="#/profile/${friend.id}" class="text-sm font-medium text-blue-600 hover:underline">
+                        ${friend.username}
+            </a>  
           </div>
         </div>
       `).join('');
@@ -300,6 +360,8 @@ function formatGameDate(dateString: string): string {
 //////  TESTE FIM
 
 export async function getProfile(): Promise<void> {
+  hideSearchResults(); // Esconder resultados de pesquisa ao carregar perfil
+  clearInputs('searchFriendsInput'); // Limpar campo de pesquisa
   const token = localStorage.getItem('authToken');
   if (!token) {
     router.navigate('/login');
@@ -421,17 +483,17 @@ export async function getUserProfile(userId: string): Promise<void> {
 
     if (res.ok) {
       updateUserProfileUI(data);
-      //getGameHistory(); // Fetch game history after profile is loaded
+      getUserGameHistory(userId); // Fetch game history after profile is loaded
     } else {
-      alert('Erro ao obter perfil.');
-      if (res.status === 401) {
+        alert('Erro ao obter perfil.');
+        if (res.status === 401) {
         // Token invalid, redirect to login
         localStorage.removeItem('authToken');
         router.navigate('/login');
-      }
-      else {
+       }
+        else {
         router.navigate('/dashboard');
-      }
+        }
     }
   } catch {
     alert('Erro de conexão ao buscar perfil.');

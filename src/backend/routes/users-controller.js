@@ -569,6 +569,58 @@ const usersController = async (fastify, options) => {
         }
     });
 
+    fastify.get('/games/history/:id', {
+        onRequest: [fastify.authenticate], // Protegida por autenticação JWT
+        handler: async (req, reply) => {
+            try {
+                const {id} = req.params;
+
+                const games = db.prepare(`
+                    SELECT
+                        g.id,
+                        CASE
+                            WHEN g.player1_id = ? THEN u2.username
+                            ELSE u1.username
+                        END as opponent_name,
+                        CASE
+                            WHEN g.player1_id = ? THEN g.player1_score
+                            ELSE g.player2_score
+                        END as player_score,
+                        CASE
+                            WHEN g.player1_id = ? THEN g.player2_score
+                            ELSE g.player1_score
+                        END as opponent_score,
+                        CASE
+                            WHEN (g.player1_id = ? AND g.player1_score > g.player2_score) OR
+                                    (g.player2_id = ? AND g.player2_score > g.player1_score)
+                            THEN 'win'
+                            ELSE 'loss'
+                        END as result,
+                        CASE
+                            WHEN g.player1_id = ? THEN g.player2_id
+                            ELSE g.player1_id
+                        END as opponent_id,
+                        g.played_at
+                    FROM games g
+                    JOIN users u1 ON g.player1_id = u1.id
+                    JOIN users u2 ON g.player2_id = u2.id
+                    WHERE g.player1_id = ? OR g.player2_id = ?
+                    ORDER BY g.played_at DESC
+                    LIMIT 20
+                `).all(id, id, id, id, id, id, id, id);
+                
+
+                return { games };
+            } catch (error) {
+                req.log.error('Error fetching game history:', error);
+                if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+                    return reply.status(401).send({ error: 'Unauthorized: Invalid or expired token', details: error.message });
+                }
+                return reply.status(500).send({ error: 'Internal server error', details: error.message });
+            }
+        }
+    });
+
     // --- GET /api/users/friends - Lista de Amigos ---
     fastify.get('/friends', {
         onRequest: [fastify.authenticate], // Protegida por autenticação JWT

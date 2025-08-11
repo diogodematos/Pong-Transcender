@@ -19,10 +19,9 @@ const createUsersTable = `
         password TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         avatar TEXT DEFAULT NULL,
-        wins INTEGER DEFAULT 0,    -- Adicionado
-        losses INTEGER DEFAULT 0,  -- Adicionado
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        wins INTEGER DEFAULT 0,
+        losses INTEGER DEFAULT 0,  
+        nickname TEXT DEFAULT NULL
     )
 `;
 
@@ -87,7 +86,9 @@ try {
 
     db.exec(createScoresTable);
     db.exec(createFriendsTable); // Adicionado
-    db.exec(createGamesTable);   // Adicionado
+    db.exec(createGamesTable);
+    db.exec(createTrigger); // adicionado
+    db.exec(createTournaments);     // Adicionado
     console.log('Database tables (users, scores, friends, games) created/checked successfully');
 } catch (error) {
     console.error('Error creating database tables:', error);
