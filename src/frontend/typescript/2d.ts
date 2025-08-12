@@ -26,6 +26,27 @@ class Game {
   private maxPulseIntensity: number = 7;
   private pulseDecayRate: number = 0.07;
 
+  public setDifficulty(level: 'easy' | 'medium' | 'hard') {
+    if (level === 'easy') {
+        Game.diffMultiplier = 2;
+        Game.speedMultiplier = 1.3;
+        if (this.ball) this.ball.speed = 5;
+    } 
+    else if (level === 'medium') {
+        Game.diffMultiplier = 1;
+        Game.speedMultiplier = 1.4;
+        if (this.ball) this.ball.speed = 6;
+    } 
+    else if (level === 'hard') {
+        Game.diffMultiplier = 0.5;
+        Game.speedMultiplier = 1.6;
+        if (this.ball) this.ball.speed = 7;
+    }
+
+    console.log(`📊 Dificuldade (2D) ajustada para: ${level}`);
+    this.reset();
+}
+
   constructor() {
     // Creating canvas and checking if null
     const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement | null;
@@ -652,8 +673,11 @@ class ParticleSystem {
   }
 }
 
+export let currentGame2D: Game | null = null;
+
 export function startGame2D() {
   console.log('2D Game started!');
   game = new Game();
+  currentGame2D = game;
   game.gameLoop();
 }

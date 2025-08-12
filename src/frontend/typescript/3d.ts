@@ -56,6 +56,26 @@ class Game3D {
   private ballFragments: BABYLON.Mesh[] = [];
   private isGoalScored: boolean = false;
 
+  public setDifficulty(level: 'easy' | 'medium' | 'hard') {
+    if (level === 'easy') {
+        this.diffMultiplier = 2;
+        this.speedMultiplier = 1.3;
+        this.ballSpeed = 0.25;
+    } else if (level === 'medium') {
+        this.diffMultiplier = 1;
+        this.speedMultiplier = 1.4;
+        this.ballSpeed = 0.3;
+    } else if (level === 'hard') {
+        this.diffMultiplier = 0.5;
+        this.speedMultiplier = 1.5;
+        this.ballSpeed = 0.35;
+    }
+
+    console.log(`📊 Dificuldade ajustada para: ${level}`);
+    this.reset();
+}
+
+
   constructor() {
     const canvasEl = document.getElementById("renderCanvas");
     if (!(canvasEl instanceof HTMLCanvasElement)) {
@@ -1127,7 +1147,7 @@ class Game3D {
         setTimeout(() => {
           alert(`Game Over! You Win! Final Score: ${this.playerScore} - ${this.computerScore}`);
           this.reset();
-        }, 2000);
+        }, 200);
         router.navigate('/dashboard');
         return;
       }
@@ -1366,10 +1386,14 @@ class Game3D {
     });
   }
 }
+
+export let currentGame3D: Game3D | null = null;
 // FIXED: Updated startGame3D function
 export async function startGame3D(gameId: string = '', isHost: boolean = false, useMultiplayer: boolean = false) {
   console.log('3D Game selected');
   const game = new Game3D();
+
+  currentGame3D = game;
 
 /*  // Connect with proper multiplayer flag
   game.connectToGame(gameId, isHost, useMultiplayer).then(() => {

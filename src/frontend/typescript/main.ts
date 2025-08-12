@@ -5,8 +5,8 @@ import { updateProfile, searchUsers, addFriend } from './profile.ts';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage } from './pages.ts';
 import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
-import { startGame2D } from './2d.ts'; // Importa a função de início do jogo 2D
-import { startGame3D } from './3d.ts'; // No longer directly used here, game.ts handles it
+import { startGame2D, currentGame2D } from './2d.ts'; // Importa a função de início do jogo 2D
+import { startGame3D, currentGame3D } from './3d.ts'; // No longer directly used here, game.ts handles it
 import { initializeMainMenu, cleanupCurrentGame } from './game.ts'; // Correctly imported
 import { CredentialResponse } from 'google-one-tap';
 
@@ -227,10 +227,10 @@ function setupEventListeners(): void {
     
     // Passo 2 — Escolher dificuldade e iniciar jogo IA
     document.querySelectorAll('#step-difficulty button').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (!iaSelectedMode) return;
     
-        const diff = (btn as HTMLElement).getAttribute('data-diff');
+        const diff = (btn as HTMLElement).getAttribute('data-diff') as 'easy' | 'medium' | 'hard';
         document.getElementById('iaModal')!.classList.add('hidden');
     
         if (gameRunning) {
@@ -244,10 +244,16 @@ function setupEventListeners(): void {
           if (iaSelectedMode === '2d') {
             console.log(`Iniciando 2D IA [${diff}]`);
             startGame2D(); // futuramente podes passar diff;
+            if (currentGame2D && diff) {
+                currentGame2D.setDifficulty(diff);
+            }
             router.navigate('/game'); // Navega para a página do jogo 2D
           } else {
             console.log(`Iniciando 3D IA [${diff}]`);
-            startGame3D('', true, false); // futuramente podes passar diff
+            await startGame3D('', true, false); // cria instância e inicia
+            if (currentGame3D) {
+            currentGame3D.setDifficulty(diff); // aplica dificuldade
+            }
             router.navigate('/game'); // Navega para a página do jogo 3D
             scr.hidden = false;
           }
