@@ -1,3 +1,5 @@
+import {router} from "./router";
+
 class Game3D {
   // Connections
   private socket: WebSocket | null = null;
@@ -452,10 +454,12 @@ class Game3D {
           this.isConnected = false;
         }
         
+        router.navigate('/profile'); // Navigate to profile page after game ends
+
         // Navigate to dashboard after a short delay without full page reload
         setTimeout(() => {
           console.log('Navigating back to profile page');
-          window.location.href = '/profile.html';
+          router.navigate('/profile');
         }, 2000); // Increased delay to ensure cleanup
         break;
 
@@ -1124,6 +1128,7 @@ class Game3D {
           alert(`Game Over! You Win! Final Score: ${this.playerScore} - ${this.computerScore}`);
           this.reset();
         }, 2000);
+        router.navigate('/dashboard');
         return;
       }
     }
@@ -1392,7 +1397,7 @@ export async function startGame3D(gameId: string = '', isHost: boolean = false, 
     
     // Redirect to dashboard/profile page on connection failure
     setTimeout(() => {
-      window.location.href = '/profile.html';
+        router.navigate('/profile'); // Adjust the route as needed
     }, 1000);
   }
 }

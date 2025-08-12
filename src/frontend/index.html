@@ -273,6 +273,63 @@
             <button id="cancelProfileChangesButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
         </div>
 
+                <!-- Modal IA Battle -->
+        <div id="iaModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-2xl p-6 w-96 shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-center">IA Battle</h2>
+            
+            <!-- Etapa 1: Escolher Dimensão -->
+            <div id="step-dimension" class="space-y-2">
+                <p class="mb-2 font-semibold text-center">Escolhe o modo</p>
+                <button class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600" data-mode="2d">2D</button>
+                <button class="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600" data-mode="3d">3D</button>
+            </div>
+        
+            <!-- Etapa 2: Escolher Dificuldade -->
+            <div id="step-difficulty" class="space-y-2 hidden">
+                <p class="mb-2 font-semibold text-center">Escolhe a dificuldade</p>
+                <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-diff="easy">Fácil</button>
+                <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-diff="medium">Médio</button>
+                <button class="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600" data-diff="hard">Difícil</button>
+            </div>
+        
+            <!-- Fechar -->
+            <div class="mt-4 text-center">
+                <button id="closeIaModal" class="text-gray-500 hover:text-gray-800">Cancelar</button>
+            </div>
+            </div>
+        </div>
+
+        <!-- Modal Player vs Player -->
+        <div id="pvpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-2xl p-6 w-96 shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-center">Player vs Player</h2>
+            
+            <!-- Etapa 1: Escolher Dimensão -->
+            <div id="pvp-step-dimension" class="space-y-2">
+                <p class="mb-2 font-semibold text-center">Escolhe o modo</p>
+                <button class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600" data-mode="2d">2D</button>
+                <button class="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600" data-mode="3d">3D</button>
+            </div>
+        
+            <!-- Etapa 2: Criar ou Entrar (apenas se for 3D) -->
+            <div id="pvp-step-3d-options" class="space-y-2 hidden">
+                <p class="mb-2 font-semibold text-center">Escolhe uma opção</p>
+                <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-action="create">Criar Jogo</button>
+                <div class="space-y-2">
+                <input id="pvpGameIdInput" type="text" placeholder="Game ID" class="border border-gray-300 rounded-lg p-2 w-full" />
+                <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-action="join">Entrar no Jogo</button>
+                </div>
+            </div>
+        
+            <!-- Fechar -->
+            <div class="mt-4 text-center">
+                <button id="closePvpModal" class="text-gray-500 hover:text-gray-800">Cancelar</button>
+            </div>
+            </div>
+        </div>
+  
+
         <div id="gamePage" class="hidden flex flex-col items-center justify-center min-h-screen p-8 bg-transparent">
            <canvas id="renderCanvas" ></canvas>
 
@@ -315,10 +372,10 @@
       </div>
     </div>
 
-    <div id="dimension">
+    <!-- <div id="dimension">
       <button class="button" id="btn-2d">Play 2D Game</button>
       <button class="button" id="btn-3d">Play 3D Game</button>
-    </div>
+    </div> -->
 
   </div>
 
