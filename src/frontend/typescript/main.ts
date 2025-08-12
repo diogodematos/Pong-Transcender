@@ -262,6 +262,7 @@ function setupEventListeners(): void {
 
         // Abrir modal no clique do botão Duel
     document.getElementById('startOneVsOne')?.addEventListener('click', () => {
+        clearInputs('pvpGameIdInput');
         document.getElementById('pvpModal')!.classList.remove('hidden');
         document.getElementById('pvp-step-dimension')!.classList.remove('hidden');
         document.getElementById('pvp-step-3d-options')!.classList.add('hidden');
@@ -337,7 +338,6 @@ function setupEventListeners(): void {
         startGame3D(gameId, false, true);
         router.navigate('/game');
         scr.hidden = false;
-
         }
     }
   
