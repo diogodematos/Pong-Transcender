@@ -35,6 +35,8 @@ class Game3D {
   private computerScore: number = 0;
   private diffMultiplier: number = 1;
   private speedMultiplier: number = 1.4;
+  private diffMultiplierIA: number = 1;
+  private speedMultiplierIA: number = 1.4;
   private ballSpeed: number = 0.3;
   private ballDiameter: number = 1;
   private isPlayerMoving: "UP" | "DOWN" | "NO" = "NO";
@@ -497,7 +499,7 @@ class Game3D {
     await this.createScene();
     console.log("Setting up...");
     this.setupEventListeners();
-    this.setupDifficultyButtons();
+    //this.setupDifficultyButtons();
     
     // Set up score colors based on host status for multiplayer
     if (this.useMultiplayer) {
@@ -677,7 +679,7 @@ class Game3D {
     this.player.material = playerMaterial;
 
     // Computer paddle (right side)
-    this.computerWidth = 6 * this.diffMultiplier;
+    this.computerWidth = 6 * this.diffMultiplierIA;
     this.computer = BABYLON.MeshBuilder.CreateBox("computer", {
       width: 1,
       height: 1,
@@ -877,28 +879,7 @@ class Game3D {
     });
   }
 
-  setupDifficultyButtons() {
-    document.getElementById("b_easy")?.addEventListener("click", () => {
-      this.diffMultiplier = 2;
-      this.speedMultiplier = 1.3;
-      this.ballSpeed = 0.25;
-      this.reset();
-    });
 
-    document.getElementById("b_medium")?.addEventListener("click", () => {
-      this.diffMultiplier = 1;
-      this.speedMultiplier = 1.4;
-      this.ballSpeed = 0.3;
-      this.reset();
-    });
-
-    document.getElementById("b_hard")?.addEventListener("click", () => {
-      this.diffMultiplier = 0.5;
-      this.speedMultiplier = 1.5;
-      this.ballSpeed = 0.35;
-      this.reset();
-    });
-  }
 
   setupScoreColors() {
     const playerScoreEl = document.getElementById('player-score');
@@ -938,9 +919,9 @@ class Game3D {
 
     // Reset paddle sizes
     this.playerWidth *= this.diffMultiplier;
-    this.computerWidth *= this.diffMultiplier;
+    this.computerWidth *= this.diffMultiplierIA;
     this.player.scaling.z = this.diffMultiplier;
-    this.computer.scaling.z = this.diffMultiplier;
+    this.computer.scaling.z = this.diffMultiplierIA;
 
     // Reset visual effects
     this.ballLastHitBy = null;
@@ -1022,10 +1003,10 @@ class Game3D {
     }
 
     // Single player AI logic
-    const speed = 0.1 * this.speedMultiplier;
+    const speed = 0.1 * this.speedMultiplierIA;
     const ballZ = this.ball.position.z;
     const paddleZ = this.computer.position.z;
-    const paddleHeight = 3 * this.diffMultiplier;
+    const paddleHeight = 3 * this.diffMultiplierIA;
 
     // AI: Follow ball when it's moving towards computer
     if ((this.ball as any).velocity.x > 0) {
@@ -1088,6 +1069,7 @@ class Game3D {
     const playerPos = this.player.position;
     const computerPos = this.computer.position;
     const paddleHeight = 3 * this.diffMultiplier;
+    const paddleHeightIA = 3 * this.diffMultiplierIA;
 
     // Player paddle collision
     if (ballPos.x <= playerPos.x + 1 && ballPos.x >= playerPos.x - 1) {
@@ -1113,7 +1095,7 @@ class Game3D {
 
     // Computer paddle collision
     if (ballPos.x >= computerPos.x - 1 && ballPos.x <= computerPos.x + 1) {
-      if (ballPos.z >= computerPos.z - paddleHeight && ballPos.z <= computerPos.z + paddleHeight) {
+      if (ballPos.z >= computerPos.z - paddleHeightIA && ballPos.z <= computerPos.z + paddleHeightIA) {
         console.log("computer collision");
         (this.ball as any).velocity.x = -Math.abs((this.ball as any).velocity.x);
         this.ballLastHitBy = 'computer';

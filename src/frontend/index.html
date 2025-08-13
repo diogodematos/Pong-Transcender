@@ -305,20 +305,12 @@
             <div class="bg-white rounded-2xl p-6 w-96 shadow-lg">
             <h2 class="text-2xl font-bold mb-4 text-center">Player vs Player</h2>
             
-            <!-- Etapa 1: Escolher Dimensão -->
-            <div id="pvp-step-dimension" class="space-y-2">
-                <p class="mb-2 font-semibold text-center">Escolhe o modo</p>
-                <button class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600" data-mode="2d">2D</button>
-                <button class="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600" data-mode="3d">3D</button>
-            </div>
-        
-            <!-- Etapa 2: Criar ou Entrar (apenas se for 3D) -->
-            <div id="pvp-step-3d-options" class="space-y-2 hidden">
-                <p class="mb-2 font-semibold text-center">Escolhe uma opção</p>
+            <div id="pvp-step-3d-options" class="space-y-2">
+                <p class="mb-2 font-semibold text-center">Player vs Player (3D)</p>
                 <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-action="create">Criar Jogo</button>
                 <div class="space-y-2">
-                <input id="pvpGameIdInput" type="text" placeholder="Game ID" class="border border-gray-300 rounded-lg p-2 w-full" />
-                <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-action="join">Entrar no Jogo</button>
+                  <input id="pvpGameIdInput" type="text" placeholder="Game ID" class="border border-gray-300 rounded-lg p-2 w-full" />
+                  <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-action="join">Entrar no Jogo</button>
                 </div>
             </div>
         

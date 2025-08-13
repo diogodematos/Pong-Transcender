@@ -13,7 +13,9 @@ class Game {
   public static playerScore: number = 0;
   public static computerScore: number = 0;
   public static diffMultiplier: number = 1;
+  public static diffMultiplierIA: number = 1;
   public static speedMultiplier: number = 1.4;
+  public static speedMultiplierIA: number = 1.4;
   private player1!: Paddle;
   private compBot!: ComputerPaddle;
   private ball!: Ball;
@@ -75,55 +77,16 @@ class Game {
     });
 
     // Setup difficulty buttons after DOM is loaded
-    this.setupDifficultyButtons();
 
     this.particleSystem = new ParticleSystem();
     // Start drawing everything with the default values
     this.reset();
   }
 
-  private setupDifficultyButtons() {
-    // Use setTimeout to ensure DOM is ready
-    setTimeout(() => {
-      const easyBtn = document.getElementById("b_easy") as HTMLButtonElement;
-      const mediumBtn = document.getElementById("b_medium") as HTMLButtonElement;
-      const hardBtn = document.getElementById("b_hard") as HTMLButtonElement;
-
-      if (easyBtn) {
-        easyBtn.addEventListener("click", () => {
-          Game.diffMultiplier = 2;
-          Game.speedMultiplier = 1.3;
-          console.log("Easy mode set");
-          this.reset();
-          this.ball.speed = 5;
-        });
-      }
-
-      if (mediumBtn) {
-        mediumBtn.addEventListener("click", () => {
-          Game.diffMultiplier = 1;
-          Game.speedMultiplier = 1.4;
-          console.log("Medium mode set");
-          this.reset();
-          this.ball.speed = 6;
-        });
-      }
-
-      if (hardBtn) {
-        hardBtn.addEventListener("click", () => {
-          Game.diffMultiplier = 0.5;
-          Game.speedMultiplier = 1.6;
-          console.log("Hard mode set");
-          this.reset();
-          this.ball.speed = 7;
-        });
-      }
-    }, 100);
-  }
-
   reset() {
     var paddleWidth: number = this.gameCanvas.height / 100,
       paddleHeight: number = (this.gameCanvas.height / 10) * Game.diffMultiplier,
+      paddleHeightIA: number = (this.gameCanvas.height / 10) * Game.diffMultiplierIA,
       ballSize: number = 10,
       wallOffset: number = 50;
 
@@ -135,7 +98,7 @@ class Game {
     );
     this.compBot = new ComputerPaddle(
       paddleWidth,
-      paddleHeight,
+      paddleHeightIA,
       this.gameCanvas.width - (wallOffset + paddleWidth),
       this.gameCanvas.height / 2 - paddleHeight / 2,
     );
@@ -373,7 +336,7 @@ class Paddle extends Entity {
 }
 
 class ComputerPaddle extends Entity {
-  private speed: number = 5 * Game.speedMultiplier;
+  private speed: number = 5 * Game.speedMultiplierIA;
   public goal: GoalLine;
 
   constructor(w: number, h: number, x: number, y: number) {
