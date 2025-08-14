@@ -1,23 +1,12 @@
 // src/frontend/typescript/main.ts
 
 import { login, register, logout, isAuthenticated } from './auth.ts';
-import { updateProfile, searchUsers, addFriend } from './profile.ts';
-import { getGameRunning, setGameRunning } from './game';
-// Type definition for global game state
-declare global {
-    interface Window {
-        PongTranscenderState?: {
-            gameRunning: boolean;
-            selectedGameMode: '2d' | '3d' | null;
-        };
-    }
-}
+import { updateProfile, searchUsers} from './profile.ts';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage } from './pages.ts';
 import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
 import { startGame2D, currentGame2D } from './2d.ts'; // Importa a função de início do jogo 2D
 import { startGame3D, currentGame3D } from './3d.ts'; // No longer directly used here, game.ts handles it
-import { initializeMainMenu, cleanupCurrentGame } from './game.ts'; // Correctly imported
 import { CredentialResponse } from 'google-one-tap';
 
 // IMPORTANTE para o TypeScript: Declara a função handleGoogleLogin no escopo global
@@ -37,7 +26,6 @@ function setupRoutes(): void {
 
     router.addRoute('/login', () => {
         // Cleanup any game before showing login
-        cleanupCurrentGame(); 
         if (isAuthenticated()) {
             router.navigate('/dashboard');
         } else {
@@ -46,8 +34,6 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/register', () => {
-        // Cleanup any game before showing register
-        cleanupCurrentGame();
         if (isAuthenticated()) {
             router.navigate('/dashboard');
         } else {
@@ -56,8 +42,7 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/dashboard', () => {
-        // Cleanup any game before showing dashboard
-        cleanupCurrentGame();
+
         if (isAuthenticated()) {
             showDashboardPage();
         } else {
@@ -66,8 +51,6 @@ function setupRoutes(): void {
     });
 
     router.addRoute('/profile', () => {
-        // Cleanup any game before showing profile
-        cleanupCurrentGame();
         if (isAuthenticated()) {
             showProfilePage();
         } else {
@@ -76,8 +59,6 @@ function setupRoutes(): void {
     });
     
     router.addRoute('/edit-profile', () => {
-        // Cleanup any game before showing edit profile
-        cleanupCurrentGame();
         if (isAuthenticated()) {
             showEditProfilePage();
         } else {
@@ -88,9 +69,6 @@ function setupRoutes(): void {
     router.addRoute('/game', () => {
         if (isAuthenticated()) {
             showGamePage();
-            // initializeMainMenu() is called here because we are entering the game "section"
-            // It will handle internal game UI states (dimension, difficulty, multiplayer)
-            initializeMainMenu(); 
         } else {
             router.navigate('/login');
         }
@@ -199,26 +177,18 @@ function setupEventListeners(): void {
     
     // Passo 2 — Escolher dificuldade e iniciar jogo IA
     document.querySelectorAll('#step-difficulty button').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!iaSelectedMode) return;
-    
-        const diff = (btn as HTMLElement).getAttribute('data-diff') as 'easy' | 'medium' | 'hard';
-        document.getElementById('iaModal')!.classList.add('hidden');
-    
-                // Use global singleton state for gameRunning
-                if (typeof getGameRunning === 'function' ? getGameRunning() : (window && window.PongTranscenderState && window.PongTranscenderState.gameRunning)) {
-                    alert('Um jogo já está em execução.');
-                    return;
-                }
-
-                if (typeof setGameRunning === 'function') {
-                    setGameRunning(true);
-                } else if (window && window.PongTranscenderState) {
-                    window.PongTranscenderState.gameRunning = true;
-                } else {
-                    gameRunning = true;
-                }
-    
+        btn.addEventListener('click', async () => {
+          if (!iaSelectedMode) return;
+      
+          const diff = (btn as HTMLElement).getAttribute('data-diff') as 'easy' | 'medium' | 'hard';
+          document.getElementById('iaModal')!.classList.add('hidden');
+      
+          if (gameRunning) {
+            alert('Um jogo já está em execução.');
+            return;
+          }
+      
+          gameRunning = true;
         try {
           if (iaSelectedMode === '2d') {
             console.log(`Iniciando 2D IA [${diff}]`);
@@ -245,15 +215,13 @@ function setupEventListeners(): void {
       });
     });
 
-    let pvpSelectedMode: '2d' | '3d' | null = null;
 
         // Abrir modal no clique do botão Duel
     document.getElementById('startOneVsOne')?.addEventListener('click', () => {
         clearInputs('pvpGameIdInput');
         document.getElementById('pvpModal')!.classList.remove('hidden');
-        document.getElementById('pvp-step-dimension')!.classList.add('hidden');
+        //document.getElementById('pvp-step-dimension')!.classList.add('hidden');
         document.getElementById('pvp-step-3d-options')!.classList.remove('hidden');
-        pvpSelectedMode = null;
     });
     
     // Fechar modal
@@ -334,11 +302,21 @@ function setupEventListeners(): void {
 
     document.getElementById('GoToRegisterPage')?.addEventListener('click', () => {
         clearInputs('username', 'password');
+        const errorElement = document.getElementById('loginResponseMessage');
+        if (errorElement) {
+          errorElement.textContent = '';
+          errorElement.classList.add('hidden');
+        }
         router.navigate('/register');
     });
 
     document.getElementById('GoToLoginPage')?.addEventListener('click', () => {
         clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
+        const errorElement = document.getElementById('registerResponseMessage');
+        if (errorElement) {
+          errorElement.textContent = '';
+          errorElement.classList.add('hidden');
+        }
         router.navigate('/login');
     });
 

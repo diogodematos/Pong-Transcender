@@ -64,7 +64,11 @@ export async function register(data: RegisterData): Promise<boolean> {
        document.getElementById('registerSuccessModal')?.classList.remove('hidden');
        // Ajuste os IDs dos inputs de registro para corresponderem ao seu HTML
        clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
-       // Opcional: router.navigate('/login'); // Poderia ser aqui se não usar o modal
+       const errorElement = document.getElementById('registerResponseMessage');
+       if (errorElement) {
+         errorElement.textContent = '';
+         errorElement.classList.add('hidden');
+       }
        return true;
      } else {
        console.error('Registration failed:', result.error);
@@ -84,6 +88,11 @@ export async function register(data: RegisterData): Promise<boolean> {
 export function logout(): void {
   disconnectWebSocket(); // Desconecta o WebSocket
   localStorage.removeItem('authToken'); // Remove o token de autenticação
+  const errorElement = document.getElementById('loginResponseMessage');
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.classList.add('hidden');
+  }
   router.navigate('/login'); // Redireciona para a página de login
 }
 
@@ -104,5 +113,6 @@ function displayError(id: string, message: string) {
   const el = document.getElementById(id);
   if (el) {
     el.textContent = message;
+    el.classList.remove('hidden');
   }
 }

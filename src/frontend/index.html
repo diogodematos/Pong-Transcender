@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="styles/main.css">
     <link href='https://fonts.googleapis.com/css?family=Orbitron:900' rel='stylesheet' type='text/css'>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.0.0/babylon.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.0.0/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@6.0.0/babylonjs.loaders.min.js"></script>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col" style="background-image: url('assets/img/background.png'); background-size: cover; background-position: center;">
     <div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(20,30,40,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:2rem;color:#7DF9FF;">
@@ -334,55 +334,58 @@
 
         <div id="gamePage" class="hidden flex flex-col items-center justify-center min-h-screen p-8 bg-transparent">
            <canvas id="renderCanvas" ></canvas>
+        
+        </div> 
 
-<div id="ui-overlay">
-  <div id="score-display" hidden="true">
-    <div id="player-score">0</div>
-    <div id="computer-score">0</div>
-  </div>
+        <div id="ui-overlay">
+            <div id="score-display" hidden="true">
+                <div id="player-score">0</div>
+                <div id="computer-score">0</div>
+            </div>
 
-  <div id="instructions" hidden="true">
-    Pong Game Controls:
-    <br><br>
-    • Move to the left: ← or ↑
-    <br>
-    • Move to the right: → or ↓
-    <br>
-    • Press Esc to exit.
-    <br><br><br><br>
-    Good Luck! Have fun
-  </div>
+            <div id="instructions" hidden="true">
+                Pong Game Controls:
+                <br><br>
+                • Move to the left: ← or ↑
+                <br>
+                • Move to the right: → or ↓
+                <br>
+                • Press Esc to exit.
+                <br><br><br><br>
+                Good Luck! Have fun
+            </div>
 
-  <div id="controls">
+            <div id="controls">
 
-    <div id="sngl-player" hidden="true">
-      <button  class="button" id="btn-sp">Single Player</button>
-    </div>
+                <div id="sngl-player" hidden="true">
+                <button  class="button" id="btn-sp">Single Player</button>
+                </div>
 
-    <div id="diff" hidden="true">
-      <button class="button" id="b_easy">EASY</button>
-      <button class="button" id="b_medium">MEDIUM</button>
-      <button class="button" id="b_hard">HARD</button>
-    </div>
+                <div id="diff" hidden="true">
+                <button class="button" id="b_easy">EASY</button>
+                <button class="button" id="b_medium">MEDIUM</button>
+                <button class="button" id="b_hard">HARD</button>
+                </div>
 
-    <div id="joinDiv" hidden="true">
-      <button class="button" id="btn-create">Create Game</button>
+                <div id="joinDiv" hidden="true">
+                    <button class="button" id="btn-create">Create Game</button>
 
-      <div id="gameIdDiv">
-      <button class="button" id="btn-join">Join Game</button>
-      <input type="text" id="gameId" placeholder="Game ID">
-      </div>
-    </div>
+                    <div id="gameIdDiv">
+                    <button class="button" id="btn-join">Join Game</button>
+                    <input type="text" id="gameId" placeholder="Game ID">
+                    </div>
+                </div>
 
-    <!-- <div id="dimension">
-      <button class="button" id="btn-2d">Play 2D Game</button>
-      <button class="button" id="btn-3d">Play 3D Game</button>
-    </div> -->
+                <!-- <div id="dimension">
+                <button class="button" id="btn-2d">Play 2D Game</button>
+                <button class="button" id="btn-3d">Play 3D Game</button>
+                </div> -->
 
-  </div>
+            </div>
 
-</div>
-<script type="module" src="/src/game.ts"></script>
+            <!-- </div>
+            <script type="module" src="/src/game.ts"></script>
+                    </div>  -->
         </div>
 
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
@@ -392,7 +395,7 @@
                 <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
             </div>
         </div>
-    </div>
+    
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script type="module" src="typescript/main.ts"></script>

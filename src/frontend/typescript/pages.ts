@@ -1,7 +1,6 @@
 // src/frontend/typescript/pages.ts
 
 import { getDashboard, getFriendsForProfile, getProfile, getUserProfile} from "./profile.ts";
-import { initializeMainMenu, cleanupCurrentGame } from './game.ts'; // Importe as funções do game.ts
 
 export function showLoginPage(): void {
     togglePages('loginPage');
@@ -9,6 +8,7 @@ export function showLoginPage(): void {
 }
 
 export function showRegisterPage(): void {
+
     togglePages('registerPage');
     hideNavigation();
 }
@@ -36,7 +36,6 @@ export function showGamePage(): void {
     showNavigation();
     // Inicialize o menu principal do jogo e os controles (botões de dificuldade, etc.)
     console.log('Attempting to initialize game main menu from showGamePage...');
-    initializeMainMenu();
 }
 
 export function showUserProfilePage(userId: string): void {
@@ -69,7 +68,6 @@ function togglePages(visiblePageId: string): void {
         if (el) {
             if (page === 'gamePage' && visiblePageId !== 'gamePage' && !el.classList.contains('hidden')) {
                 console.log("Leaving game page, cleaning up current game...");
-                cleanupCurrentGame(); // Chama a função de limpeza do game.ts
             }
             el.classList.toggle('hidden', page !== visiblePageId);
         }
