@@ -1,6 +1,4 @@
 import {router} from "./router.ts";
-import { cleanupCurrentGame } from "./game";
-import { setGameRunning } from "./game";
 
 class Game3D {
   // Connections
@@ -35,6 +33,8 @@ class Game3D {
   private keysPressed: { [key: number]: boolean } = {};
   private playerScore: number = 0;
   private computerScore: number = 0;
+  private finalPlayerScore: number | null = null;
+  private finalOpponentScore: number | null = null;
   private diffMultiplier: number = 1;
   private speedMultiplier: number = 1.4;
   private diffMultiplierIA: number = 1;
@@ -477,11 +477,15 @@ class Game3D {
           this.gameUpdateInterval = null;
         }
         
-        // Show game over message
-        // Set game state for overlay
-        this.gameState = (data.winnerId === data.yourPlayerId); // true if you won
-        this.isRunning = false;
-        this.createGameEndOverlay();
+  // Always use final scores from game_end message for overlay
+  this.finalPlayerScore = typeof data.playerScore === 'number' ? data.playerScore : this.playerScore;
+  this.finalOpponentScore = typeof data.opponentScore === 'number' ? data.opponentScore : this.computerScore;
+  // Debug winner mapping
+  console.log('[GameEnd] winnerId:', data.winnerId, 'yourPlayerId:', data.yourPlayerId, 'isVictory:', data.winnerId === data.yourPlayerId);
+  // Set game state for overlay
+  this.gameState = (data.winnerId === data.yourPlayerId); // true if you won
+  this.isRunning = false;
+  this.createGameEndOverlay();
 
         // Gracefully close ONLY the game WebSocket (not the user WebSocket)
         if (this.socket) {
@@ -1421,21 +1425,50 @@ class Game3D {
 
     const isVictory = this.gameState;
     const title = document.createElement('h1');
+    let titleColor, titleShadow;
+    if (this.useMultiplayer && !this.isHost) {
+      // Non-host: VICTORY is red, DEFEAT is blue
+      titleColor = isVictory ? '#FF073A' : '#7DF9FF';
+      titleShadow = isVictory ? '#FF073A' : '#7DF9FF';
+    } else {
+      // Host and single player: VICTORY is blue, DEFEAT is red
+      titleColor = isVictory ? '#7DF9FF' : '#FF073A';
+      titleShadow = isVictory ? '#7DF9FF' : '#FF073A';
+    }
     title.textContent = isVictory ? 'VICTORY!' : 'DEFEAT!';
     title.style.cssText = `
       font-size: 4rem;
       margin: 0 0 20px 0;
-      text-shadow: 0 0 20px ${isVictory ? '#7DF9FF' : '#FF073A'};
-      color: ${isVictory ? '#7DF9FF' : '#FF073A'};
+      text-shadow: 0 0 20px ${titleShadow};
+      color: ${titleColor};
       animation: pulse 2s infinite;
     `;
 
+    // Always use final scores from game_end message if available
+    const playerScore = typeof this.finalPlayerScore === 'number' ? this.finalPlayerScore : this.playerScore;
+    const opponentScore = typeof this.finalOpponentScore === 'number' ? this.finalOpponentScore : this.computerScore;
+    let playerLabel = 'Player';
+    let opponentLabel = 'Computer';
+    let playerColor = '#7DF9FF';
+    let opponentColor = '#FF073A';
+    // Multiplayer: use 'You' and 'Opponent' labels and update colors by side
+    if (this.useMultiplayer) {
+      playerLabel = 'You';
+      opponentLabel = 'Opponent';
+      if (this.isHost) {
+        playerColor = '#7DF9FF'; // Blue
+        opponentColor = '#FF073A'; // Red
+      } else {
+        playerColor = '#FF073A'; // Red
+        opponentColor = '#7DF9FF'; // Blue
+      }
+    }
     const scoreDisplay = document.createElement('div');
     scoreDisplay.innerHTML = `
       <p style="font-size: 2rem; margin: 20px 0;">Final Score</p>
       <p style="font-size: 1.5rem; margin: 10px 0;">
-        Player: <span style="color: #7DF9FF;">${this.playerScore}</span> - 
-        Computer: <span style="color: #FF073A;">${this.computerScore}</span>
+        ${playerLabel}: <span style="color: ${playerColor};">${playerScore}</span> - 
+        ${opponentLabel}: <span style="color: ${opponentColor};">${opponentScore}</span>
       </p>
     `;
 
@@ -1448,25 +1481,94 @@ class Game3D {
 
     const mainMenuButton = document.createElement('button');
     mainMenuButton.textContent = 'Main Menu';
-    mainMenuButton.style.cssText = `
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      background: linear-gradient(45deg, #FF073A, #DC143C);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(255, 7, 58, 0.3);
-    `;
-    mainMenuButton.onmouseover = () => {
-      mainMenuButton.style.transform = 'scale(1.05)';
-      mainMenuButton.style.boxShadow = '0 6px 20px rgba(255, 7, 58, 0.5)';
-    };
-    mainMenuButton.onmouseout = () => {
-      mainMenuButton.style.transform = 'scale(1)';
-      mainMenuButton.style.boxShadow = '0 4px 15px rgba(255, 7, 58, 0.3)';
-    };
+    if (this.useMultiplayer) {
+      if (this.isHost) {
+        // Host: always blue button
+        mainMenuButton.style.cssText = `
+          padding: 15px 30px;
+          font-size: 1.2rem;
+          background: linear-gradient(45deg, #7DF9FF, #1E90FF);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(125, 249, 255, 0.3);
+        `;
+        mainMenuButton.onmouseover = () => {
+          mainMenuButton.style.transform = 'scale(1.05)';
+          mainMenuButton.style.boxShadow = '0 6px 20px rgba(125, 249, 255, 0.5)';
+        };
+        mainMenuButton.onmouseout = () => {
+          mainMenuButton.style.transform = 'scale(1)';
+          mainMenuButton.style.boxShadow = '0 4px 15px rgba(125, 249, 255, 0.3)';
+        };
+      } else {
+        // Non-host: always red button
+        mainMenuButton.style.cssText = `
+          padding: 15px 30px;
+          font-size: 1.2rem;
+          background: linear-gradient(45deg, #FF073A, #DC143C);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(255, 7, 58, 0.3);
+        `;
+        mainMenuButton.onmouseover = () => {
+          mainMenuButton.style.transform = 'scale(1.05)';
+          mainMenuButton.style.boxShadow = '0 6px 20px rgba(255, 7, 58, 0.5)';
+        };
+        mainMenuButton.onmouseout = () => {
+          mainMenuButton.style.transform = 'scale(1)';
+          mainMenuButton.style.boxShadow = '0 4px 15px rgba(255, 7, 58, 0.3)';
+        };
+      }
+    } else {
+      // Single player: keep victory/defeat color logic
+      if (isVictory) {
+        mainMenuButton.style.cssText = `
+          padding: 15px 30px;
+          font-size: 1.2rem;
+          background: linear-gradient(45deg, #7DF9FF, #1E90FF);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(125, 249, 255, 0.3);
+        `;
+        mainMenuButton.onmouseover = () => {
+          mainMenuButton.style.transform = 'scale(1.05)';
+          mainMenuButton.style.boxShadow = '0 6px 20px rgba(125, 249, 255, 0.5)';
+        };
+        mainMenuButton.onmouseout = () => {
+          mainMenuButton.style.transform = 'scale(1)';
+          mainMenuButton.style.boxShadow = '0 4px 15px rgba(125, 249, 255, 0.3)';
+        };
+      } else {
+        mainMenuButton.style.cssText = `
+          padding: 15px 30px;
+          font-size: 1.2rem;
+          background: linear-gradient(45deg, #FF073A, #DC143C);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(255, 7, 58, 0.3);
+        `;
+        mainMenuButton.onmouseover = () => {
+          mainMenuButton.style.transform = 'scale(1.05)';
+          mainMenuButton.style.boxShadow = '0 6px 20px rgba(255, 7, 58, 0.5)';
+        };
+        mainMenuButton.onmouseout = () => {
+          mainMenuButton.style.transform = 'scale(1)';
+          mainMenuButton.style.boxShadow = '0 4px 15px rgba(255, 7, 58, 0.3)';
+        };
+      }
+    }
   mainMenuButton.onclick = () => window.location.reload();
 
     buttonContainer.appendChild(mainMenuButton);

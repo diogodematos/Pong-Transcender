@@ -549,6 +549,10 @@ const usersController = async (fastify, options) => {
                             THEN 'win'
                             ELSE 'loss'
                         END as result,
+                        CASE
+                            WHEN g.player1_id = ? THEN g.player2_id
+                            ELSE g.player1_id
+                        END as opponent_id,
                         g.played_at
                     FROM games g
                     JOIN users u1 ON g.player1_id = u1.id
@@ -556,7 +560,8 @@ const usersController = async (fastify, options) => {
                     WHERE g.player1_id = ? OR g.player2_id = ?
                     ORDER BY g.played_at DESC
                     LIMIT 20
-                `).all(userId, userId, userId, userId, userId, userId, userId);
+                `).all(userId, userId, userId, userId, userId, userId, userId, userId);
+                
 
                 return { games };
             } catch (error) {

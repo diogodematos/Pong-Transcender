@@ -254,11 +254,28 @@ export default async function gameRoutes(fastify, options) {
 
               // Check for game end (first to 5 points wins)
               if (!gameState.gameEnded && (gameState.player1Score >= 5 || gameState.player2Score >= 5)) {
+                // Broadcast final game state to all clients before game_end
+                gameSockets.forEach(client => {
+                  if (client && client.readyState === 1) {
+                    const clientUserId = socketToUserId.get(client);
+                    const isClientPlayer1 = clientUserId === players.player1Id;
+                    const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
+                    client.send(JSON.stringify({
+                      type: 'game_state',
+                      opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                      ballX: ballXForClient,
+                      ballY: gameState.ballZ,
+                      playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
+                      opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
+                      playersConnected: gameSockets.size,
+                      gameStarted: gameState.gameStarted,
+                    }));
+                  }
+                });
                 gameState.gameEnded = true;
                 const winnerId = gameState.player1Score >= 5 ? players.player1Id : players.player2Id;
-                
                 req.log.info(`Game ended! Winner: ${winnerId}, Final Score: ${gameState.player1Score}-${gameState.player2Score}`);
-                
+
                 // Save game result to database
                 try {
                   db.prepare(`
@@ -271,31 +288,32 @@ export default async function gameRoutes(fastify, options) {
                     gameState.player2Score,
                     winnerId
                   );
-                  
                   // Update user stats
                   db.prepare('UPDATE users SET wins = wins + 1 WHERE id = ?').run(winnerId);
                   const loserId = winnerId === players.player1Id ? players.player2Id : players.player1Id;
                   if (loserId) {
                     db.prepare('UPDATE users SET losses = losses + 1 WHERE id = ?').run(loserId);
                   }
-                  
                   req.log.info(`Database updated: Winner ${winnerId} got +1 win, Loser ${loserId} got +1 loss`);
                 } catch (dbError) {
                   req.log.error(`Database error when saving game result: ${dbError.message}`);
                 }
-                
-                // Broadcast game end
+
+                // Broadcast personalized game end to each client
                 gameSockets.forEach(client => {
                   if (client && client.readyState === 1) {
+                    const clientUserId = socketToUserId.get(client);
+                    const isClientPlayer1 = clientUserId === players.player1Id;
                     client.send(JSON.stringify({
                       type: 'game_end',
-                      winnerId,
-                      player1Score: gameState.player1Score,
-                      player2Score: gameState.player2Score,
+                      winnerId: winnerId,
+                      yourPlayerId: clientUserId,
+                      playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
+                      opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
                     }));
                   }
                 });
-                
+
                 // Clean up game resources
                 connectedGames.delete(gameId);
                 gamePlayers.delete(gameId);

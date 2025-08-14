@@ -308,9 +308,6 @@ function updateOnlineFriends(friends: Friend[]): void {
                         ${friend.username}
           </a>  
         </div>
-        <button id="challengeFriend(${friend.id})" class="bg-[#2f9b20] text-white px-2 py-1 rounded text-xs hover:bg-[#247a1a] transition-colors">
-          Desafiar
-        </button>
       </div>
     `).join('');
 }
