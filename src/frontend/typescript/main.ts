@@ -455,6 +455,10 @@ function handleAvatarPreviewUpdate(event: Event): void {
 
 // Função executada quando a página é carregada
 window.onload = (): void => {
+    // Show loading overlay immediately
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
     setupRoutes();
     setupEventListeners();
     router.handleInitialRoute();
@@ -464,6 +468,10 @@ window.onload = (): void => {
             connectWebSocket(token);
         }
     }
+    // Delay hiding overlay until auth check and initial route are handled
+    setTimeout(() => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+    }, 400); // 400ms for smoother transition
     checkAuthAndRedirect();
 };
 

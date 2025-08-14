@@ -1467,7 +1467,7 @@ class Game3D {
       mainMenuButton.style.transform = 'scale(1)';
       mainMenuButton.style.boxShadow = '0 4px 15px rgba(255, 7, 58, 0.3)';
     };
-    mainMenuButton.onclick = () => this.returnToMainMenu();
+  mainMenuButton.onclick = () => window.location.reload();
 
     buttonContainer.appendChild(mainMenuButton);
 
@@ -1488,54 +1488,54 @@ class Game3D {
     document.body.appendChild(this.gameEndOverlay);
   }
 
-  returnToMainMenu() {
-    // Stop the game loop and dispose Babylon engine/scene
-    if (this.engine) {
-      this.engine.stopRenderLoop();
-      if (this.scene) {
-        this.scene.dispose();
-        this.scene = null;
-      }
-      this.engine.dispose();
-      // Do not set this.engine to null, keep it as BABYLON.Engine type
-    }
-    this.isRunning = false;
+  // returnToMainMenu() {
+  //   // Stop the game loop and dispose Babylon engine/scene
+  //   if (this.engine) {
+  //     this.engine.stopRenderLoop();
+  //     if (this.scene) {
+  //       this.scene.dispose();
+  //       this.scene = null;
+  //     }
+  //     this.engine.dispose();
+  //     // Do not set this.engine to null, keep it as BABYLON.Engine type
+  //   }
+  //   this.isRunning = false;
 
-    // Remove overlays and UI elements
-    if (this.gameEndOverlay) {
-      document.body.removeChild(this.gameEndOverlay);
-      this.gameEndOverlay = null;
-    }
-    const countdownEl = document.getElementById('countdown-display');
-    if (countdownEl && countdownEl.parentNode) {
-      countdownEl.parentNode.removeChild(countdownEl);
-    }
-    const waitingEl = document.getElementById('waiting-display');
-    if (waitingEl && waitingEl.parentNode) {
-      waitingEl.parentNode.removeChild(waitingEl);
-    }
-    // Optionally reset scores/UI
-    const playerScoreEl = document.getElementById('player-score');
-    if (playerScoreEl) playerScoreEl.textContent = '0';
-    const computerScoreEl = document.getElementById('computer-score');
-    if (computerScoreEl) computerScoreEl.textContent = '0';
+  //   // Remove overlays and UI elements
+  //   if (this.gameEndOverlay) {
+  //     document.body.removeChild(this.gameEndOverlay);
+  //     this.gameEndOverlay = null;
+  //   }
+  //   const countdownEl = document.getElementById('countdown-display');
+  //   if (countdownEl && countdownEl.parentNode) {
+  //     countdownEl.parentNode.removeChild(countdownEl);
+  //   }
+  //   const waitingEl = document.getElementById('waiting-display');
+  //   if (waitingEl && waitingEl.parentNode) {
+  //     waitingEl.parentNode.removeChild(waitingEl);
+  //   }
+  //   // Optionally reset scores/UI
+  //   const playerScoreEl = document.getElementById('player-score');
+  //   if (playerScoreEl) playerScoreEl.textContent = '0';
+  //   const computerScoreEl = document.getElementById('computer-score');
+  //   if (computerScoreEl) computerScoreEl.textContent = '0';
 
-    // Reset game state variables
-    this.playerScore = 0;
-    this.computerScore = 0;
-    this.gameState = null;
+  //   // Reset game state variables
+  //   this.playerScore = 0;
+  //   this.computerScore = 0;
+  //   this.gameState = null;
 
-    // Reset global reference if used
-    if (typeof currentGame3D !== 'undefined') {
-      currentGame3D = null;
-    }
+  //   // Reset global reference if used
+  //   if (typeof currentGame3D !== 'undefined') {
+  //     currentGame3D = null;
+  //   }
 
-    // Log cleanup
-    console.log('Game cleaned up, ready for new game.');
+  //   // Log cleanup
+  //   console.log('Game cleaned up, ready for new game.');
 
-    // Navigate to dashboard/main menu
-    router.navigate('/dashboard');
-  }
+  //   // Navigate to dashboard/main menu
+  //   router.navigate('/dashboard');
+  // }
 }
 
 export let currentGame3D: Game3D | null = null;
