@@ -2,6 +2,16 @@
 
 import { login, register, logout, isAuthenticated } from './auth.ts';
 import { updateProfile, searchUsers, addFriend } from './profile.ts';
+import { getGameRunning, setGameRunning } from './game';
+// Type definition for global game state
+declare global {
+    interface Window {
+        PongTranscenderState?: {
+            gameRunning: boolean;
+            selectedGameMode: '2d' | '3d' | null;
+        };
+    }
+}
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage } from './pages.ts';
 import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
@@ -195,12 +205,19 @@ function setupEventListeners(): void {
         const diff = (btn as HTMLElement).getAttribute('data-diff') as 'easy' | 'medium' | 'hard';
         document.getElementById('iaModal')!.classList.add('hidden');
     
-        if (gameRunning) {
-          alert('Um jogo já está em execução.');
-          return;
-        }
-    
-        gameRunning = true;
+                // Use global singleton state for gameRunning
+                if (typeof getGameRunning === 'function' ? getGameRunning() : (window && window.PongTranscenderState && window.PongTranscenderState.gameRunning)) {
+                    alert('Um jogo já está em execução.');
+                    return;
+                }
+
+                if (typeof setGameRunning === 'function') {
+                    setGameRunning(true);
+                } else if (window && window.PongTranscenderState) {
+                    window.PongTranscenderState.gameRunning = true;
+                } else {
+                    gameRunning = true;
+                }
     
         try {
           if (iaSelectedMode === '2d') {
@@ -212,9 +229,11 @@ function setupEventListeners(): void {
             router.navigate('/game'); // Navega para a página do jogo 2D
           } else {
             console.log(`Iniciando 3D IA [${diff}]`);
+            showGamePage(); // Ensure gamePage is visible before starting 3D game
+            await waitForCanvas('renderCanvas', 1000); // Wait for canvas to be present
             await startGame3D('', true, false); // cria instância e inicia
             if (currentGame3D) {
-            currentGame3D.setDifficulty(diff); // aplica dificuldade
+              currentGame3D.setDifficulty(diff); // aplica dificuldade
             }
             router.navigate('/game'); // Navega para a página do jogo 3D
             scr.hidden = false;
@@ -271,6 +290,7 @@ function setupEventListeners(): void {
             alert('Por favor insere um Game ID');
             return;
             }
+            
             iniciarPvP3D(false, gameId);
         }
         });
@@ -297,12 +317,14 @@ function setupEventListeners(): void {
     
         if (isHost) {
         console.log('Criando jogo 3D...');
+        showGamePage();
         startGame3D('', true, true);
         router.navigate('/game'); // Navega para a página do jogo 3D
         scr.hidden = false;
 
         } else {
         console.log(`Entrando no jogo 3D com ID: ${gameId}`);
+        showGamePage();
         startGame3D(gameId, false, true);
         router.navigate('/game');
         scr.hidden = false;
@@ -446,3 +468,14 @@ window.onload = (): void => {
 };
 
 export { router };
+
+// Helper function to wait for the renderCanvas element
+async function waitForCanvas(canvasId: string, timeout = 1000): Promise<HTMLCanvasElement> {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const el = document.getElementById(canvasId);
+    if (el instanceof HTMLCanvasElement) return el;
+    await new Promise(res => setTimeout(res, 20));
+  }
+  throw new Error(`Canvas element with id "${canvasId}" not found after ${timeout}ms`);
+}

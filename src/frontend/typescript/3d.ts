@@ -1,4 +1,6 @@
-import {router} from "./router";
+import {router} from "./router.ts";
+import { cleanupCurrentGame } from "./game";
+import { setGameRunning } from "./game";
 
 class Game3D {
   // Connections
@@ -12,8 +14,8 @@ class Game3D {
   // Canvas and engine
   private canvas: HTMLCanvasElement;
   private engine: BABYLON.Engine;
-  private scene: BABYLON.Scene;
-  private camera: BABYLON.FreeCamera;
+  private scene: BABYLON.Scene | null;
+  private camera: BABYLON.FreeCamera | null;
 
   // Lighting
   private playerLight: BABYLON.SpotLight;
@@ -42,6 +44,9 @@ class Game3D {
   private isPlayerMoving: "UP" | "DOWN" | "NO" = "NO";
   private playerWidth: number = 6;
   private computerWidth: number = 6;
+  private gameEndOverlay: HTMLDivElement | null = null;
+  private isRunning: boolean = true;
+  private gameState: boolean | null = null; // true = victory, false = defeat
 
   // Visual effects
   private playerScorePulse: number = 0;
@@ -80,7 +85,15 @@ class Game3D {
 
   constructor() {
     const canvasEl = document.getElementById("renderCanvas");
+    console.debug('[Game3D] renderCanvas element:', canvasEl);
+    if (!canvasEl) {
+      const gamePage = document.getElementById('gamePage');
+      console.error('[Game3D] renderCanvas not found! gamePage innerHTML:', gamePage ? gamePage.innerHTML : 'gamePage not found');
+      throw new Error('Element with id "renderCanvas" not found.');
+    }
     if (!(canvasEl instanceof HTMLCanvasElement)) {
+      const gamePage = document.getElementById('gamePage');
+      console.error('[Game3D] renderCanvas is not a canvas element! Tag:', canvasEl.tagName, 'gamePage innerHTML:', gamePage ? gamePage.innerHTML : 'gamePage not found');
       throw new Error('Element with id "renderCanvas" is not a canvas element.');
     }
     this.canvas = canvasEl;
@@ -335,7 +348,7 @@ class Game3D {
   handleNetworkMessage(data: any) {
     console.log('🔄 Processing network message:', data.type, data);
     
-    switch (data.type) {
+  switch (data.type) {
       case 'game_joined':
         console.log('✅ Successfully joined game:', data.gameId);
         console.log('🔌 WebSocket connected, isHost:', this.isHost, 'useMultiplayer:', this.useMultiplayer);
@@ -465,9 +478,11 @@ class Game3D {
         }
         
         // Show game over message
-        const winnerMessage = data.winnerId ? `Winner: ${data.winnerId}` : 'Game Over';
-        alert(`${winnerMessage}! Final Score: ${data.player1Score} - ${data.player2Score}`);
-        
+        // Set game state for overlay
+        this.gameState = (data.winnerId === data.yourPlayerId); // true if you won
+        this.isRunning = false;
+        this.createGameEndOverlay();
+
         // Gracefully close ONLY the game WebSocket (not the user WebSocket)
         if (this.socket) {
           console.log('Closing game WebSocket connection');
@@ -475,14 +490,6 @@ class Game3D {
           this.socket = null;
           this.isConnected = false;
         }
-        
-        router.navigate('/profile'); // Navigate to profile page after game ends
-
-        // Navigate to dashboard after a short delay without full page reload
-        setTimeout(() => {
-          console.log('Navigating back to profile page');
-          router.navigate('/profile');
-        }, 2000); // Increased delay to ensure cleanup
         break;
 
       default:
@@ -512,13 +519,17 @@ class Game3D {
   }
 
   async createScene() {
+    if (!this.engine) return;
     this.scene = new BABYLON.Scene(this.engine);
+    if (!this.scene) return;
     this.scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
     // Camera with cinematic angle
     this.camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(-45, 0, 0), this.scene);
-    this.camera.setTarget(new BABYLON.Vector3(0, 0, 0));
-    this.camera.rotation.x = 0.3; // Slight downward angle
+    if (this.camera) {
+      this.camera.setTarget(new BABYLON.Vector3(0, 0, 0));
+      this.camera.rotation.x = 0.3;
+    }
 
     // Lighting setup for dramatic effect
     this.createLighting();
@@ -534,6 +545,7 @@ class Game3D {
   }
 
   createLighting() {
+    if (!this.scene) return;
     // Main directional light
     const mainLight = new BABYLON.DirectionalLight("mainLight", new BABYLON.Vector3(-1, -1, 1), this.scene);
     mainLight.intensity = 0.5;
@@ -555,6 +567,7 @@ class Game3D {
   }
 
   createArena() {
+    if (!this.scene) return;
     // Arena floor
     const ground = BABYLON.MeshBuilder.CreateGround("ground", {
       width: this.arenaSize[0],
@@ -585,6 +598,7 @@ class Game3D {
   }
 
   createWalls() {
+    if (!this.scene) return;
     // Top and bottom walls
     const wallHeight = 2;
     const wallMaterial = new BABYLON.StandardMaterial("wallMat", this.scene);
@@ -613,6 +627,7 @@ class Game3D {
   }
 
   createGoalAreas() {
+    if (!this.scene) return;
     // Player goal (left side)
     const playerGoal = BABYLON.MeshBuilder.CreateBox("playerGoal", {
       width: 0.3,
@@ -664,6 +679,7 @@ class Game3D {
   }
 
   createPaddles() {
+    if (!this.scene) return;
     // Player paddle (left side)
     this.playerWidth = 6 * this.diffMultiplier;
     this.player = BABYLON.MeshBuilder.CreateBox("player", { width: 1, height: 1, depth: this.playerWidth }, this.scene);
@@ -708,6 +724,7 @@ class Game3D {
   }
 
   createBall() {
+    if (!this.scene) return;
     // Dispose existing ball if it exists to prevent duplicates
     if (this.ball) {
       this.ball.dispose();
@@ -753,6 +770,7 @@ class Game3D {
   }
 
   createParticleSystem() {
+    if (!this.scene) return;
     // Particle system for goal explosions
     this.particleSystem = new BABYLON.ParticleSystem("particles", 2000, this.scene);
     this.particleSystem.particleTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/flare.png", this.scene);
@@ -778,6 +796,7 @@ class Game3D {
   }
 
   createBallFragments(position: BABYLON.Vector3): void {
+    if (!this.scene) return;
     // Create multiple small fragments
     const fragmentCount = 5;
     const fragmentSize = 0.2;
@@ -853,6 +872,7 @@ class Game3D {
   }
 
   addAtmosphericEffects() {
+    if (!this.scene) return;
     // Fog for depth
     this.scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
     this.scene.fogColor = new BABYLON.Color3(0, 0, 0.1);
@@ -860,9 +880,9 @@ class Game3D {
     this.scene.fogEnd = 30;*/
 
     // Subtle camera animation
-    this.scene.registerBeforeRender(() => {
+    if (this.camera && this.camera.position) {
       this.camera.position.y = 15 + Math.sin(Date.now() * 0.001) * 0.7;
-    });
+    }
   }
 
   setupEventListeners() {
@@ -875,7 +895,7 @@ class Game3D {
     });
 
     window.addEventListener("resize", () => {
-      this.engine.resize();
+      if (this.engine) this.engine.resize();
     });
   }
 
@@ -929,12 +949,13 @@ class Game3D {
   }
 
   update() {
+    if (!this.isRunning) return;
     this.updatePlayer();
     this.updateComputer();
     if (!this.isGoalScored) { // Only update ball if no goal was scored
       this.updateBall();
     }
-    this.updateBallFragments(); // Add this line
+    this.updateBallFragments();
     this.updateVisualEffects();
     this.updateUI();
   }
@@ -1127,10 +1148,10 @@ class Game3D {
       // Check for game end (first to 5 points wins)
       if (this.playerScore >= 5) {
         setTimeout(() => {
-          alert(`Game Over! You Win! Final Score: ${this.playerScore} - ${this.computerScore}`);
-          this.reset();
+          this.gameState = true;
+          this.isRunning = false;
+          this.createGameEndOverlay();
         }, 200);
-        router.navigate('/dashboard');
         return;
       }
     }
@@ -1147,8 +1168,9 @@ class Game3D {
       // Check for game end (first to 5 points wins)
       if (this.computerScore >= 5) {
         setTimeout(() => {
-          alert(`Game Over! Computer Wins! Final Score: ${this.playerScore} - ${this.computerScore}`);
-          this.reset();
+          this.gameState = false;
+          this.isRunning = false;
+          this.createGameEndOverlay();
         }, 2000);
         return;
       }
@@ -1363,9 +1385,156 @@ class Game3D {
   startRenderLoop() {
     console.log("Game started!")
     this.engine.runRenderLoop(() => {
+      if (!this.isRunning) return;
       this.update();
-      this.scene.render();
+      if (this.scene) {
+        this.scene.render();
+      }
     });
+  }
+
+  // Overlay for game end
+  createGameEndOverlay() {
+    // Remove existing overlay if it exists
+    if (this.gameEndOverlay) {
+      document.body.removeChild(this.gameEndOverlay);
+    }
+
+    this.gameEndOverlay = document.createElement('div');
+    this.gameEndOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    `;
+
+    const isVictory = this.gameState;
+    const title = document.createElement('h1');
+    title.textContent = isVictory ? 'VICTORY!' : 'DEFEAT!';
+    title.style.cssText = `
+      font-size: 4rem;
+      margin: 0 0 20px 0;
+      text-shadow: 0 0 20px ${isVictory ? '#7DF9FF' : '#FF073A'};
+      color: ${isVictory ? '#7DF9FF' : '#FF073A'};
+      animation: pulse 2s infinite;
+    `;
+
+    const scoreDisplay = document.createElement('div');
+    scoreDisplay.innerHTML = `
+      <p style="font-size: 2rem; margin: 20px 0;">Final Score</p>
+      <p style="font-size: 1.5rem; margin: 10px 0;">
+        Player: <span style="color: #7DF9FF;">${this.playerScore}</span> - 
+        Computer: <span style="color: #FF073A;">${this.computerScore}</span>
+      </p>
+    `;
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = `
+      display: flex;
+      gap: 20px;
+      margin-top: 40px;
+    `;
+
+    const mainMenuButton = document.createElement('button');
+    mainMenuButton.textContent = 'Main Menu';
+    mainMenuButton.style.cssText = `
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      background: linear-gradient(45deg, #FF073A, #DC143C);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 7, 58, 0.3);
+    `;
+    mainMenuButton.onmouseover = () => {
+      mainMenuButton.style.transform = 'scale(1.05)';
+      mainMenuButton.style.boxShadow = '0 6px 20px rgba(255, 7, 58, 0.5)';
+    };
+    mainMenuButton.onmouseout = () => {
+      mainMenuButton.style.transform = 'scale(1)';
+      mainMenuButton.style.boxShadow = '0 4px 15px rgba(255, 7, 58, 0.3)';
+    };
+    mainMenuButton.onclick = () => this.returnToMainMenu();
+
+    buttonContainer.appendChild(mainMenuButton);
+
+    this.gameEndOverlay.appendChild(title);
+    this.gameEndOverlay.appendChild(scoreDisplay);
+    this.gameEndOverlay.appendChild(buttonContainer);
+
+    // Add CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    document.body.appendChild(this.gameEndOverlay);
+  }
+
+  returnToMainMenu() {
+    // Stop the game loop and dispose Babylon engine/scene
+    if (this.engine) {
+      this.engine.stopRenderLoop();
+      if (this.scene) {
+        this.scene.dispose();
+        this.scene = null;
+      }
+      this.engine.dispose();
+      // Do not set this.engine to null, keep it as BABYLON.Engine type
+    }
+    this.isRunning = false;
+
+    // Remove overlays and UI elements
+    if (this.gameEndOverlay) {
+      document.body.removeChild(this.gameEndOverlay);
+      this.gameEndOverlay = null;
+    }
+    const countdownEl = document.getElementById('countdown-display');
+    if (countdownEl && countdownEl.parentNode) {
+      countdownEl.parentNode.removeChild(countdownEl);
+    }
+    const waitingEl = document.getElementById('waiting-display');
+    if (waitingEl && waitingEl.parentNode) {
+      waitingEl.parentNode.removeChild(waitingEl);
+    }
+    // Optionally reset scores/UI
+    const playerScoreEl = document.getElementById('player-score');
+    if (playerScoreEl) playerScoreEl.textContent = '0';
+    const computerScoreEl = document.getElementById('computer-score');
+    if (computerScoreEl) computerScoreEl.textContent = '0';
+
+    // Reset game state variables
+    this.playerScore = 0;
+    this.computerScore = 0;
+    this.gameState = null;
+
+    // Reset global reference if used
+    if (typeof currentGame3D !== 'undefined') {
+      currentGame3D = null;
+    }
+
+    // Log cleanup
+    console.log('Game cleaned up, ready for new game.');
+
+    // Navigate to dashboard/main menu
+    router.navigate('/dashboard');
   }
 }
 

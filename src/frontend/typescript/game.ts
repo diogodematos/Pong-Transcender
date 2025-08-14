@@ -2,7 +2,21 @@ import { startGame2D } from './2d.ts';
 import { startGame3D } from './3d.ts';
 
 // Track if games are already running to prevent multiple instances
-let gameRunning = false;
+// Use a global singleton for game state
+if (!(window as any).PongTranscenderState) {
+  (window as any).PongTranscenderState = {
+    gameRunning: false,
+    selectedGameMode: null
+  };
+}
+
+export function getGameRunning() {
+  return (window as any).PongTranscenderState.gameRunning;
+}
+export function setGameRunning(value: boolean) {
+  (window as any).PongTranscenderState.gameRunning = value;
+}
+
 let selectedGameMode: '2d' | '3d' | null = null;
 console.log("Starting game...");
 
@@ -45,14 +59,15 @@ window.addEventListener('DOMContentLoaded', () => {
       if (multiplayerDiv) multiplayerDiv.hidden = true;
 
       // Start 2D game immediately (single player only)
-      if (!gameRunning) {
+  console.log('[DEBUG] gameRunning before 2D start:', getGameRunning());
+  if (!getGameRunning()) {
         console.log('Starting 2D single-player game...');
-        gameRunning = true;
+  setGameRunning(true);
         try {
           startGame2D();
         } catch (error) {
           console.error('Error starting 2D game:', error);
-          gameRunning = false;
+          setGameRunning(false);
         }
       } else {
         console.log('Game already running');
@@ -109,15 +124,16 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (!gameRunning) {
+  console.log('[DEBUG] gameRunning before 3D join:', getGameRunning());
+  if (!getGameRunning()) {
         console.log(`Joining 3D multiplayer game with ID: ${gameId}`);
-        gameRunning = true;
+  setGameRunning(true);
 
         try {
           startGame3D(gameId, false, true); // false = not host (joining)
         } catch (error) {
           console.error('Error joining 3D game:', error);
-          gameRunning = false;
+          setGameRunning(false);
           alert(`Failed to join game: ${error}`);
         }
       }
@@ -146,15 +162,16 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (!gameRunning) {
+  console.log('[DEBUG] gameRunning before 3D create:', getGameRunning());
+  if (!getGameRunning()) {
         console.log('Creating new 3D multiplayer game...');
-        gameRunning = true;
+  setGameRunning(true);
 
         try {
           startGame3D('', true, true); // true = host (creating)
         } catch (error) {
           console.error('Error creating 3D game:', error);
-          gameRunning = false;
+          setGameRunning(false);
           alert(`Failed to create game: ${error}`);
         }
       } else {
@@ -182,16 +199,17 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (!gameRunning) {
+  console.log('[DEBUG] gameRunning before 3D single player:', getGameRunning());
+  if (!getGameRunning()) {
         console.log('Starting 3D single-player game...');
-        gameRunning = true;
+  setGameRunning(true);
 
         try {
           // Start 3D game without multiplayer connection
           startGame3D('', true, false); // gameId, isHost, useMultiplayer
         } catch (error) {
           console.error('Error starting 3D single-player game:', error);
-          gameRunning = false;
+          setGameRunning(false);
           alert(`Failed to start game: ${error}`);
         }
       } else {
@@ -225,7 +243,7 @@ export function initializeMainMenu() {
 // Function to handle game cleanup
 export function cleanupCurrentGame() {
   console.log('Cleaning up current game...');
-  gameRunning = false;
+  setGameRunning(false);
   selectedGameMode = null;
 
   // Show main menu elements again
