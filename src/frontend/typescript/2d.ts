@@ -210,10 +210,56 @@ class Game {
   }
 
   gameLoop() {
-    this.update();
-    this.draw();
-    requestAnimationFrame(() => this.gameLoop());
-  }
+      // Check win condition before updating/drawing
+      if (Game.playerScore >= 5 || Game.computerScore >= 5) {
+        this.showGameEndMessage();
+        return;
+      }
+      this.update();
+      this.draw();
+      requestAnimationFrame(() => this.gameLoop());
+    }
+
+    showGameEndMessage() {
+      // Remove previous message if exists
+      const oldMsg = document.getElementById('game-end-msg');
+      if (oldMsg) oldMsg.remove();
+
+
+    const msgDiv = document.createElement('div');
+    msgDiv.id = 'game-end-msg';
+    msgDiv.style.position = 'fixed';
+    msgDiv.style.left = '50%';
+    msgDiv.style.top = '50%';
+    msgDiv.style.transform = 'translate(-50%, -50%)';
+    msgDiv.style.background = 'rgba(0,0,0,0.7)';
+    msgDiv.style.color = '#fff';
+    msgDiv.style.padding = '16px 32px';
+    msgDiv.style.borderRadius = '12px';
+    msgDiv.style.fontFamily = 'Orbitron, Arial, sans-serif';
+    msgDiv.style.fontSize = '1.5rem';
+    msgDiv.style.zIndex = '100';
+    msgDiv.style.textAlign = 'center';
+
+      const winner = Game.playerScore > Game.computerScore ? 'You win!' : 'Computer wins!';
+      msgDiv.innerHTML = `<div style='margin-bottom:8px;'>${winner}</div><div>Final Score: <span style='color:#7DF9FF;'>${Game.playerScore}</span> - <span style='color:#FF073A;'>${Game.computerScore}</span></div>`;
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Main Menu';
+      btn.style.marginTop = '12px';
+      btn.style.padding = '8px 24px';
+      btn.style.fontSize = '1rem';
+      btn.style.background = 'linear-gradient(45deg, #7DF9FF, #FF073A)';
+      btn.style.color = '#fff';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '8px';
+      btn.style.cursor = 'pointer';
+      btn.onclick = () => window.location.reload();
+      msgDiv.appendChild(document.createElement('br'));
+      msgDiv.appendChild(btn);
+
+      document.body.appendChild(msgDiv);
+    }
 }
 
 // --------- CLASSES ---------
