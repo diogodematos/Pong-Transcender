@@ -739,7 +739,19 @@ class Game3D {
 
     // Ball material with dynamic glow
     const ballMaterial = new BABYLON.StandardMaterial("ballMat", this.scene);
-    ballMaterial.ambientTexture = new BABYLON.Texture("../assets/img/pokeball2.png", this.scene);
+    // dentro do método createBall
+    const ballType = (window as any).selectedBall || "ball1";
+    console.log("Bola escolhida no createBall:", ballType);
+    if (ballType === "ball1") {
+      ballMaterial.ambientTexture = new BABYLON.Texture("../assets/img/pokeball2.png", this.scene);}
+    else if (ballType === "ball2") { 
+      ballMaterial.ambientTexture = new BABYLON.Texture("../assets/img/quickball.png", this.scene);}
+    else if (ballType === "ball4") {
+      ballMaterial.ambientTexture = new BABYLON.Texture("../assets/img/ultraball.png", this.scene);
+    }
+    else {
+      ballMaterial.ambientTexture = new BABYLON.Texture("../assets/img/masterball.png", this.scene);
+    }
 
     ballMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
     ballMaterial.emissiveColor = new BABYLON.Color3(0.3, 0.3, 0.3);

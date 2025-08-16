@@ -152,9 +152,13 @@ function setupEventListeners(): void {
 
     let gameRunning = false;
 
+
+    //                                            Tourney 
     document.getElementById('startTournament')?.addEventListener('click', () => {
         router.navigate('/tourney');
     });
+
+    //                                            IA Battle
 
     let iaSelectedMode: '2d' | '3d' | null = null;
     const scr = document.getElementById('score-display') as HTMLDivElement;
@@ -222,7 +226,7 @@ function setupEventListeners(): void {
       });
     });
 
-
+        //                                           PvP Battle
         // Abrir modal no clique do botão Duel
     document.getElementById('startOneVsOne')?.addEventListener('click', () => {
         clearInputs('pvpGameIdInput');
@@ -236,36 +240,28 @@ function setupEventListeners(): void {
         document.getElementById('pvpModal')!.classList.add('hidden');
     });
     
-    // Etapa 1 — Escolher dimensão
-    // document.querySelectorAll('#pvp-step-dimension button').forEach(btn => {
-    //     btn.addEventListener('click', () => {
-    //     pvpSelectedMode = (btn as HTMLElement).getAttribute('data-mode') as '2d' | '3d';
-        
-    //     if (pvpSelectedMode === '2d') {
-    //         document.getElementById('pvpModal')!.classList.add('hidden');
-    //         iniciarPvp2D();
-    //     } else {
-    //         document.getElementById('pvp-step-dimension')!.classList.add('hidden');
-    //         document.getElementById('pvp-step-3d-options')!.classList.remove('hidden');
-    //     }
-    //     });
-    // });
-    
     // Etapa 2 (apenas 3D) — Criar ou Entrar
     document.querySelectorAll('#pvp-step-3d-options button').forEach(btn => {
         btn.addEventListener('click', () => {
         const action = (btn as HTMLElement).getAttribute('data-action');
         const gameId = (document.getElementById('pvpGameIdInput') as HTMLInputElement).value.trim();
     
+        // 🔹 Ler a bola escolhida
+        const selectedBall = (document.querySelector('input[name="ball-option"]:checked') as HTMLInputElement).value;
+    
+        // 🔹 Guardar no botão como atributo dataset (igual ao diff)
+        (btn as HTMLElement).setAttribute('data-ball', selectedBall);
+    
+        // Fechar modal
         document.getElementById('pvpModal')!.classList.add('hidden');
     
-        if (action === 'create') iniciarPvP3D(true);
-        else if (action === 'join') {
+        if (action === 'create') {
+            iniciarPvP3D(true);
+        } else if (action === 'join') {
             if (!gameId) {
             alert('Por favor insere um Game ID');
             return;
             }
-            
             iniciarPvP3D(false, gameId);
         }
         });
@@ -289,9 +285,12 @@ function setupEventListeners(): void {
         return;
         }
         gameRunning = true;
+        const selectedBall = document.querySelector('#pvp-step-3d-options button[data-ball]')?.getAttribute("data-ball") || "ball1";
     
         if (isHost) {
         console.log('Criando jogo 3D...');
+        // Lê a bola escolhida do botão
+        (window as any).selectedBall = selectedBall;
         showGamePage();
         startGame3D('', true, true);
         router.navigate('/game'); // Navega para a página do jogo 3D
@@ -299,6 +298,8 @@ function setupEventListeners(): void {
 
         } else {
         console.log(`Entrando no jogo 3D com ID: ${gameId}`);
+        // Lê a bola escolhida do botão
+        (window as any).selectedBall = selectedBall;
         showGamePage();
         startGame3D(gameId, false, true);
         router.navigate('/game');

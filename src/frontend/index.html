@@ -315,20 +315,51 @@
             <div class="bg-white rounded-2xl p-6 w-96 shadow-lg">
             <h2 class="text-2xl font-bold mb-4 text-center">Player vs Player</h2>
             
-            <div id="pvp-step-3d-options" class="space-y-2">
+            <div id="pvp-step-3d-options" class="space-y-4">
                 <p class="mb-2 font-semibold text-center">Player vs Player (3D)</p>
+              
+                <!-- Escolha da bola -->
+                <label class="block mb-2 text-center font-medium">Escolhe a bola:</label>
+                <div class="flex justify-center space-x-6">
+                  <!-- Bola 1 -->
+                  <label class="flex flex-col items-center cursor-pointer">
+                    <input type="radio" name="ball-option" value="ball1" checked class="mb-2">
+                    <img src="../assets/img/pokeball.png" alt="Pokébola" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-blue-500 transition">
+                    <span class="mt-1 text-sm">Pokeball</span>
+                  </label>
+                  <!-- Bola 2 -->
+                  <label class="flex flex-col items-center cursor-pointer">
+                    <input type="radio" name="ball-option" value="ball2" class="mb-2">
+                    <img src="../assets/img/quickball.png" alt="Quick Ball" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-yellow-500 transition">
+                    <span class="mt-1 text-sm">Quickball</span>
+                  </label>
+                  <!-- Bola 3 -->
+                  <label class="flex flex-col items-center cursor-pointer">
+                    <input type="radio" name="ball-option" value="ball3" class="mb-2">
+                    <img src="../assets/img/masterball.png" alt="Master Ball" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-purple-500 transition">
+                    <span class="mt-1 text-sm">Masterball</span>
+                  </label>
+                  <label class="flex flex-col items-center cursor-pointer">
+                    <input type="radio" name="ball-option" value="ball4" class="mb-2">
+                    <img src="../assets/img/ultraball.png" alt="Ultra Ball" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-purple-500 transition">
+                    <span class="mt-1 text-sm">Ultraball</span>
+                  </label>
+                </div>
+                
+              
+                <!-- Ações -->
                 <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-action="create">Criar Jogo</button>
                 <div class="space-y-2">
                   <input id="pvpGameIdInput" type="text" placeholder="Game ID" class="border border-gray-300 rounded-lg p-2 w-full" />
                   <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-action="join">Entrar no Jogo</button>
                 </div>
             </div>
-        
-            <!-- Fechar -->
             <div class="mt-4 text-center">
                 <button id="closePvpModal" class="text-gray-500 hover:text-gray-800">Cancelar</button>
+            </div>  
             </div>
-            </div>
+            <!-- Fechar -->
+
         </div>
 
 
