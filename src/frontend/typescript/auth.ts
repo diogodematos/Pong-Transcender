@@ -21,7 +21,8 @@ export async function login(credentials: UserCredentials): Promise<boolean> {
     const data = await res.json();
 
     if (res.ok) {
-       localStorage.setItem('authToken', data.token);
+       localStorage.setItem('authToken', data.token,); // Armazena o token de autenticação
+       localStorage.setItem('userName', data.dbUser.username) // Armazena o username
        clearInputs('username', 'password');
        connectWebSocket(data.token); // Inicializa a conexão WebSocket com o token
        router.navigate('/dashboard'); // Redireciona para o dashboard
@@ -102,6 +103,10 @@ export function logout(): void {
  */
 export function isAuthenticated(): boolean {
   return localStorage.getItem('authToken') !== null;
+}
+
+export function getLoggedUsername(): string {
+  return localStorage.getItem('userName') || 'Jogador';
 }
 
 /**

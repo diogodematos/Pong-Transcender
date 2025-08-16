@@ -330,7 +330,7 @@
             </div>
             </div>
         </div>
-  
+
 
         <div id="gamePage" class="hidden flex flex-col items-center justify-center min-h-screen p-8 bg-transparent">
            <canvas id="renderCanvas" ></canvas>
@@ -387,6 +387,61 @@
             <script type="module" src="/src/game.ts"></script>
                     </div>  -->
         </div>
+
+        <div id="tourneyPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
+            <!-- Título e subtítulo -->
+            <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
+                <img src="/assets/img/trophy.png" alt="Torneio" class="w-8 h-8 mr-2">
+                Criar Torneio Local
+            </h2>
+            <p class="text-center text-gray-600 mb-6 text-sm">Defina o nome do torneio e os jogadores participantes</p>
+        
+            <!-- Nome do torneio -->
+            <div class="mb-4">
+                <label for="tourneyName" class="block text-sm font-medium text-gray-700">Nome do Torneio</label>
+                <input type="text" id="tourneyName" name="tourneyName"
+                       class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
+                       placeholder="Ex: Torneio de Verão" required />
+            </div>
+        
+            <!-- Slots dos jogadores -->
+            <div id="tourneySlots" class="space-y-4">
+                <div class="mb-4">
+                    <label for="player1" class="block text-sm font-medium text-gray-700">Jogador 1 (Você)</label>
+                    <input type="text" id="player1" name="player1"
+                           class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
+                           value="" />
+                </div>
+                <div class="mb-4">
+                    <label for="player2" class="block text-sm font-medium text-gray-700">Jogador 2</label>
+                    <input type="text" id="player2" name="player2"
+                           class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
+                           placeholder="Nickname" />
+                </div>
+                <div class="mb-4">
+                    <label for="player3" class="block text-sm font-medium text-gray-700">Jogador 3</label>
+                    <input type="text" id="player3" name="player3"
+                           class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
+                           placeholder="Nickname" />
+                </div>
+                <div class="mb-4">
+                    <label for="player4" class="block text-sm font-medium text-gray-700">Jogador 4</label>
+                    <input type="text" id="player4" name="player4"
+                           class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
+                           placeholder="Nickname" />
+                </div>
+            </div>
+        
+            <!-- Botão de início -->
+            <button id="startTourneyBtn"
+                    class="mt-6 w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] 
+                           transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled>
+                Iniciar Torneio
+            </button>
+        </div>
+        
+        
 
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">

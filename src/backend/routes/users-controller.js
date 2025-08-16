@@ -199,7 +199,7 @@ const usersController = async (fastify, options) => {
             }
             // Usa fastify.jwt.sign para assinar o token (secretKey definido no plugin JWT)
             const token = fastify.jwt.sign({ id: dbUser.id }, { expiresIn: '1h' });
-            return { success: true, message: 'User logged in', token, dbUser: { id: dbUser.id } }; // Inclui dbUser.id para consistência
+            return { success: true, message: 'User logged in', token, dbUser: { id: dbUser.id, username: dbUser.username } }; // Inclui dbUser.id para consistência
         } catch (error) {
             req.log.error(`Error during login: ${error.message}`);
             return reply.status(500).send({ error: 'Internal server error', details: error.message });

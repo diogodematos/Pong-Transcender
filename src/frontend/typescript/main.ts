@@ -1,8 +1,8 @@
 // src/frontend/typescript/main.ts
 
-import { login, register, logout, isAuthenticated } from './auth.ts';
+import { login, register, logout, isAuthenticated} from './auth.ts';
 import { updateProfile, searchUsers} from './profile.ts';
-import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage } from './pages.ts';
+import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage, showTourneyPage } from './pages.ts';
 import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
 import { startGame2D, currentGame2D } from './2d.ts'; // Importa a função de início do jogo 2D
@@ -45,6 +45,14 @@ function setupRoutes(): void {
 
         if (isAuthenticated()) {
             showDashboardPage();
+        } else {
+            router.navigate('/login');
+        }
+    });
+
+    router.addRoute('/tourney', () => {
+        if (isAuthenticated()) {
+            showTourneyPage(); // Uncomment if you have a tourney page
         } else {
             router.navigate('/login');
         }
@@ -145,8 +153,7 @@ function setupEventListeners(): void {
     let gameRunning = false;
 
     document.getElementById('startTournament')?.addEventListener('click', () => {
-        console.log('Botão "League" clicado!');
-        router.navigate('/game');
+        router.navigate('/tourney');
     });
 
     let iaSelectedMode: '2d' | '3d' | null = null;

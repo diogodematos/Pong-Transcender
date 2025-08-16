@@ -1,6 +1,6 @@
-// src/frontend/typescript/pages.ts
-
+import { initTourneyPage } from './tourney.ts';
 import { getDashboard, getFriendsForProfile, getProfile, getUserProfile} from "./profile.ts";
+import { getLoggedUsername } from './auth.ts';
 
 export function showLoginPage(): void {
     togglePages('loginPage');
@@ -45,6 +45,14 @@ export function showUserProfilePage(userId: string): void {
     showNavigation();
 }
 
+export function showTourneyPage(): void {
+    clearInputs('tourneyName', 'player1', 'player2', 'player3', 'player4');
+    const username = getLoggedUsername(); // função que lê do token/jwt/estado
+    initTourneyPage(username);
+    togglePages('tourneyPage');
+    showNavigation();
+}
+
 export function clearInputs(...ids: string[]): void {
     ids.forEach(id => {
         const el = document.getElementById(id) as HTMLInputElement | null;
@@ -61,7 +69,7 @@ export function clearInputs(...ids: string[]): void {
 }
 
 function togglePages(visiblePageId: string): void {
-    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage', 'userProfilePage'];
+    const pages = ['loginPage', 'registerPage', 'profilePage', 'editProfilePage', 'gamePage', 'dashboardPage', 'userProfilePage', 'tourneyPage'];
     
     pages.forEach(page => {
         const el = document.getElementById(page);
