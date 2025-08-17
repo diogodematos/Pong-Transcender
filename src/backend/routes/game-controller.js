@@ -403,14 +403,17 @@ export default async function gameRoutes(fastify, options) {
   });
 
   // API to create a new game
-  fastify.post('/create', {
-    onRequest: [fastify.authenticate],
-    handler: async (req, reply) => {
-      const userId = req.user.id;
-      const gameId = `game_${Date.now()}_${userId}`;
-      return { gameId };
-    }
-  });
+fastify.post('/create', {
+  onRequest: [fastify.authenticate],
+  handler: async (req, reply) => {
+    let gameId;
+    do {
+      gameId = `game_${Math.floor(1000 + Math.random() * 9000)}`;
+    } while (connectedGames.has(gameId));
+    return { gameId };
+  }
+});
+
 
   // API to join a game
   fastify.post('/join', {

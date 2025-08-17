@@ -12,8 +12,8 @@ class Game3D {
   // Canvas and engine
   private canvas: HTMLCanvasElement;
   private engine: BABYLON.Engine;
-  private scene: BABYLON.Scene | null;
-  private camera: BABYLON.FreeCamera | null;
+  private scene: BABYLON.Scene;
+  private camera: BABYLON.FreeCamera;
 
   // Lighting
   private playerLight: BABYLON.SpotLight;
@@ -523,17 +523,13 @@ class Game3D {
   }
 
   async createScene() {
-    if (!this.engine) return;
     this.scene = new BABYLON.Scene(this.engine);
-    if (!this.scene) return;
     this.scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
     // Camera with cinematic angle
     this.camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(-45, 0, 0), this.scene);
-    if (this.camera) {
-      this.camera.setTarget(new BABYLON.Vector3(0, 0, 0));
-      this.camera.rotation.x = 0.3;
-    }
+    this.camera.setTarget(new BABYLON.Vector3(0, 0, 0));
+    this.camera.rotation.x = 0.3; // Slight downward angle
 
     // Lighting setup for dramatic effect
     this.createLighting();
@@ -888,7 +884,6 @@ class Game3D {
   }
 
   addAtmosphericEffects() {
-    if (!this.scene) return;
     // Fog for depth
     this.scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
     this.scene.fogColor = new BABYLON.Color3(0, 0, 0.1);
@@ -896,9 +891,9 @@ class Game3D {
     this.scene.fogEnd = 30;*/
 
     // Subtle camera animation
-    if (this.camera && this.camera.position) {
+    this.scene.registerBeforeRender(() => {
       this.camera.position.y = 15 + Math.sin(Date.now() * 0.001) * 0.7;
-    }
+    });
   }
 
   setupEventListeners() {
@@ -1686,8 +1681,8 @@ export async function startGame3D(gameId: string = '', isHost: boolean = false, 
     
     // Redirect to dashboard/profile page on connection failure
     setTimeout(() => {
-        router.navigate('/profile'); // Adjust the route as needed
-    }, 1000);
+        window.location.reload(); // Adjust the route as needed
+    }, 100);
   }
 }
 
