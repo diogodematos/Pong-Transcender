@@ -39,6 +39,8 @@ export default async function gameRoutes(fastify, options) {
         gamePlayers.set(gameId, {
           player1Id: null,
           player2Id: null,
+          activePlayer1: false,
+          activePlayer2: false,
           countdownStarted: false,
           gameState: {
             paddle1Y: 0,
@@ -67,15 +69,21 @@ export default async function gameRoutes(fastify, options) {
       req.log.info(`🔍 Debug - After adding socket: Set size = ${gameSockets.size}`);
       req.log.info(`🔍 Debug - Socket mapped to user ID: ${userId}`);
       
-      // Assign player IDs
-      if (!players.player1Id) {
+      // Assign or reassign player based on userId
+      if (!players.player1Id || players.player1Id === userId) {
         players.player1Id = userId;
-      } else if (!players.player2Id && players.player1Id !== userId) {
+        players.activePlayer1 = true;
+      } else if (!players.player2Id || players.player2Id === userId) {
         players.player2Id = userId;
+        players.activePlayer2 = true;
+      } else {
+        req.log.info(`Unauthorized join attempt by user ${userId} for game ${gameId}`);
+        socket.close(1008, 'Game full or not authorized');
+        return;
       }
 
-      // Start countdown when 2nd player joins
-      if (gameSockets.size === 2 && !players.countdownStarted) {
+      // Start countdown when 2nd player joins or reconnects
+      if (gameSockets.size === 2 && players.activePlayer1 && players.activePlayer2 && !players.countdownStarted) {
         players.countdownStarted = true;
         let countdown = 3;
         
@@ -95,11 +103,17 @@ export default async function gameRoutes(fastify, options) {
           if (countdown < 0) {
             clearInterval(countdownInterval);
             
-            // Start the game after countdown
+            // Set initial velocity only if currently at rest (initial start or after goal)
+            if (gameState.ballVelX === 0 && gameState.ballVelZ === 0) {
+              gameState.ballX = 0;
+              gameState.ballZ = 0;
+              gameState.ballVelX = Math.random() > 0.5 ? 0.3 : -0.3;
+              gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+              req.log.info(`Setting initial ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
+            }
+            
             gameState.gameStarted = true;
-            gameState.ballVelX = Math.random() > 0.5 ? 0.3 : -0.3;
-            gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
-            req.log.info(`Game started! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
+            req.log.info(`Game started/resumed! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
             
             // Notify clients game has started
             gameSockets.forEach(client => {
@@ -194,9 +208,8 @@ export default async function gameRoutes(fastify, options) {
       // Start periodic game state broadcast for this game if not already started
       if (!gameState.updateInterval) {
         gameState.updateInterval = setInterval(() => {
-          if (gameSockets.size > 0 && gameState.gameStarted && !gameState.gameEnded) {
-            // Only update ball position if game has actually started
-            if (gameState.ballVelX !== 0 || gameState.ballVelZ !== 0) {
+          if (gameSockets.size > 0) {
+            if (gameState.gameStarted && !gameState.gameEnded) {
               // Update ball position
               gameState.ballX += gameState.ballVelX;
               gameState.ballZ += gameState.ballVelZ;
@@ -322,7 +335,7 @@ export default async function gameRoutes(fastify, options) {
               }
             }
 
-            // Broadcast updated state to all clients
+            // Always broadcast updated state to all clients
             gameSockets.forEach(client => {
               if (client && client.readyState === 1) {
                 // Find which user this client belongs to using the socket mapping
@@ -351,13 +364,27 @@ export default async function gameRoutes(fastify, options) {
       }
 
       socket.on('close', (code, reason) => {
+        const disconnectedUserId = socketToUserId.get(socket);
         gameSockets.delete(socket);
-        socketToUserId.delete(socket); // Clean up socket mapping
-        req.log.info(`User ${userId} left game ${gameId}. Code: ${code}, Reason: ${reason || 'N/A'}`);
+        socketToUserId.delete(socket);
+        
+        if (disconnectedUserId === players.player1Id) {
+          players.activePlayer1 = false;
+        } else if (disconnectedUserId === players.player2Id) {
+          players.activePlayer2 = false;
+        }
+        
+        // Pause game if not both active
+        if (!players.activePlayer1 || !players.activePlayer2) {
+          gameState.gameStarted = false;
+          players.countdownStarted = false;
+          req.log.info(`Game paused due to disconnection. Waiting for reconnection.`);
+        }
+        
+        req.log.info(`User ${disconnectedUserId} left game ${gameId}. Code: ${code}, Reason: ${reason || 'N/A'}. Connected: ${gameSockets.size}`);
+        
         if (gameSockets.size === 0) {
-          // Clean up the update interval if it exists
-          const gameState = connectedGames.get(gameId);
-          if (gameState && gameState.updateInterval) {
+          if (gameState.updateInterval) {
             clearInterval(gameState.updateInterval);
             gameState.updateInterval = null;
           }
@@ -367,13 +394,27 @@ export default async function gameRoutes(fastify, options) {
       });
 
       socket.on('error', (error) => {
-        req.log.error(`Game WebSocket error for user ${userId}: ${error.message}`);
+        const disconnectedUserId = socketToUserId.get(socket);
         gameSockets.delete(socket);
-        socketToUserId.delete(socket); // Clean up socket mapping
+        socketToUserId.delete(socket);
+        
+        if (disconnectedUserId === players.player1Id) {
+          players.activePlayer1 = false;
+        } else if (disconnectedUserId === players.player2Id) {
+          players.activePlayer2 = false;
+        }
+        
+        // Pause game if not both active
+        if (!players.activePlayer1 || !players.activePlayer2) {
+          gameState.gameStarted = false;
+          players.countdownStarted = false;
+          req.log.info(`Game paused due to disconnection. Waiting for reconnection.`);
+        }
+        
+        req.log.error(`Game WebSocket error for user ${disconnectedUserId}: ${error.message}`);
+        
         if (gameSockets.size === 0) {
-          // Clean up the update interval if it exists
-          const gameState = connectedGames.get(gameId);
-          if (gameState && gameState.updateInterval) {
+          if (gameState.updateInterval) {
             clearInterval(gameState.updateInterval);
             gameState.updateInterval = null;
           }
@@ -403,16 +444,16 @@ export default async function gameRoutes(fastify, options) {
   });
 
   // API to create a new game
-fastify.post('/create', {
-  onRequest: [fastify.authenticate],
-  handler: async (req, reply) => {
-    let gameId;
-    do {
-      gameId = `game_${Math.floor(1000 + Math.random() * 9000)}`;
-    } while (connectedGames.has(gameId));
-    return { gameId };
-  }
-});
+  fastify.post('/create', {
+    onRequest: [fastify.authenticate],
+    handler: async (req, reply) => {
+      let gameId;
+      do {
+        gameId = `game_${Math.floor(1000 + Math.random() * 9000)}`;
+      } while (connectedGames.has(gameId));
+      return { gameId };
+    }
+  });
 
 
   // API to join a game

@@ -1062,16 +1062,14 @@ class Game3D {
     this.computer.position.z += (this.computer as any).velocity.z;
   }
 
-  updateBall() {
-    // In multiplayer, NEVER handle ball physics on client - server is 100% authoritative
-    if (this.useMultiplayer) {
-      // Only handle visual effects like rotation, no position updates
-      if (!this.isGoalScored && this.ball.isEnabled()) {
-        const rotationSpeed = 0.1;
-        this.ball.rotation.y += rotationSpeed;
-      }
-      return;
+   updateBall() {
+  if (this.useMultiplayer) {
+    if (this.ball.isEnabled()) {
+      const rotationSpeed = 0.1;
+      this.ball.rotation.y += rotationSpeed;
     }
+    return;
+  }
 
     // Single player ball physics
     // Wall bouncing (top and bottom)
