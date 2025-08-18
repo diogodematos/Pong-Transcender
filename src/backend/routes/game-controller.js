@@ -150,13 +150,17 @@ export default async function gameRoutes(fastify, options) {
                   req.log.info(`📡 Sending game state to user ${clientUserId}, isPlayer1: ${isClientPlayer1}`);
                   
                   // Mirror ball position for Player 2 so they see it from their perspective
+                  /*gameState.ballX += gameState.ballVelX;
+                  gameState.ballZ += gameState.ballVelZ;*/
+
                   const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
-                  
+                  const ballZForClient = isClientPlayer1 ? gameState.ballZ : -gameState.ballZ;
+
                   client.send(JSON.stringify({
                     type: 'game_state',
-                    opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                    opponentPaddleY: isClientPlayer1 ? -gameState.paddle2Y : -gameState.paddle1Y,
                     ballX: ballXForClient,
-                    ballY: gameState.ballZ,
+                    ballZ: ballZForClient,
                     playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
                     opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
                     playersConnected: gameSockets.size,
@@ -164,7 +168,7 @@ export default async function gameRoutes(fastify, options) {
                   }));
                 }
               });
-            }, 100);
+            }, 10);
             
           } else if (data.type === 'player_update') {
             // Update paddle position based on user ID (host vs non-host)
@@ -183,15 +187,19 @@ export default async function gameRoutes(fastify, options) {
                 // Find which user this client belongs to using the socket mapping
                 const clientUserId = socketToUserId.get(client);
                 const isClientPlayer1 = clientUserId === players.player1Id;
-                
+
                 // Mirror ball position for Player 2 so they see it from their perspective
+                /*gameState.ballX += gameState.ballVelX;
+                gameState.ballZ += gameState.ballVelZ;*/
+
                 const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
-                
+                const ballZForClient = isClientPlayer1 ? gameState.ballZ : -gameState.ballZ;
+
                 client.send(JSON.stringify({
                   type: 'game_state',
-                  opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                  opponentPaddleY: isClientPlayer1 ? -gameState.paddle2Y : -gameState.paddle1Y,
                   ballX: ballXForClient,
-                  ballY: gameState.ballZ,
+                  ballZ: ballZForClient,
                   playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
                   opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
                   playersConnected: gameSockets.size,
@@ -228,7 +236,7 @@ export default async function gameRoutes(fastify, options) {
               if (gameState.ballX <= -arenaHalfWidth + 2 && gameState.ballX >= -arenaHalfWidth + 1) {
                 if (gameState.ballZ >= gameState.paddle1Y - paddleHeight && 
                     gameState.ballZ <= gameState.paddle1Y + paddleHeight) {
-                  gameState.ballVelX = Math.abs(gameState.ballVelX) + 0.02; // Increase speed slightly
+                  gameState.ballVelX = Math.abs(gameState.ballVelX) + 0.01; // Increase speed slightly
                   gameState.ballVelZ += (gameState.ballZ - gameState.paddle1Y) * 0.1; // Add spin
                   req.log.info(`Player 1 paddle hit! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
                 }
@@ -236,10 +244,10 @@ export default async function gameRoutes(fastify, options) {
 
               // Player 2 paddle collision (right side)
               if (gameState.ballX >= arenaHalfWidth - 2 && gameState.ballX <= arenaHalfWidth - 1) {
-                if (gameState.ballZ >= gameState.paddle2Y - paddleHeight && 
-                    gameState.ballZ <= gameState.paddle2Y + paddleHeight) {
-                  gameState.ballVelX = -Math.abs(gameState.ballVelX) - 0.02; // Increase speed slightly
-                  gameState.ballVelZ += (gameState.ballZ - gameState.paddle2Y) * 0.1; // Add spin
+                if (gameState.ballZ >= -gameState.paddle2Y - paddleHeight &&
+                    gameState.ballZ <= -gameState.paddle2Y + paddleHeight) {
+                  gameState.ballVelX = -Math.abs(gameState.ballVelX) - 0.01; // Increase speed slightly
+                  gameState.ballVelZ += (gameState.ballZ - (-gameState.paddle2Y)) * 0.1; // Add spin
                   req.log.info(`Player 2 paddle hit! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
                 }
               }
@@ -251,8 +259,14 @@ export default async function gameRoutes(fastify, options) {
                 gameState.player1Score++;
                 gameState.ballX = 0;
                 gameState.ballZ = 0;
-                gameState.ballVelX = -0.3;
-                gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+                gameState.ballVelX = 0;
+                gameState.ballVelZ = 0;
+
+                setTimeout(() => {
+                  gameState.ballVelX = -0.3;
+                  gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+                }, 1000);
+
                 req.log.info(`Player 1 scored! Score: ${gameState.player1Score}-${gameState.player2Score}`);
               } else if (gameState.ballX < -arenaHalfWidth) {
                 // Ball went past left side of arena (from server perspective)
@@ -260,8 +274,14 @@ export default async function gameRoutes(fastify, options) {
                 gameState.player2Score++;
                 gameState.ballX = 0;
                 gameState.ballZ = 0;
+                gameState.ballVelX = 0;
+                gameState.ballVelZ = 0;
+
+                setTimeout(() => {
                 gameState.ballVelX = 0.3;
                 gameState.ballVelZ = (Math.random() - 0.5) * 0.3;
+                }, 1000);
+
                 req.log.info(`Player 2 scored! Score: ${gameState.player1Score}-${gameState.player2Score}`);
               }
 
@@ -272,12 +292,14 @@ export default async function gameRoutes(fastify, options) {
                   if (client && client.readyState === 1) {
                     const clientUserId = socketToUserId.get(client);
                     const isClientPlayer1 = clientUserId === players.player1Id;
+                    // Mirror ball position for Player 2 so they see it from their perspective
                     const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
+                    const ballZForClient = isClientPlayer1 ? gameState.ballZ : -gameState.ballZ;
                     client.send(JSON.stringify({
                       type: 'game_state',
-                      opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                      opponentPaddleY: isClientPlayer1 ? -gameState.paddle2Y : -gameState.paddle1Y,
                       ballX: ballXForClient,
-                      ballY: gameState.ballZ,
+                      ballZ: ballZForClient,
                       playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
                       opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
                       playersConnected: gameSockets.size,
@@ -343,15 +365,19 @@ export default async function gameRoutes(fastify, options) {
                 const isClientPlayer1 = clientUserId === players.player1Id;
                 
                 req.log.info(`📡 Broadcasting game state to user ${clientUserId}, isPlayer1: ${isClientPlayer1}`);
-                
+
                 // Mirror ball position for Player 2 so they see it from their perspective
+                /*gameState.ballX += gameState.ballVelX;
+                gameState.ballZ += gameState.ballVelZ;*/
+
                 const ballXForClient = isClientPlayer1 ? gameState.ballX : -gameState.ballX;
-                
+                const ballZForClient = isClientPlayer1 ? gameState.ballZ : -gameState.ballZ;
+
                 client.send(JSON.stringify({
                   type: 'game_state',
-                  opponentPaddleY: isClientPlayer1 ? gameState.paddle2Y : gameState.paddle1Y,
+                  opponentPaddleY: isClientPlayer1 ? -gameState.paddle2Y : -gameState.paddle1Y,
                   ballX: ballXForClient,
-                  ballY: gameState.ballZ,
+                  ballZ: ballZForClient,
                   playerScore: isClientPlayer1 ? gameState.player1Score : gameState.player2Score,
                   opponentScore: isClientPlayer1 ? gameState.player2Score : gameState.player1Score,
                   playersConnected: gameSockets.size,
@@ -360,7 +386,7 @@ export default async function gameRoutes(fastify, options) {
               }
             });
           }
-        }, 100); // Reduced to 10 FPS server updates to prevent glitching
+        }, 10); // Reduced to 10 FPS server updates to prevent glitching
       }
 
       socket.on('close', (code, reason) => {

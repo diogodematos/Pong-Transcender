@@ -360,7 +360,7 @@ class Game3D {
             type: 'player_update',
             paddleY: this.player.position.z,
             ballX: this.ball.position.x,
-            ballY: this.ball.position.z
+            ballZ: this.ball.position.z
           }));
           
           // If we're the host, send periodic updates to ensure ball starts moving
@@ -376,7 +376,7 @@ class Game3D {
                     type: 'player_update',
                     paddleY: this.player.position.z,
                     ballX: this.ball.position.x,
-                    ballY: this.ball.position.z
+                    ballZ: this.ball.position.z
                   }));
                   
                   // Stop after 10 updates (5 seconds) to let natural gameplay take over
@@ -398,7 +398,7 @@ class Game3D {
         console.log('Received game state:', {
           opponentPaddleY: data.opponentPaddleY,
           ballX: data.ballX,
-          ballY: data.ballY,
+          ballZ: data.ballZ,
           playerScore: data.playerScore,
           opponentScore: data.opponentScore,
           playersConnected: data.playersConnected,
@@ -413,10 +413,10 @@ class Game3D {
           }
           
           // Update ball position ONLY from server authority - disable all client ball physics
-          if (data.ballX !== undefined && data.ballY !== undefined) {
+          if (data.ballX !== undefined && data.ballZ !== undefined) {
             // Always update ball position from server, no client-side ball movement at all
             this.ball.position.x = data.ballX;
-            this.ball.position.z = data.ballY; // Note: server ballY maps to our ballZ
+            this.ball.position.z = data.ballZ; // Note: server ballZ maps to our ballZ
             
             // Show the ball if it was hidden
             if (!this.ball.isEnabled()) {
@@ -1019,7 +1019,7 @@ class Game3D {
           type: 'player_update',
           paddleY: controlledPaddle.position.z, // Send current paddle position
           ballX: this.ball.position.x,          // Include ball position for server-side collision detection
-          ballY: this.ball.position.z           // Your server expects ballY, we use ballZ
+          ballZ: this.ball.position.z           // Your server expects ballZ, we use ballZ
         }));
       }
     }
