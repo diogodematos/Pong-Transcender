@@ -45,6 +45,8 @@ export default async function gameRoutes(fastify, options) {
           gameState: {
             paddle1Y: 0,
             paddle2Y: 0,
+            lastP1Y: 0,
+            lastP2Y: 0,
             ballX: 0,
             ballY: 0,
             ballZ: 0,
@@ -213,6 +215,10 @@ export default async function gameRoutes(fastify, options) {
         }
       });
 
+
+      gameState.lastP1Y = gameState.paddle1Y;
+      gameState.lastP2Y = gameState.paddle2Y;
+
       // Start periodic game state broadcast for this game if not already started
       if (!gameState.updateInterval) {
         gameState.updateInterval = setInterval(() => {
@@ -230,14 +236,27 @@ export default async function gameRoutes(fastify, options) {
 
               // Paddle collision detection
               const paddleHeight = 3;
-              const arenaHalfWidth = 25;
+              const arenaHalfWidth = 24;
+
+              let speed = 0.4;
+              let spin = 0.2;
 
               // Player 1 paddle collision (left side)
               if (gameState.ballX <= -arenaHalfWidth + 2 && gameState.ballX >= -arenaHalfWidth + 1) {
                 if (gameState.ballZ >= gameState.paddle1Y - paddleHeight && 
-                    gameState.ballZ <= gameState.paddle1Y + paddleHeight) {
-                  gameState.ballVelX = Math.abs(gameState.ballVelX) + 0.01; // Increase speed slightly
-                  gameState.ballVelZ += (gameState.ballZ - gameState.paddle1Y) * 0.1; // Add spin
+                    gameState.ballZ <= gameState.paddle1Y + paddleHeight)
+                {
+                  if (gameState.lastP1Y !== gameState.paddle1Y)
+                  {
+                    gameState.ballVelX = Math.abs(gameState.ballVelX) + speed; // Increase speed powerup
+                    gameState.ballVelZ += (gameState.ballZ - gameState.paddle1Y) * (-spin); // Add spin
+                    gameState.lastP1Y = gameState.paddle1Y;
+                  }
+                  else
+                  {
+                    gameState.ballVelX = Math.abs(gameState.ballVelX) + 0.01; // Increase speed slightly
+                    gameState.ballVelZ += (gameState.ballZ - gameState.paddle1Y) * 0.1; // Add spin
+                  }
                   req.log.info(`Player 1 paddle hit! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
                 }
               }
@@ -245,12 +264,25 @@ export default async function gameRoutes(fastify, options) {
               // Player 2 paddle collision (right side)
               if (gameState.ballX >= arenaHalfWidth - 2 && gameState.ballX <= arenaHalfWidth - 1) {
                 if (gameState.ballZ >= -gameState.paddle2Y - paddleHeight &&
-                    gameState.ballZ <= -gameState.paddle2Y + paddleHeight) {
-                  gameState.ballVelX = -Math.abs(gameState.ballVelX) - 0.01; // Increase speed slightly
-                  gameState.ballVelZ += (gameState.ballZ - (-gameState.paddle2Y)) * 0.1; // Add spin
+                    gameState.ballZ <= -gameState.paddle2Y + paddleHeight)
+                {
+                  if (gameState.lastP2Y !== gameState.paddle2Y)
+                  {
+                    gameState.ballVelX = -Math.abs(gameState.ballVelX) - speed; // Increase speed slightly
+                    gameState.ballVelZ += (gameState.ballZ - (-gameState.paddle2Y)) * (-spin); // Add spin
+                    gameState.lastP2Y = gameState.paddle2Y;
+                  }
+                  else
+                  {
+                    gameState.ballVelX = -Math.abs(gameState.ballVelX) - 0.01; // Increase speed slightly
+                    gameState.ballVelZ += (gameState.ballZ - (-gameState.paddle2Y)) * 0.1; // Add spin
+                  }
                   req.log.info(`Player 2 paddle hit! Ball velocity: X=${gameState.ballVelX}, Z=${gameState.ballVelZ}`);
                 }
               }
+
+              gameState.lastP1Y = gameState.paddle1Y;
+              gameState.lastP2Y = gameState.paddle2Y;
 
               // Goal detection
               if (gameState.ballX > arenaHalfWidth) {
