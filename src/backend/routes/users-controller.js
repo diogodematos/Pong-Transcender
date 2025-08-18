@@ -11,7 +11,7 @@ const googleClient = new OAuth2Client('801178976948-j91b6t32p0i97628g02vnhvrsa91
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{7,20}$/;
 const emailRegex = /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]{2,}$/;
 
-// Mapa para gerenciar usuários conectados via WebSocket
+// Mapa para gerenciar utilizadors conectados via WebSocket
 const connectedUsers = new Map();
 
 const usersController = async (fastify, options) => {
@@ -53,7 +53,7 @@ const usersController = async (fastify, options) => {
             const userId = decoded.id;
 
             if (!userId) {
-                req.log.warn(`ID de usuário inválido no token WebSocket para token: ${token}`);
+                req.log.warn(`ID de utilizador inválido no token WebSocket para token: ${token}`);
                 socket.close(1008, 'Invalid user ID');
                 return;
             }
@@ -64,7 +64,7 @@ const usersController = async (fastify, options) => {
                 return;
             }
 
-            // Armazenar a conexão do usuário
+            // Armazenar a conexão do utilizador
             connectedUsers.set(userId, socket);
             req.log.info(`Utilizador ${userId} conectado via WebSocket.`);
 
