@@ -60,6 +60,7 @@ export function initTourneyPage(loggedUsername: string) {
 
   const inputs = Array.from(document.querySelectorAll('#tourneySlots input')) as HTMLInputElement[];
   const startBtn = document.getElementById('startTourneyBtn') as HTMLButtonElement;
+  startBtn.disabled = true;
 
   inputs.forEach(input => {
     input.addEventListener('input', () => {
@@ -84,7 +85,7 @@ export function initTourneyPage(loggedUsername: string) {
     ];
 
     alert(`Torneio "${tourneyName}" criado!\nPrimeiro jogo: ${matches[0].p1} vs ${matches[0].p2}`);
-
+    startBtn.disabled = true;
     startNextMatch();
   });
 }

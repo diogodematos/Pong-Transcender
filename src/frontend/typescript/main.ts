@@ -401,6 +401,10 @@ function setupEventListeners(): void {
     });
     document.getElementById('registerAvatar')?.addEventListener('change', handleAvatarPreview);
     document.getElementById('newAvatar')?.addEventListener('change', handleAvatarPreviewUpdate);
+
+    document.getElementById('cancelTourneyButton')?.addEventListener('click', () => {
+        router.navigate('/dashboard');
+    });
 }
 
 function handleAvatarPreview(event: Event): void {

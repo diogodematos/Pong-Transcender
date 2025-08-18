@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pong Game - SPA</title>
+    <title>Poke Pong</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/assets/img/pokeball.png" type="image/x-icon">
+    <!-- <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"> -->
     <link rel="stylesheet" href="styles/main.css">
     <link href='https://fonts.googleapis.com/css?family=Orbitron:900' rel='stylesheet' type='text/css'>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.0.0/babylon.min.js"></script>
@@ -25,12 +25,11 @@
 
     <nav id="mainNavigation" class="hidden bg-black bg-opacity-50 p-4">
         <div class="container mx-auto flex justify-between items-center">
-            <div class="text-white font-bold text-xl">Pong Game</div>
+            <button data-route="/dashboard" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Poke Pong</button>
             <div class="flex items-center space-x-4">
                 <img id="dashboardAvatar" src="/assets/img/default-avatar.jpg" alt="Avatar" 
                      class="w-10 h-10 rounded-full border-2 border-blue-500 object-cover"
                      onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';">
-                <button data-route="/dashboard" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Main Page</button>
                 <button data-route="/game" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">Game</button>
                 <button data-route="/profile" class="nav-item text-white hover:text-[#2f9b20] px-3 py-1 rounded transition-colors">
                     <span id="dashboardUsername"></span>
@@ -470,6 +469,9 @@
                     disabled>
                 Iniciar Torneio
             </button>
+
+            <button id="cancelTourneyButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
+
         </div>
         
         
