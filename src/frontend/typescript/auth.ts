@@ -177,6 +177,7 @@ export async function register(data: RegisterData): Promise<boolean> {
 export function logout(): void {
   disconnectWebSocket(); // Desconecta o WebSocket
   localStorage.removeItem('authToken'); // Remove o token de autenticação
+  localStorage.removeItem('userName'); // Remove o username
   const errorElement = document.getElementById('loginResponseMessage');
   if (errorElement) {
     errorElement.textContent = '';

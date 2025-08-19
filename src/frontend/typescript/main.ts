@@ -112,9 +112,12 @@ async function handleGoogleLogin(response: CredentialResponse) {
 
         if (data.token) {
             localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userName', data.user.username);
             console.log('Login Google bem-sucedido. Token recebido.');
             connectWebSocket(data.token); 
             router.navigate('/dashboard');
+            document.getElementById('enable2faButton')!.classList.add('hidden');
+            document.getElementById('disableTwofaBtn')!.classList.add('hidden');
         } else {
             alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos.'));
             console.error('Erro no login Google (backend response):', data.error);

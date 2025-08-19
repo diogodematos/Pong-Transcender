@@ -296,7 +296,7 @@ const usersController = async (fastify, options) => {
             const token = fastify.jwt.sign({ id: user.id }, { expiresIn: '1h' });
             req.log.info(`Token JWT gerado para o utilizador ${user.username}.`);
 
-            return reply.send({ success: true, message: 'Google login successful', token });
+            return reply.send({ success: true, message: 'Google login successful', token, user: { username: user.username } });
 
         } catch (error) {
             req.log.error(`ERRO no login Google: ${error.message}`, error);
