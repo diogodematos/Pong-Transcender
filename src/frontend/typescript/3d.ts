@@ -49,6 +49,7 @@ class Game3D {
   private gameState: boolean | null = null; // true = victory, false = defeat
   private aiState: any;
   private lastCalculated: number = 0;
+  private baseSpeed = 0.35 // 0.35 for 42's PCs || 0.2 for good PCs
 
   // Visual effects
   private playerScorePulse: number = 0;
@@ -987,7 +988,7 @@ class Game3D {
   }
 
   updatePlayer() {
-    const speed = 0.2 * this.speedMultiplier;
+    const speed = this.baseSpeed * this.speedMultiplier;
     this.isPlayerMoving = "NO";
     
     // In multiplayer, always control the left paddle (player) regardless of host/client
@@ -1122,7 +1123,9 @@ class Game3D {
 
     // Movement execution
     const currentPos = this.computer.position.z;
-    const speed = 0.09 * this.speedMultiplierIA; // Slightly faster than original
+    let speed = 0.09 * this.speedMultiplierIA; // Slightly faster than original
+    if (this.baseSpeed > 0.2)
+      speed *= 1 + this.baseSpeed;
     const tolerance = 0.1;
 
     if (this.aiState.targetPosition < currentPos - tolerance)
@@ -1182,8 +1185,11 @@ class Game3D {
     // Update ball position
     this.ball.position.x += (this.ball as any).velocity.x;
     this.ball.position.z += (this.ball as any).velocity.z;
+    
+    let rotationSpeed = 0.1;
 
-    const rotationSpeed = 0.1;
+    if (this.baseSpeed > 0.2)
+      rotationSpeed *= this.baseSpeed;
     this.ball.rotation.x += (this.ball as any).velocity.z * rotationSpeed;
     this.ball.rotation.y += rotationSpeed;
     this.ball.rotation.z -= (this.ball as any).velocity.x * rotationSpeed;

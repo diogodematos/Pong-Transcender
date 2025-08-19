@@ -223,6 +223,7 @@ export default async function gameRoutes(fastify, options) {
       if (!gameState.updateInterval) {
         gameState.updateInterval = setInterval(() => {
           if (gameSockets.size > 0) {
+            let baseSpeed = 0.2 // 0.2 for 42's PCs || 1.0 for good PCs
             if (gameState.gameStarted && !gameState.gameEnded) {
               // Update ball position
               gameState.ballX += gameState.ballVelX;
@@ -235,11 +236,11 @@ export default async function gameRoutes(fastify, options) {
               }
 
               // Paddle collision detection
-              const paddleHeight = 3;
+              const paddleHeight = 3.5;
               const arenaHalfWidth = 24;
 
-              let speed = 0.4;
-              let spin = 0.2;
+              let speed = 0.4 * baseSpeed;
+              let spin = 0.2 * baseSpeed;
 
               // Player 1 paddle collision (left side)
               if (gameState.ballX <= -arenaHalfWidth + 2 && gameState.ballX >= -arenaHalfWidth + 1) {
