@@ -24,7 +24,7 @@ export async function getDashboard() {
       if (usernameDash) usernameDash.textContent = userData.username;
       if (avatarDash) avatarDash.src = userData.avatar || 'assets/img/default-avatar.jpg';
     } else {
-      alert('Erro ao aceder ao Dashboard.');
+      alert('Error accessing Dashboard.');
       if (res.status === 401) {
         // Token invalid, redirect to login
         localStorage.removeItem('authToken');
@@ -32,7 +32,7 @@ export async function getDashboard() {
       }
     }
   } catch {
-    alert('Erro de conexão ao Dashboard.');
+    alert('Connection error to Dashboard.');
   }
 }
 
@@ -54,7 +54,7 @@ export async function getGameHistory(): Promise<void> {
           updateGameHistoryUI(data.games);
       }
   } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+      console.error('Error loading history:', error);
   }
 }
 
@@ -152,7 +152,7 @@ export async function getUserGameHistory(userID: string): Promise<void> {
           updateUserGameHistoryUI(data.games);
       }
   } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+      console.error('Error loading history:', error);
   }
 }
 
@@ -166,7 +166,7 @@ function updateUserGameHistoryUI(games: GameHistoryItem[]): void {
   if (games.length === 0) {
     const emptyMessage = document.createElement('p');
     emptyMessage.className = 'text-gray-500 text-center py-4';
-    emptyMessage.textContent = 'Nenhum jogo jogado ainda.';
+    emptyMessage.textContent = 'No games played yet.';
     gameHistory.appendChild(emptyMessage);
     return;
   }
@@ -178,7 +178,7 @@ function updateUserGameHistoryUI(games: GameHistoryItem[]): void {
     const isWin = game.result === 'win';
     const bgColor = isWin ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
     const textColor = isWin ? 'text-green-700' : 'text-red-700';
-    const resultText = isWin ? 'Vitória' : 'Derrota';
+    const resultText = isWin ? 'Win' : 'Loss';
     const score = `${game.player_score} - ${game.opponent_score}`;
     const date = formatGameDate(game.played_at);
 
@@ -331,12 +331,12 @@ function showSearchResults(users: any[]): void {
         // Create "already friend" span
         rightElement = document.createElement('span');
         rightElement.className = 'text-green-600 text-xs font-medium';
-        rightElement.textContent = 'Já é amigo';
+        rightElement.textContent = 'Already a friend';
       } else {
         // Create add friend button
         rightElement = document.createElement('button');
         rightElement.className = 'bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs';
-        rightElement.textContent = 'Adicionar';
+        rightElement.textContent = 'Add';
         
         // Add click event listener instead of onclick attribute (safer approach)
         rightElement.addEventListener('click', () => {
@@ -380,18 +380,18 @@ export async function addFriend(friendId: number): Promise<void> {
       });
 
       if (res.ok) {
-          alert('Amigo adicionado com sucesso!');
-          // Refresh da lista de amigos
+          alert('Friend added successfully!');
+          // Refresh friends list
           getFriendsForProfile();
-          // Limpar pesquisa
+          // Clear search
           clearInputs('searchFriendsInput');
       } else {
           const data = await res.json();
-          alert(data.error || 'Erro ao adicionar amigo.');
+          alert(data.error || 'Error adding friend.');
       }
   } catch (error) {
-      console.error('Erro ao adicionar amigo:', error);
-      alert('Erro ao adicionar amigo.');
+      console.error('Error adding friend:', error);
+      alert('Error adding friend.');
   }
 }
 
@@ -431,7 +431,7 @@ function updateOnlineFriends(friends: Friend[]): void {
   if (friends.length === 0) {
     const emptyMessage = document.createElement('p');
     emptyMessage.className = 'text-sm text-gray-500';
-    emptyMessage.textContent = 'Nenhum amigo online';
+    emptyMessage.textContent = 'No friends online';
     container.appendChild(emptyMessage);
   } else {
     // Create each friend item safely
@@ -488,7 +488,7 @@ function updateOfflineFriends(friends: Friend[]): void {
   if (friends.length === 0) {
     const emptyMessage = document.createElement('p');
     emptyMessage.className = 'text-sm text-gray-500';
-    emptyMessage.textContent = 'Nenhum amigo offline';
+    emptyMessage.textContent = 'No friends offline';
     container.appendChild(emptyMessage);
   } else {
     // Create each friend item safely
@@ -537,9 +537,9 @@ function formatGameDate(dateString: string): string {
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 1) return 'Hoje, ' + date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-  if (diffDays === 2) return 'Ontem, ' + date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-  return date.toLocaleDateString('pt-PT') + ', ' + date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 1) return 'Today, ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 2) return 'Yesterday, ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleDateString('en-US') + ', ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
 // Função global para desafiar amigos
@@ -550,8 +550,8 @@ function formatGameDate(dateString: string): string {
 //////  TESTE FIM
 
 export async function getProfile(): Promise<void> {
-  hideSearchResults(); // Esconder resultados de pesquisa ao carregar perfil
-  clearInputs('searchFriendsInput'); // Limpar campo de pesquisa
+  hideSearchResults(); // Hide search results when loading profile
+  clearInputs('searchFriendsInput'); // Clear search field
   const token = localStorage.getItem('authToken');
   if (!token) {
     router.navigate('/login');
@@ -570,7 +570,7 @@ export async function getProfile(): Promise<void> {
       getGameHistory(); // Fetch game history after profile is loaded
       getFriendsForProfile(); // Fetch friends after profile is loaded
     } else {
-      alert('Erro ao obter perfil.');
+      alert('Error getting profile.');
       if (res.status === 401) {
         // Token invalid, redirect to login
         localStorage.removeItem('authToken');
@@ -578,7 +578,7 @@ export async function getProfile(): Promise<void> {
       }
     }
   } catch {
-    alert('Erro de conexão ao buscar perfil.');
+    alert('Connection error while fetching profile.');
   }
 }
 
@@ -606,7 +606,7 @@ export async function updateProfile(newData: UpdateProfileData): Promise<boolean
     });
 
     if (res.ok) {
-      alert('Perfil atualizado com sucesso!');
+      alert('Profile updated successfully!');
       clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
       router.navigate('/profile');
       return true;
@@ -622,7 +622,7 @@ export async function updateProfile(newData: UpdateProfileData): Promise<boolean
       return false;
     }
   } catch {
-    alert('Erro ao atualizar o perfil.');
+    alert('Error updating profile.');
     clearInputs('newUsername', 'newPassword', 'newEmail', 'newAvatar');
     return false;
   }
@@ -675,7 +675,7 @@ export async function getUserProfile(userId: string): Promise<void> {
       updateUserProfileUI(data);
       getUserGameHistory(userId); // Fetch game history after profile is loaded
     } else {
-        alert('Erro ao obter perfil.');
+        alert('Error getting profile.');
         if (res.status === 401) {
         // Token invalid, redirect to login
         localStorage.removeItem('authToken');
@@ -686,7 +686,7 @@ export async function getUserProfile(userId: string): Promise<void> {
         }
     }
   } catch {
-    alert('Erro de conexão ao buscar perfil.');
+    alert('Connection error while fetching profile.');
   }
 }
 
