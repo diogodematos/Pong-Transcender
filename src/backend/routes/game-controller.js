@@ -223,7 +223,9 @@ export default async function gameRoutes(fastify, options) {
       if (!gameState.updateInterval) {
         gameState.updateInterval = setInterval(() => {
           if (gameSockets.size > 0) {
-            let baseSpeed = 0.2 // 0.2 for 42's PCs || 1.0 for good PCs
+
+            let baseSpeed = 0.1 // 0.1 for 42's PCs || 1.0 for good PCs
+
             if (gameState.gameStarted && !gameState.gameEnded) {
               // Update ball position
               gameState.ballX += gameState.ballVelX;
