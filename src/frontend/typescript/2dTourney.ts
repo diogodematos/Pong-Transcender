@@ -26,8 +26,8 @@ export class GameTourney {
   private mid: GoalLine | undefined;
   private particleSystem: ParticleSystem;
 
-  public player1Name: string = "Jogador 1";
-  public player2Name: string = "Jogador 2";
+  public player1Name: string = "Player 1";
+  public player2Name: string = "Player 2";
 
   private playerScorePulse: number = 0;
   private computerScorePulse: number = 0;
@@ -76,7 +76,7 @@ export class GameTourney {
       GameTourney.speedMultiplier = 1.6;
       if (this.ball) this.ball.speed = 7;
     }
-    console.log(`📊 Dificuldade (2D Torneio) ajustada para: ${level}`);
+    console.log(`📊 Difficulty (2D) set to: ${level}`);
     this.reset();
   }
 

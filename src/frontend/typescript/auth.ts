@@ -6,13 +6,13 @@ import { router } from './router.js';
 import { connectWebSocket, disconnectWebSocket } from './ws.js';
 
 /**
- * Tenta fazer login com as credenciais fornecidas.
- * @param credentials Objeto com username e password.
- * @returns true se o login for bem-sucedido, false caso contrário.
+ * Attempts to log in with the provided credentials.
+ * @param credentials Object with username and password.
+ * @returns true if login is successful, false otherwise.
  */
 export async function login(credentials: UserCredentials ): Promise<boolean> {
   try {
-    const res = await fetch('/api/users/login', { // CORRIGIDO: URL com prefixo /api/users
+  const res = await fetch('/api/users/login', { // FIXED: URL with /api/users prefix
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify(credentials),
@@ -21,20 +21,20 @@ export async function login(credentials: UserCredentials ): Promise<boolean> {
     const data = await res.json();
 
     if (res.ok) {
-       localStorage.setItem('authToken', data.token,); // Armazena o token de autenticação
-       localStorage.setItem('userName', data.dbUser.username) // Armazena o username
-       clearInputs('username', 'password');
-       connectWebSocket(data.token); // Inicializa a conexão WebSocket com o token
-       router.navigate('/dashboard'); // Redireciona para o dashboard
+  localStorage.setItem('authToken', data.token,); // Stores the authentication token
+  localStorage.setItem('userName', data.dbUser.username) // Stores the username
+  clearInputs('username', 'password');
+  connectWebSocket(data.token); // Initializes the WebSocket connection with the token
+  router.navigate('/dashboard'); // Redirects to the dashboard
        return true;
      } else {
        console.error('Login failed:', data.error);
-       displayError('loginResponseMessage', data.error || 'Credenciais inválidas.'); // Exibe erro na UI
+  displayError('loginResponseMessage', data.error || 'Invalid credentials.'); // Displays error in the UI
        return false;
      }
   } catch (error) {
      console.error('Login request error:', error);
-     displayError('loginResponseMessage', 'Erro ao conectar com o servidor.'); // Exibe erro de rede/servidor
+  displayError('loginResponseMessage', 'Error connecting to server.'); // Displays network/server error
      return false;
   }
 }
@@ -52,7 +52,7 @@ export async function setup2FA() {
     const qrImg = modal.querySelector('img');
     if (qrImg) {
       qrImg.src = qrCode;
-      qrImg.alt = "QR Code para 2FA";
+  qrImg.alt = "QR Code for 2FA";
     }
     modal.classList.remove('hidden');
     document.getElementById('enable2faButton')!.classList.add('hidden');
@@ -63,7 +63,7 @@ export async function setup2FA() {
 document.getElementById('disableTwofaBtn')?.addEventListener('click', async () => {
   const token = localStorage.getItem('authToken');
   if (!token) {
-    alert('Necessário login para desativar 2FA.');
+    alert('Login required to disable 2FA.');
     return;
   }
   const res = await fetch('/api/users/twofa/disable', {
@@ -74,14 +74,14 @@ document.getElementById('disableTwofaBtn')?.addEventListener('click', async () =
   const messageDiv = document.getElementById('disableTwofaMessage');
   if (res.ok) {
     if (messageDiv) {
-      messageDiv.textContent = '2FA desativado com sucesso.';
+  messageDiv.textContent = '2FA successfully disabled.';
       messageDiv.style.color = 'green';
       document.getElementById('disableTwofaBtn')!.classList.add('hidden');
       document.getElementById('enable2faButton')!.classList.remove('hidden');
     }
   } else {
     if (messageDiv) {
-      messageDiv.textContent = data.error || 'Erro ao desativar 2FA.';
+  messageDiv.textContent = data.error || 'Error disabling 2FA.';
       messageDiv.style.color = 'red';
     }
   }
@@ -116,7 +116,7 @@ export async function fetchTwofaStatus() {
     }
   }
   
-  // Atualiza os botões ao carregar a página
+  // Update buttons when the page loads
   document.addEventListener('DOMContentLoaded', () => {
     fetchTwofaStatus();
   });
@@ -128,9 +128,9 @@ export async function fetchTwofaStatus() {
 
 
 /**
- * Tenta registrar um novo utilizador.
- * @param data Objeto com dados de registro (username, password, email, avatar).
- * @returns true se o registro for bem-sucedido, false caso contrário.
+ * Attempts to register a new user.
+ * @param data Object with registration data (username, password, email, avatar).
+ * @returns true if registration is successful, false otherwise.
  */
 export async function register(data: RegisterData): Promise<boolean> {
   const formData = new FormData();
@@ -140,7 +140,7 @@ export async function register(data: RegisterData): Promise<boolean> {
   if (data.avatar) formData.append('avatar', data.avatar);
 
   try {
-    const res = await fetch('/api/users/register', { // CORRIGIDO: URL com prefixo /api/users
+  const res = await fetch('/api/users/register', { // FIXED: URL with /api/users prefix
        method: 'POST',
        body: formData,
      });
@@ -149,9 +149,9 @@ export async function register(data: RegisterData): Promise<boolean> {
 
     if (res.ok) {
        console.log('Registration successful:', result.message);
-       // Exibe o modal de sucesso e limpa os campos
+       // Show the success modal and clear the fields
        document.getElementById('registerSuccessModal')?.classList.remove('hidden');
-       // Ajuste os IDs dos inputs de registro para corresponderem ao seu HTML
+       // Adjust the registration input IDs to match your HTML
        clearInputs('registerUsername', 'registerPassword', 'registerEmail', 'registerAvatar');
        const errorElement = document.getElementById('registerResponseMessage');
        if (errorElement) {
@@ -161,49 +161,49 @@ export async function register(data: RegisterData): Promise<boolean> {
        return true;
      } else {
        console.error('Registration failed:', result.error);
-       displayError('registerResponseMessage', result.error || 'Erro no registro.'); // Exibe erro na UI
+      displayError('registerResponseMessage', result.error || 'Registration error.'); // Displays error in the UI
        return false;
      }
   } catch (error) {
      console.error('Registration request error:', error);
-     displayError('registerResponseMessage', 'Erro ao conectar com o servidor.'); // Exibe erro de rede/servidor
+    displayError('registerResponseMessage', 'Error connecting to server.'); // Displays network/server error
      return false;
   }
 }
 
 /**
- * Faz logout do utilizador atual, desconectando o WebSocket e limpando o token.
+ * Logs out the current user, disconnecting the WebSocket and clearing the token.
  */
 export function logout(): void {
-  disconnectWebSocket(); // Desconecta o WebSocket
-  localStorage.removeItem('authToken'); // Remove o token de autenticação
-  localStorage.removeItem('userName'); // Remove o username
-  localStorage.removeItem('google'); // Remove o status de login Google
+  disconnectWebSocket(); // Disconnects the WebSocket
+  localStorage.removeItem('authToken'); // Removes the authentication token
+  localStorage.removeItem('userName'); // Removes the username
+  localStorage.removeItem('google'); // Removes Google login status
   const errorElement = document.getElementById('loginResponseMessage');
   if (errorElement) {
     errorElement.textContent = '';
     errorElement.classList.add('hidden');
   }
-  window.location.reload(); // Recarrega a página para limpar o estado
-  // router.navigate('/login'); // Redireciona para a página de login
+  window.location.reload(); // Reloads the page to clear state
+  // router.navigate('/login'); // Redirects to the login page
 }
 
 /**
- * Verifica se o utilizador está atualmente autenticado.
- * @returns true se um token de autenticação estiver presente, false caso contrário.
+ * Checks if the user is currently authenticated.
+ * @returns true if an authentication token is present, false otherwise.
  */
 export function isAuthenticated(): boolean {
   return localStorage.getItem('authToken') !== null;
 }
 
 export function getLoggedUsername(): string {
-  return localStorage.getItem('userName') || 'Jogador';
+  return localStorage.getItem('userName') || 'Player';
 }
 
 /**
- * Função utilitária para exibir mensagens de erro em um elemento HTML específico.
- * @param id O ID do elemento HTML onde a mensagem de erro será exibida.
- * @param message A mensagem de erro a ser exibida.
+ * Utility function to display error messages in a specific HTML element.
+ * @param id The ID of the HTML element where the error message will be displayed.
+ * @param message The error message to display.
  */
 export function displayError(id: string, message: string) {
   const el = document.getElementById(id);

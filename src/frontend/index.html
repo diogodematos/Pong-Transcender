@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,17 +47,17 @@
             </h2>
             <form id="loginForm">
                 <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium text-gray-700">Usuário</label>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
                     <input type="text" id="username" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                     <input type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] transition-colors">Login</button>
             </form>
             <p id="loginResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Não tem uma conta? Registe-se</button>
+            <button id="GoToRegisterPage" class="text-[#2f9b20] hover:underline">Don't have an account? Register</button>
             <div class="my-4 text-center text-gray-500">OR</div>
             <div id="g_id_onload"
                  data-client_id="801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com"
@@ -82,7 +82,7 @@
             </h2>
             <form id="registerForm" enctype="multipart/form-data">
                 <div class="mb-4">
-                    <label for="registerUsername" class="block text-sm font-medium text-gray-700">Utilizador</label>
+                    <label for="registerUsername" class="block text-sm font-medium text-gray-700">Username</label>
                     <input type="text" id="registerUsername" name="username" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" required />
                 </div>
                 <div class="mb-4">
@@ -102,10 +102,10 @@
                              onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';"/>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] transition-colors">Registar</button>
+                <button type="submit" class="w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] transition-colors">Register</button>
             </form>
             <p id="registerResponseMessage" class="mt-4 text-center text-sm text-gray-500"></p>
-            <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Já tem uma conta? Faça login</button>
+            <button id="GoToLoginPage" class="text-[#2f9b20] hover:underline">Already have an account? Login</button>
         </div>
 
         <div id="dashboardPage" class="page hidden">
@@ -135,10 +135,10 @@
 
         <div id="profilePage" class="hidden min-h-screen bg-gray-100 p-8">
             <div class="max-w-7xl mx-auto">
-                <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Perfil do Jogador</h1>
+                <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Player Profile</h1>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Meu Perfil</h2>
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">My Profile</h2>
                         <div class="flex justify-center mb-4">
                             <img id="profileAvatar" src="/assets/img/default-avatar.jpg" alt="Avatar" 
                                  class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-lg"
@@ -146,7 +146,7 @@
                         </div>
                         <div class="space-y-3 mb-6">
                             <div class="bg-gray-50 p-3 rounded-lg">
-                                <p class="text-sm text-gray-600">Usuário</p>
+                                <p class="text-sm text-gray-600">Username</p>
                                 <p class="font-semibold text-gray-800" id="profileUsername">-</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-lg">
@@ -156,37 +156,37 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4 mb-6">
                             <div class="bg-green-50 p-3 rounded-lg text-center border border-green-200">
-                                <p class="text-sm text-green-500">Vitórias</p>
+                                <p class="text-sm text-green-500">Wins</p>
                                 <p class="text-2xl font-bold text-green-700" id="profileWins">0</p>
                             </div>
                             <div class="bg-red-50 p-3 rounded-lg text-center border border-red-200">
-                                <p class="text-sm text-red-600">Derrotas</p>
+                                <p class="text-sm text-red-600">Losses</p>
                                 <p class="text-2xl font-bold text-red-700" id="profileLosses">0</p>
                             </div>
                         </div>
                         <div class="space-y-3">
                             <button id="editProfileButton" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition-colors shadow-md">
-                                Editar Perfil
+                                Edit Profile
                             </button>
                             <button id="goToDashboard" class="w-full bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-colors shadow-md">
-                                Voltar ao Dashboard
+                                Back to Dashboard
                             </button>
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Histórico de Jogos</h2>
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Game History</h2>
                         <div id="gameHistory" class="space-y-3 max-h-96 overflow-y-auto"></div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Amigos</h2>
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Friends</h2>
                         <div class="mb-4">
                             <input type="text" 
                                    id="searchFriendsInput" 
-                                   placeholder="Buscar utilizadores..." 
+                                   placeholder="Search users..." 
                                    class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div id="searchResults" class="mb-4 space-y-2 hidden">
-                            <h4 class="text-sm font-semibold text-gray-700">Resultados da Pesquisa:</h4>
+                            <h4 class="text-sm font-semibold text-gray-700">Search Results:</h4>
                             <div id="searchResultsList" class="space-y-2"></div>
                         </div>
                         <div class="mb-4">
@@ -204,12 +204,12 @@
 
                 <div id="userProfilePage" class="hidden min-h-screen bg-gray-100 p-8">
             <div class="max-w-7xl mx-auto">
-                <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Perfil do Jogador</h1>
+                <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Player Profile</h1>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     
                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Perfil</h2>
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Profile</h2>
                         
                         <div class="flex justify-center mb-4">
                             <img id="profileAvatarId" src="/assets/img/default-avatar.jpg" alt="Avatar" 
@@ -219,18 +219,18 @@
                         
                         <div class="space-y-3 mb-6">
                             <div class="bg-gray-50 p-3 rounded-lg">
-                                <p class="text-sm text-gray-600">Usuário</p>
+                                <p class="text-sm text-gray-600">Username</p>
                                 <p class="font-semibold text-gray-800" id="profileUsernameId">-</p>
                             </div>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-4 mb-6">
                             <div class="bg-green-50 p-3 rounded-lg text-center border border-green-200">
-                                <p class="text-sm text-green-500">Vitórias</p>
+                                <p class="text-sm text-green-500">Wins</p>
                                 <p class="text-2xl font-bold text-green-700" id="profileWinsId">0</p>
                             </div>
                             <div class="bg-red-50 p-3 rounded-lg text-center border border-red-200">
-                                <p class="text-sm text-red-600">Derrotas</p>
+                                <p class="text-sm text-red-600">Losses</p>
                                 <p class="text-2xl font-bold text-red-700" id="profileLossesId">0</p>
                             </div>
                         </div>
@@ -241,13 +241,13 @@
                                 Jogar Pong
                             </button> -->
                             <button id="goToDashboardId" class="w-full bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-colors shadow-md">
-                                Voltar ao Dashboard
+                                Back to Dashboard
                             </button>
                         </div>
                     </div>
                     
                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Histórico de Jogos</h2>
+                        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Game History</h2>
                         <div id="gameUserHistory" class="space-y-3 max-h-96 overflow-y-auto">
                         </div>
                     </div>
@@ -256,17 +256,17 @@
         </div>
 
         <div id="editProfilePage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
-            <h2 class="text-2xl font-bold text-center mb-4">Editar Perfil</h2>
+            <h2 class="text-2xl font-bold text-center mb-4">Edit Profile</h2>
             <div class="mb-4">
-                <label for="newUsername" class="block text-sm font-medium text-gray-700">Novo Nome de Utilizador</label>
+                <label for="newUsername" class="block text-sm font-medium text-gray-700">New Username</label>
                 <input type="text" id="newUsername" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
             <div class="mb-4">
-                <label for="newEmail" class="block text-sm font-medium text-gray-700">Novo Email</label>
+                <label for="newEmail" class="block text-sm font-medium text-gray-700">New Email</label>
                 <input type="email" id="newEmail" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
             <div class="mb-4">
-                <label for="newPassword" class="block text-sm font-medium text-gray-700">Nova Password</label>
+                <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
                 <input type="password" id="newPassword" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]" />
             </div>
             <div class="mb-4">
@@ -278,24 +278,24 @@
                          onerror="this.onerror=null;this.src='/assets/img/default-avatar.jpg';"/>
                 </div>
                 <button id="enable2faButton" class="hidden bg-indigo-600 text-white px-4 py-2 rounded">
-                    Ativar 2FA
+                    Enable 2FA
                 </button>
                 <div id="twofaModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
                     <div class="bg-white p-8 rounded shadow">
-                    <h2 class="text-lg font-bold mb-2">Verificação em 2 Etapas</h2>
-                    <p>Escaneia este QR code numa aplicação de autenticação:</p>
-                    <img src="" alt="QR code para 2FA" class="mx-auto my-4" />
-                    <button onclick="document.getElementById('twofaModal').classList.add('hidden')" class="mt-4 px-4 py-2 rounded bg-gray-300">Fechar</button>
+                    <h2 class="text-lg font-bold mb-2">Two-Factor Verification</h2>
+                    <p>Scan this QR code in an authenticator app:</p>
+                    <img src="" alt="QR code for 2FA" class="mx-auto my-4" />
+                    <button onclick="document.getElementById('twofaModal').classList.add('hidden')" class="mt-4 px-4 py-2 rounded bg-gray-300">Close</button>
                     </div>
                 </div>
                 <button id="disableTwofaBtn" class="hidden bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                    Desativar 2FA
+                    Disable 2FA
                   </button>
                   <div id="disableTwofaMessage" class="mt-2 text-sm"></div>
                   
             </div>
-            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 mb-2 transition-colors">Guardar Alterações</button>
-            <button id="cancelProfileChangesButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
+            <button id="saveProfileChangesButton" class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 mb-2 transition-colors">Save Changes</button>
+            <button id="cancelProfileChangesButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancel</button>
         </div>
 
                 <!-- Modal IA Battle -->
@@ -303,24 +303,24 @@
             <div class="bg-white rounded-2xl p-6 w-96 shadow-lg">
             <h2 class="text-2xl font-bold mb-4 text-center">IA Battle</h2>
             
-            <!-- Etapa 1: Escolher Dimensão -->
+            <!-- Step 1: Choose Dimension -->
             <div id="step-dimension" class="space-y-2">
-                <p class="mb-2 font-semibold text-center">Escolhe o modo</p>
+                <p class="mb-2 font-semibold text-center">Choose mode</p>
                 <button class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600" data-mode="2d">2D</button>
                 <button class="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600" data-mode="3d">3D</button>
             </div>
         
-            <!-- Etapa 2: Escolher Dificuldade -->
+            <!-- Step 2: Choose Difficulty -->
             <div id="step-difficulty" class="space-y-2 hidden">
-                <p class="mb-2 font-semibold text-center">Escolhe a dificuldade</p>
-                <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-diff="easy">Fácil</button>
-                <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-diff="medium">Médio</button>
-                <button class="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600" data-diff="hard">Difícil</button>
+                <p class="mb-2 font-semibold text-center">Choose difficulty</p>
+                <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-diff="easy">Easy</button>
+                <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-diff="medium">Medium</button>
+                <button class="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600" data-diff="hard">Hard</button>
             </div>
         
-            <!-- Fechar -->
+            <!-- Close -->
             <div class="mt-4 text-center">
-                <button id="closeIaModal" class="text-gray-500 hover:text-gray-800">Cancelar</button>
+                <button id="closeIaModal" class="text-gray-500 hover:text-gray-800">Cancel</button>
             </div>
             </div>
         </div>
@@ -333,22 +333,22 @@
             <div id="pvp-step-3d-options" class="space-y-4">
                 <p class="mb-2 font-semibold text-center">Player vs Player (3D)</p>
               
-                <!-- Escolha da bola -->
-                <label class="block mb-2 text-center font-medium">Escolhe a bola:</label>
+                <!-- Ball selection -->
+                <label class="block mb-2 text-center font-medium">Choose ball:</label>
                 <div class="flex justify-center space-x-6">
-                  <!-- Bola 1 -->
+                  <!-- Ball 1 -->
                   <label class="flex flex-col items-center cursor-pointer">
                     <input type="radio" name="ball-option" value="ball1" checked class="mb-2">
                     <img src="../assets/img/pokeball.png" alt="Pokébola" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-blue-500 transition">
                     <span class="mt-1 text-sm">Pokeball</span>
                   </label>
-                  <!-- Bola 2 -->
+                  <!-- Ball 2 -->
                   <label class="flex flex-col items-center cursor-pointer">
                     <input type="radio" name="ball-option" value="ball2" class="mb-2">
                     <img src="../assets/img/quickball.png" alt="Quick Ball" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-yellow-500 transition">
                     <span class="mt-1 text-sm">Quickball</span>
                   </label>
-                  <!-- Bola 3 -->
+                  <!-- Ball 3 -->
                   <label class="flex flex-col items-center cursor-pointer">
                     <input type="radio" name="ball-option" value="ball3" class="mb-2">
                     <img src="../assets/img/masterball.png" alt="Master Ball" class="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-purple-500 transition">
@@ -362,15 +362,15 @@
                 </div>
                 
               
-                <!-- Ações -->
-                <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-action="create">Criar Jogo</button>
+                <!-- Actions -->
+                <button class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600" data-action="create">Create Game</button>
                 <div class="space-y-2">
                   <input id="pvpGameIdInput" type="text" placeholder="Game ID" class="border border-gray-300 rounded-lg p-2 w-full" />
-                  <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-action="join">Entrar no Jogo</button>
+                  <button class="w-full bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600" data-action="join">Join Game</button>
                 </div>
             </div>
             <div class="mt-4 text-center">
-                <button id="closePvpModal" class="text-gray-500 hover:text-gray-800">Cancelar</button>
+                <button id="closePvpModal" class="text-gray-500 hover:text-gray-800">Cancel</button>
             </div>  
             </div>
             <!-- Fechar -->
@@ -437,41 +437,41 @@
         <div id="tourneyPage" class="hidden bg-white p-8 rounded-lg shadow-md max-w-sm w-full bg-opacity-90">
             <!-- Título e subtítulo -->
             <h2 class="text-2xl font-bold text-center mb-4 flex items-center justify-center">
-                <img src="/assets/img/trophy.png" alt="Torneio" class="w-8 h-8 mr-2">
-                Criar Torneio Local
+                <img src="/assets/img/trophy.png" alt="Tournament" class="w-8 h-8 mr-2">
+                Create Local Tournament
             </h2>
-            <p class="text-center text-gray-600 mb-6 text-sm">Defina o nome do torneio e os jogadores participantes</p>
+            <p class="text-center text-gray-600 mb-6 text-sm">Set the tournament name and participating players</p>
         
             <!-- Nome do torneio -->
             <div class="mb-4">
-                <label for="tourneyName" class="block text-sm font-medium text-gray-700">Nome do Torneio</label>
+                <label for="tourneyName" class="block text-sm font-medium text-gray-700">Tournament Name</label>
                 <input type="text" id="tourneyName" name="tourneyName"
                        class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
-                       placeholder="Ex: Torneio de Verão" required />
+                       placeholder="e.g. Summer Tournament" required />
             </div>
         
             <!-- Slots dos jogadores -->
             <div id="tourneySlots" class="space-y-4">
                 <div class="mb-4">
-                    <label for="player1" class="block text-sm font-medium text-gray-700">Jogador 1 (Você)</label>
+                    <label for="player1" class="block text-sm font-medium text-gray-700">Player 1 (You)</label>
                     <input type="text" id="player1" name="player1"
                            class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
                            value="" />
                 </div>
                 <div class="mb-4">
-                    <label for="player2" class="block text-sm font-medium text-gray-700">Jogador 2</label>
+                    <label for="player2" class="block text-sm font-medium text-gray-700">Player 2</label>
                     <input type="text" id="player2" name="player2"
                            class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
                            placeholder="Nickname" />
                 </div>
                 <div class="mb-4">
-                    <label for="player3" class="block text-sm font-medium text-gray-700">Jogador 3</label>
+                    <label for="player3" class="block text-sm font-medium text-gray-700">Player 3</label>
                     <input type="text" id="player3" name="player3"
                            class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
                            placeholder="Nickname" />
                 </div>
                 <div class="mb-4">
-                    <label for="player4" class="block text-sm font-medium text-gray-700">Jogador 4</label>
+                    <label for="player4" class="block text-sm font-medium text-gray-700">Player 4</label>
                     <input type="text" id="player4" name="player4"
                            class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2f9b20]"
                            placeholder="Nickname" />
@@ -483,10 +483,10 @@
                     class="mt-6 w-full bg-[#2f9b20] text-white p-2 rounded-lg hover:bg-[#2f9b20] 
                            transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled>
-                Iniciar Torneio
+                Start Tournament
             </button>
 
-            <button id="cancelTourneyButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancelar</button>
+            <button id="cancelTourneyButton" class="w-full bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 mt-2">Cancel</button>
 
         </div>
         
@@ -494,20 +494,20 @@
 
         <div id="registerSuccessModal" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 hidden">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-                <h3 class="text-lg font-bold text-center mb-4">Registo Concluído!</h3>
-                <p class="text-center mb-4">Registado com sucesso! Já pode fazer login.</p>
+                <h3 class="text-lg font-bold text-center mb-4">Registration Complete!</h3>
+                <p class="text-center mb-4">Successfully registered! You can now log in.</p>
                 <button id="goToLoginButton" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Login</button>
             </div>
         </div>
 
         <div id="twoFAModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
             <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
-              <h3 class="text-xl font-bold mb-4 text-gray-800">Autenticação 2FA</h3>
-              <p class="mb-2 text-gray-600">Insira o código do seu app autenticador:</p>
-              <input type="text" id="modalTwofaCode" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg" placeholder="Código 2FA" />
+              <h3 class="text-xl font-bold mb-4 text-gray-800">2FA Authentication</h3>
+              <p class="mb-2 text-gray-600">Enter the code from your authenticator app:</p>
+              <input type="text" id="modalTwofaCode" class="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg" placeholder="2FA Code" />
               <div id="modalTwofaError" class="text-red-500 mb-2"></div>
-              <button id="submitTwofaCode" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">Confirmar</button>
-              <button id="closeTwoFAModal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2 transition-colors">Cancelar</button>
+              <button id="submitTwofaCode" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">Confirm</button>
+              <button id="closeTwoFAModal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2 transition-colors">Cancel</button>
             </div>
         </div>
     

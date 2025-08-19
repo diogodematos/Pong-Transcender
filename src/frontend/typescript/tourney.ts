@@ -1,5 +1,6 @@
 import { startTourneyGame } from './2dTourney.ts';
 import { router } from './router.ts';
+import { TourneyMessages } from './messages.ts';
 
 let players: string[] = [];
 let matches: { p1: string, p2: string }[] = [];
@@ -20,8 +21,8 @@ function showWinnerModal(winner: string) {
   modal.style.textAlign = 'center';
 
   modal.innerHTML = `
-    <p>Campeão: <strong>${winner}</strong> 🏆</p>
-    <button id="closeWinnerModal" style="margin-top: 15px; padding: 8px 20px; font-weight: bold;">Continuar</button>
+    <p>${TourneyMessages.champion(winner)}</p>
+    <button id="closeWinnerModal" style="margin-top: 15px; padding: 8px 20px; font-weight: bold;">${TourneyMessages.continue}</button>
   `;
 
   document.body.appendChild(modal);
@@ -37,16 +38,14 @@ window.addEventListener('localTourneyGameOver', (e: any) => {
 
   if (currentMatchIndex < 2) {
     semifinalWinners.push(winner);
-
-    // Mostrar alert da semifinal atual antes de avançar
-    alert(`Vencedor da semifinal ${currentMatchIndex + 1}: ${winner}`);
-
+    // Show alert for current semifinal before advancing
+    alert(TourneyMessages.semifinalWinner(currentMatchIndex + 1, winner));
     if (currentMatchIndex + 1 < 2) {
       currentMatchIndex++;
       startNextMatch();
     } else if (currentMatchIndex + 1 === 2) {
       matches.push({ p1: semifinalWinners[0], p2: semifinalWinners[1] });
-      alert(`Final: ${semifinalWinners[0]} vs ${semifinalWinners[1]}`);
+      alert(TourneyMessages.final(semifinalWinners[0], semifinalWinners[1]));
       currentMatchIndex++;
       startNextMatch();
     }
@@ -57,7 +56,6 @@ window.addEventListener('localTourneyGameOver', (e: any) => {
 
 export function initTourneyPage(loggedUsername: string) {
   (document.getElementById('player1') as HTMLInputElement).value = loggedUsername;
-
   const inputs = Array.from(document.querySelectorAll('#tourneySlots input')) as HTMLInputElement[];
   const startBtn = document.getElementById('startTourneyBtn') as HTMLButtonElement;
   startBtn.disabled = true;
@@ -70,21 +68,16 @@ export function initTourneyPage(loggedUsername: string) {
   });
 
   startBtn.addEventListener('click', () => {
-    const tourneyName = (document.getElementById('tourneyName') as HTMLInputElement).value.trim() || 'Torneio Local';
-
+    const tourneyName = (document.getElementById('tourneyName') as HTMLInputElement).value.trim() || 'Local Tournament';
     currentMatchIndex = 0;
     semifinalWinners = [];
-
     players = inputs.map(inp => inp.value.trim());
-
     shuffleArray(players);
-
     matches = [
       { p1: players[0], p2: players[1] },
       { p1: players[2], p2: players[3] }
     ];
-
-    alert(`Torneio "${tourneyName}" criado!\nPrimeiro jogo: ${matches[0].p1} vs ${matches[0].p2}`);
+    alert(TourneyMessages.tournamentCreated(tourneyName, matches[0].p1, matches[0].p2));
     startBtn.disabled = true;
     startNextMatch();
   });
@@ -92,7 +85,7 @@ export function initTourneyPage(loggedUsername: string) {
 
 function startNextMatch() {
   if (currentMatchIndex >= matches.length) {
-    alert("Torneio finalizado!");
+    alert(TourneyMessages.finished);
     return;
   }
   const { p1, p2 } = matches[currentMatchIndex];

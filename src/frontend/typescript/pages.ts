@@ -34,7 +34,7 @@ export function showEditProfilePage(): void {
 export function showGamePage(): void {
     togglePages('gamePage');
     showNavigation();
-    // Inicialize o menu principal do jogo e os controles (botões de dificuldade, etc.)
+    // Initialize the main game menu and controls (difficulty buttons, etc.)
     console.log('Attempting to initialize game main menu from showGamePage...');
 }
 
@@ -47,7 +47,7 @@ export function showUserProfilePage(userId: string): void {
 
 export function showTourneyPage(): void {
     clearInputs('tourneyName', 'player1', 'player2', 'player3', 'player4');
-    const username = getLoggedUsername(); // função que lê do token/jwt/estado
+    const username = getLoggedUsername(); // function that reads from token/jwt/state
     initTourneyPage(username);
     togglePages('tourneyPage');
     showNavigation();
@@ -110,4 +110,4 @@ function resetAvatarPreview(inputId: string): void {
     }
 }
 
-// A função initializeGame() antiga foi removida conforme discutido.
+// The old initializeGame() function was removed as discussed.

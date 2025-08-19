@@ -18,8 +18,8 @@ class Router {
             this.handleRouteChange();
         });
 
-        // Não chame handleInitialRoute() aqui.
-        // A responsabilidade de inicializar a rota é do main.ts
+    // Do not call handleInitialRoute() here.
+    // The responsibility to initialize the route is in main.ts
     }
 
     // Register a route with its handler function
@@ -83,11 +83,11 @@ class Router {
             const routePart = routeParts[i];
 
             if (patternPart.startsWith(':')) {
-                // É um parâmetro (ex: :id)
+                // It's a parameter (ex: :id)
                 const paramName = patternPart.substring(1);
                 params[paramName] = routePart;
             } else if (patternPart !== routePart) {
-                // Partes fixas devem ser iguais
+                // Fixed parts must be equal
                 isMatch = false;
                 break;
             }

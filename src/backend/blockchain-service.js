@@ -2,13 +2,12 @@
 
 import { ethers } from "ethers";
 
-// --- CONFIGURAÇÕES DA BLOCKCHAIN ---
-// O endereço do contrato TournamentResults que você implantou.
-// Certifique-se de que este é o endereço real obtido no último deploy!
-const CONTRACT_ADDRESS = "0xa1CF5786c6ceC9E8D0BbACEdF2cc98dAe4614363"; // SEU ENDEREÇO REAL AQUI
+// --- BLOCKCHAIN CONFIGURATION ---
+// The address of the TournamentResults contract you deployed.
+// Make sure this is the actual address obtained from your last deployment!
+const CONTRACT_ADDRESS = "0xa1CF5786c6ceC9E8D0BbACEdF2cc98dAe4614363"; // YOUR ACTUAL ADDRESS HERE
 
-// O ABI COMPLETO do seu contrato TournamentResults.
-// Este é o array completo que você acabou de fornecer:
+// This is the full array you just provided:
 const CONTRACT_ABI = [
   {
     "anonymous": false,
@@ -209,26 +208,26 @@ const CONTRACT_ABI = [
 ];
 
 
-// Conectar ao provedor Ganache (usando o nome do serviço 'blockchain' dentro do Docker)
+// Connect to Ganache provider (using the service name 'blockchain' inside Docker)
 const provider = new ethers.JsonRpcProvider("http://blockchain:8545");
 
-// Crie uma carteira para assinar transações.
+// Create a wallet to sign transactions.
 // Use a primeira chave privada do Ganache para o mnemonic fornecido:
 // "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 // Chave Privada correspondente: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5ef7598a7250bb40eb80'
 const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5ef7598a7250bb40eb80";
 const wallet = new ethers.Wallet(privateKey, provider);
 
-// Instância do contrato
+// Contract instance
 const tournamentResultsContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
 
 /**
- * Registra o resultado de um torneio na blockchain.
- * @param {number} tournamentId - O ID único do torneio.
- * @param {string} winnerAddress - O endereço da carteira do vencedor (Ex: "0x...")
- * @param {string} loserAddress - O endereço da carteira do perdedor (Ex: "0x...")
- * @param {number} winnerScore - A pontuação do vencedor.
- * @param {number} loserScore - A pontuação do perdedor.
+ * Records a tournament result on the blockchain.
+ * @param {number} tournamentId - The unique tournament ID.
+ * @param {string} winnerAddress - The winner's wallet address (e.g., "0x...")
+ * @param {string} loserAddress - The loser's wallet address (e.g., "0x...")
+ * @param {number} winnerScore - The winner's score.
+ * @param {number} loserScore - The loser's score.
  */
 async function recordTournamentResultBlockchain(tournamentId, winnerAddress, loserAddress, winnerScore, loserScore) {
   try {
@@ -242,7 +241,7 @@ async function recordTournamentResultBlockchain(tournamentId, winnerAddress, los
     );
 
     console.log("Transaction sent:", tx.hash);
-    const receipt = await tx.wait(); // Espera a transação ser minerada
+  const receipt = await tx.wait(); // Wait for the transaction to be mined
     console.log("Transaction confirmed:", receipt.hash);
     console.log("Result recorded on blockchain!");
     return { success: true, transactionHash: receipt.hash };

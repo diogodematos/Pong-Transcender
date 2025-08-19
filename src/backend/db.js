@@ -1,17 +1,17 @@
 import Database from "better-sqlite3";
 import path from "path";
 
-// Usar DB_PATH do ambiente ou um caminho padrão relativo ao diretório de trabalho
-// ATENÇÃO: se o teu Docker Compose mapeia 'data' para um volume, o caminho tem que ser './data/app.db'
+// Use DB_PATH from environment or a default path relative to the working directory
+// ATTENTION: if your Docker Compose maps 'data' to a volume, the path must be './data/app.db'
 const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'data', 'app.db');
 
-// Criar base de dados no caminho especificado
+// Create database at the specified path
 const db = new Database(dbPath); // <--- Usar dbPath aqui
 
-// Configurar WAL mode para melhor performance
+// Set WAL mode for better performance
 db.pragma('journal_mode = WAL');
 
-// Query para criar tabela de utilizadores
+// Query to create users table
 const createUsersTable = `
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +27,7 @@ const createUsersTable = `
     )
 `;
 
-// Query para criar tabela de scores (para blockchain backup)
+// Query to create scores table (for blockchain backup)
 const createScoresTable = `
     CREATE TABLE IF NOT EXISTS scores (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +40,7 @@ const createScoresTable = `
     )
 `;
 
-// Query para criar tabela de amigos (adicionado do teu colega)
+// Query to create friends table (added by your colleague)
 const createFriendsTable = `
     CREATE TABLE IF NOT EXISTS friends (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +53,7 @@ const createFriendsTable = `
     )
 `;
 
-// Query para criar tabela de jogos (adicionado do teu colega)
+// Query to create games table (added by your colleague)
 const createGamesTable = `
     CREATE TABLE IF NOT EXISTS games (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,10 +69,10 @@ const createGamesTable = `
     )
 `;
 
-// Criar tabelas se não existirem
+// Create tables if they do not exist
 try {
     db.exec(createUsersTable);
-    // Verificar se as colunas 'wins', 'losses' e 'twofa_enabled' existem e adicioná-las se não existirem
+    // Check if columns 'wins', 'losses', and 'twofa_enabled' exist and add them if not
     const userColumns = db.prepare("PRAGMA table_info(users)").all();
     const hasWins = userColumns.some(col => col.name === 'wins');
     const hasLosses = userColumns.some(col => col.name === 'losses');
@@ -104,7 +104,7 @@ try {
     console.error('Error creating database tables:', error);
 }
 
-// Função para fechar a base de dados gracefully
+// Function to gracefully close the database
 process.on('exit', () => db.close());
 process.on('SIGHUP', () => process.exit(128 + 1));
 process.on('SIGINT', () => process.exit(128 + 2));

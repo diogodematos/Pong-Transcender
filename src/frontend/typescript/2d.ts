@@ -45,7 +45,7 @@ class Game {
         if (this.ball) this.ball.speed = 7;
     }
 
-    console.log(`📊 Dificuldade (2D) ajustada para: ${level}`);
+    console.log(`📊 Difficulty (2D) set to: ${level}`);
     this.reset();
 }
 

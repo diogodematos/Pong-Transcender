@@ -14,11 +14,11 @@ interface CredentialResponse {
     select_by: string;
 }
 
-// IMPORTANTE para o TypeScript: Declara a função handleGoogleLogin no escopo global
+// IMPORTANT for TypeScript: Declare the handleGoogleLogin function in the global scope
 // para que o script do Google no HTML possa chamá-la.
 declare global {
     interface Window {
-        // Usa a CredentialResponse importada, que é a definição exata esperada.
+    // Uses the imported CredentialResponse, which is the exact expected definition.
         handleGoogleLogin: (response: CredentialResponse) => void;
     }
 }
@@ -96,7 +96,6 @@ function setupRoutes(): void {
     });
 }
 
-// Função para verificar autenticação e redirecionar
 function checkAuthAndRedirect(): void {
     if (isAuthenticated()) {
         router.navigate('/dashboard');
@@ -105,7 +104,6 @@ function checkAuthAndRedirect(): void {
     }
 }
 
-// Função de callback para o Google Sign-In
 async function handleGoogleLogin(response: CredentialResponse) {
     try {
         const res = await fetch('/api/users/google-login', {
@@ -119,20 +117,20 @@ async function handleGoogleLogin(response: CredentialResponse) {
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('userName', data.user.username);
             localStorage.setItem('google', 'true');
-            console.log('Login Google bem-sucedido. Token recebido.');
+            console.log('Google login successful. Token received.');
             connectWebSocket(data.token); 
             router.navigate('/dashboard');
         } else {
-            alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos.'));
-            console.error('Erro no login Google (backend response):', data.error);
+            alert('Error with Google login: ' + (data.error || 'Unknown details.'));
+            console.error('Error in Google login (backend response):', data.error);
         }
     } catch (error) {
-        console.error('Erro ao autenticar com Google:', error);
-        alert('Erro ao autenticar com Google.');
+    console.error('Error authenticating with Google:', error);
+    alert('Error authenticating with Google.');
     }
 }
 
-// Atribui a função ao objeto window para que o script do Google a possa invocar
+// Assign the function to the window object so the Google script can invoke it
 window.handleGoogleLogin = handleGoogleLogin;
 
 
@@ -164,7 +162,7 @@ function setupEventListeners(): void {
             // Store username/password for next step
             (window as any).pendingLogin = { username, password };
         } else {
-            displayError('loginResponseMessage', data.error || 'Credenciais inválidas.');
+            displayError('loginResponseMessage', data.error || 'Invalid credentials.');
         }
     });
     // 2FA modal logic
@@ -173,7 +171,7 @@ function setupEventListeners(): void {
         const errorDiv = document.getElementById('modalTwofaError');
         const pending = (window as any).pendingLogin;
         if (!pending || !code) {
-            if (errorDiv) errorDiv.textContent = 'Código 2FA obrigatório.';
+            if (errorDiv) errorDiv.textContent = '2FA code required.';
             return;
         }
         // Try login with 2FA code
@@ -232,7 +230,6 @@ function setupEventListeners(): void {
     const scr = document.getElementById('score-display') as HTMLDivElement;
 
     
-    // Abrir modal no clique do botão IA Battle
     document.getElementById('startVsComputer')?.addEventListener('click', () => {
       document.getElementById('iaModal')!.classList.remove('hidden');
       document.getElementById('step-dimension')!.classList.remove('hidden');
@@ -240,12 +237,11 @@ function setupEventListeners(): void {
       iaSelectedMode = null;
     });
     
-    // Fechar modal
     document.getElementById('closeIaModal')?.addEventListener('click', () => {
       document.getElementById('iaModal')!.classList.add('hidden');
     });
     
-    // Passo 1 — Escolher dimensão
+    // Step 1 — Choose dimension
     document.querySelectorAll('#step-dimension button').forEach(btn => {
       btn.addEventListener('click', () => {
         iaSelectedMode = (btn as HTMLElement).getAttribute('data-mode') as '2d' | '3d';
@@ -254,7 +250,7 @@ function setupEventListeners(): void {
       });
     });
     
-    // Passo 2 — Escolher dificuldade e iniciar jogo IA
+    // Step 2 — Choose difficulty and start AI game
     document.querySelectorAll('#step-difficulty button').forEach(btn => {
         btn.addEventListener('click', async () => {
           if (!iaSelectedMode) return;
@@ -263,39 +259,39 @@ function setupEventListeners(): void {
           document.getElementById('iaModal')!.classList.add('hidden');
       
           if (gameRunning) {
-            alert('Um jogo já está em execução.');
+            alert('A game is already running.');
             return;
           }
       
           gameRunning = true;
         try {
           if (iaSelectedMode === '2d') {
-            console.log(`Iniciando 2D IA [${diff}]`);
-            startGame2D(); // futuramente podes passar diff;
+            console.log(`Starting 2D AI [${diff}]`);
+            startGame2D(); // you can pass diff in the future;
             if (currentGame2D && diff) {
                 currentGame2D.setDifficulty(diff);
             }
-            router.navigate('/game'); // Navega para a página do jogo 2D
+            router.navigate('/game'); // Navigate to the 2D game page
           } else {
-            console.log(`Iniciando 3D IA [${diff}]`);
-            showGamePage(); // Ensure gamePage is visible before starting 3D game
-            await waitForCanvas('renderCanvas', 1000); // Wait for canvas to be present
-            await startGame3D('', true, false); // cria instância e inicia
-            if (currentGame3D) {
-              currentGame3D.setDifficulty(diff); // aplica dificuldade
-            }
-            router.navigate('/game'); // Navega para a página do jogo 3D
-            scr.hidden = false;
+                console.log(`Starting 3D AI [${diff}]`);
+                showGamePage(); // Ensure gamePage is visible before starting 3D game
+                await waitForCanvas('renderCanvas', 1000); // Wait for canvas to be present
+                await startGame3D('', true, false); // create instance and start
+                if (currentGame3D) {
+                    currentGame3D.setDifficulty(diff); // apply difficulty
+                }
+                router.navigate('/game'); // Navigate to the 3D game page
+                scr.hidden = false;
           }
         } catch (error) {
-          console.error('Erro ao iniciar jogo IA:', error);
+          console.error('Error starting AI game:', error);
           gameRunning = false;
         }
       });
     });
 
         //                                           PvP Battle
-        // Abrir modal no clique do botão Duel
+    // Open modal on Duel button click
     document.getElementById('startOneVsOne')?.addEventListener('click', () => {
         clearInputs('pvpGameIdInput');
         document.getElementById('pvpModal')!.classList.remove('hidden');
@@ -303,31 +299,31 @@ function setupEventListeners(): void {
         document.getElementById('pvp-step-3d-options')!.classList.remove('hidden');
     });
     
-    // Fechar modal
+    // Close modal
     document.getElementById('closePvpModal')?.addEventListener('click', () => {
         document.getElementById('pvpModal')!.classList.add('hidden');
     });
     
-    // Etapa 2 (apenas 3D) — Criar ou Entrar
+    // Step 2 (3D only) — Create or Join
     document.querySelectorAll('#pvp-step-3d-options button').forEach(btn => {
         btn.addEventListener('click', () => {
         const action = (btn as HTMLElement).getAttribute('data-action');
         const gameId = (document.getElementById('pvpGameIdInput') as HTMLInputElement).value.trim();
     
-        // 🔹 Ler a bola escolhida
+    // 🔹 Read the selected ball
         const selectedBall = (document.querySelector('input[name="ball-option"]:checked') as HTMLInputElement).value;
     
-        // 🔹 Guardar no botão como atributo dataset (igual ao diff)
+    // 🔹 Store in button as dataset attribute (same as diff)
         (btn as HTMLElement).setAttribute('data-ball', selectedBall);
     
-        // Fechar modal
+    // Close modal
         document.getElementById('pvpModal')!.classList.add('hidden');
     
         if (action === 'create') {
             iniciarPvP3D(true);
         } else if (action === 'join') {
             if (!gameId) {
-            alert('Por favor insere um Game ID');
+            alert('Please enter a Game ID');
             return;
             }
             iniciarPvP3D(false, gameId);
@@ -335,38 +331,36 @@ function setupEventListeners(): void {
         });
     });
     
-    // // Funções para iniciar jogos
-    // function iniciarPvp2D() {
+    // function startPvp2D() {
     //     if (gameRunning) {
-    //     alert('Já há um jogo a decorrer.');
+    //     alert('A game is already running.');
     //     return;
     //     }
     //     gameRunning = true;
-    //     console.log('Iniciando PvP 2D...');
-    //     startGame2D(); // Até aqui, sem multiplayer real, podes adaptar depois
-    //     router.navigate('/game'); // Navega para a página do jogo 2D
+    //     console.log('Starting PvP 2D...');
+    //     startGame2D(); // No real multiplayer yet, you can adapt later
+    //     router.navigate('/game'); // Navigate to the 2D game page
     // }
     
     function iniciarPvP3D(isHost: boolean, gameId: string = '') {
-        if (gameRunning) {
-        alert('Já há um jogo a decorrer.');
-        return;
-        }
+    if (gameRunning) {
+    alert('A game is already running.');
+    return;
+    }
         gameRunning = true;
         const selectedBall = document.querySelector('#pvp-step-3d-options button[data-ball]')?.getAttribute("data-ball") || "ball1";
     
         if (isHost) {
-        console.log('Criando jogo 3D...');
-        // Lê a bola escolhida do botão
+    console.log('Creating 3D game...');
+        // Read the selected ball from the button
         (window as any).selectedBall = selectedBall;
         showGamePage();
         startGame3D('', true, true);
-        router.navigate('/game'); // Navega para a página do jogo 3D
+        router.navigate('/game');
         scr.hidden = false;
 
         } else {
-        console.log(`Entrando no jogo 3D com ID: ${gameId}`);
-        // Lê a bola escolhida do botão
+    console.log(`Joining 3D game with ID: ${gameId}`);
         (window as any).selectedBall = selectedBall;
         showGamePage();
         startGame3D(gameId, false, true);
@@ -430,15 +424,15 @@ function setupEventListeners(): void {
     });
 
     document.getElementById('searchFriendsInput')?.addEventListener('input', (e) => {
-        const target = e.target as HTMLInputElement;
-        console.log("Pesquisa:", target.value);
-        searchUsers(target.value);
+    const target = e.target as HTMLInputElement;
+    console.log("Search:", target.value);
+    searchUsers(target.value);
     });
 
     document.getElementById('addFriendButton')?.addEventListener('click', () => {
         const searchInput = document.getElementById('searchFriendsInput') as HTMLInputElement;
         if (searchInput) {
-            alert('Digite o nome do utilizador no campo de pesquisa e selecione um para adicionar.');
+            alert('Type the username in the search field and select one to add.');
         }
     });
 
@@ -521,7 +515,6 @@ function handleAvatarPreviewUpdate(event: Event): void {
     }
 }
 
-// Função executada quando a página é carregada
 window.onload = (): void => {
     // Show loading overlay immediately
     const loadingOverlay = document.getElementById('loadingOverlay');

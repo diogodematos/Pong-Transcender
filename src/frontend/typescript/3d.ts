@@ -89,7 +89,7 @@ class Game3D {
         this.ballSpeed = 0.35;
     }
 
-    console.log(`📊 Dificuldade ajustada para: ${level}`);
+  console.log(`📊 Difficulty set to: ${level}`);
     this.reset();
 }
 

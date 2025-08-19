@@ -4,13 +4,13 @@ import { recordTournamentResultBlockchain, getTournamentResultBlockchain } from 
 
 const tournamentController = (fastify, options, done) => {
 
-    // Exemplo de rota para registar um resultado de torneio
+    // Example route to record a tournament result
     fastify.post('/record-result', async (req, res) => {
-        // Suponha que o corpo da requisição POST contenha estes dados:
+    // Suppose the POST request body contains these fields:
         // {
         //   "tournamentId": 1,
-        //   "winnerAddress": "0xGanacheAccountAddress1", // Endereço de uma conta do Ganache
-        //   "loserAddress": "0xGanacheAccountAddress2",  // Endereço de outra conta do Ganache
+    //   "winnerAddress": "0xGanacheAccountAddress1", // Address of a Ganache account
+    //   "loserAddress": "0xGanacheAccountAddress2",  // Address of another Ganache account
         //   "winnerScore": 11,
         //   "loserScore": 5
         // }
@@ -20,7 +20,7 @@ const tournamentController = (fastify, options, done) => {
             return res.status(400).send({ error: 'Missing tournament result data.' });
         }
 
-        // Chamar a função da blockchain-service para registar o resultado
+    // Call the blockchain-service function to record the result
         const result = await recordTournamentResultBlockchain(
             tournamentId,
             winnerAddress,
@@ -35,7 +35,7 @@ const tournamentController = (fastify, options, done) => {
                 transactionHash: result.transactionHash
             });
         } else {
-            // Pode haver erros de validação do contrato (ex: "Tournament result already recorded.")
+            // There may be contract validation errors (e.g., "Tournament result already recorded.")
             return res.status(500).send({
                 error: 'Failed to record tournament result on blockchain.',
                 details: result.error
@@ -43,7 +43,7 @@ const tournamentController = (fastify, options, done) => {
         }
     });
 
-    // Exemplo de rota para obter um resultado de torneio
+    // Example route to get a tournament result
     fastify.get('/results/:tournamentId', async (req, res) => {
         const { tournamentId } = req.params;
         const id = parseInt(tournamentId, 10);
