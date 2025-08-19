@@ -1,6 +1,7 @@
 export interface UserCredentials {
   username: string;
   password: string;
+  towfaCode?: string; // Para autenticação de dois fatores
 }
   
 export interface RegisterData extends UserCredentials {

@@ -1,6 +1,7 @@
 import { Profile, ProfileId, UpdateProfileData, GameHistoryResponse, FriendsResponse, GameHistoryItem, Friend } from './types.ts';
 import { clearInputs } from './pages.ts';
 import { router } from './router.ts';
+import { setup2FA } from './auth.ts';
 
 export async function getDashboard() {
   const token = localStorage.getItem('authToken');
@@ -508,3 +509,7 @@ function updateUserProfileUI(profile: ProfileId): void {
   if (winsEl) winsEl.textContent = profile.wins.toString();
   if (lossesEl) lossesEl.textContent = profile.losses.toString();
 }
+
+document.getElementById('enable2faButton')?.addEventListener('click', async () => {
+  await setup2FA();
+});

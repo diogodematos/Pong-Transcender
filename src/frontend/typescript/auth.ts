@@ -10,7 +10,7 @@ import { connectWebSocket, disconnectWebSocket } from './ws.js';
  * @param credentials Objeto com username e password.
  * @returns true se o login for bem-sucedido, false caso contrário.
  */
-export async function login(credentials: UserCredentials): Promise<boolean> {
+export async function login(credentials: UserCredentials ): Promise<boolean> {
   try {
     const res = await fetch('/api/users/login', { // CORRIGIDO: URL com prefixo /api/users
        method: 'POST',
@@ -38,6 +38,94 @@ export async function login(credentials: UserCredentials): Promise<boolean> {
      return false;
   }
 }
+
+export async function setup2FA() {
+  const token = localStorage.getItem('authToken');
+  const res = await fetch('/api/users/twofa/setup', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const { qrCode } = await res.json();
+
+  const modal = document.getElementById('twofaModal');
+  if (modal) {
+    const qrImg = modal.querySelector('img');
+    if (qrImg) {
+      qrImg.src = qrCode;
+      qrImg.alt = "QR Code para 2FA";
+    }
+    modal.classList.remove('hidden');
+    document.getElementById('enable2faButton')!.classList.add('hidden');
+    document.getElementById('disableTwofaBtn')!.classList.remove('hidden');
+  }
+}
+
+document.getElementById('disableTwofaBtn')?.addEventListener('click', async () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    alert('Necessário login para desativar 2FA.');
+    return;
+  }
+  const res = await fetch('/api/users/twofa/disable', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+  const messageDiv = document.getElementById('disableTwofaMessage');
+  if (res.ok) {
+    if (messageDiv) {
+      messageDiv.textContent = '2FA desativado com sucesso.';
+      messageDiv.style.color = 'green';
+      document.getElementById('disableTwofaBtn')!.classList.add('hidden');
+      document.getElementById('enable2faButton')!.classList.remove('hidden');
+    }
+  } else {
+    if (messageDiv) {
+      messageDiv.textContent = data.error || 'Erro ao desativar 2FA.';
+      messageDiv.style.color = 'red';
+    }
+  }
+});
+
+function updateTwofaButtons(twofaEnabled: boolean) {
+  if (twofaEnabled) {
+    document.getElementById('enable2faButton')!.classList.add('hidden');
+    document.getElementById('disableTwofaBtn')!.classList.remove('hidden');
+  } else {
+    document.getElementById('enable2faButton')!.classList.remove('hidden');
+    document.getElementById('disableTwofaBtn')!.classList.add('hidden');
+  }
+}
+
+export async function fetchTwofaStatus() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      updateTwofaButtons(false);
+      return;
+    }
+  
+    const res = await fetch('/api/users/twofa/status', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+  
+    if (res.ok) {
+      const data = await res.json();
+      updateTwofaButtons(data.twofa_enabled);
+    } else {
+      updateTwofaButtons(false);
+    }
+  }
+  
+  // Atualiza os botões ao carregar a página
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchTwofaStatus();
+  });
+
+
+// document.addEventListener('DOMContentLoaded', () => {
+//   fetchTwofaStatus();
+// });
+
 
 /**
  * Tenta registrar um novo utilizador.
@@ -114,7 +202,7 @@ export function getLoggedUsername(): string {
  * @param id O ID do elemento HTML onde a mensagem de erro será exibida.
  * @param message A mensagem de erro a ser exibida.
  */
-function displayError(id: string, message: string) {
+export function displayError(id: string, message: string) {
   const el = document.getElementById(id);
   if (el) {
     el.textContent = message;

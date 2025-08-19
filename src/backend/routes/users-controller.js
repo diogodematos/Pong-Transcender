@@ -5,6 +5,8 @@ import { OAuth2Client } from 'google-auth-library';
 import path from 'path';
 import pump from 'pump';    
 import * as fs from 'fs';
+import speakeasy from 'speakeasy';
+import qrcode from 'qrcode';
 
 const googleClient = new OAuth2Client('801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com');
 
@@ -184,7 +186,7 @@ const usersController = async (fastify, options) => {
 
     // --- POST /api/users/login - Login de utilizador ---
     fastify.post('/login', async (req, reply) => {
-        const { username, password } = req.body;
+        const { username, password, twofa_code } = req.body;
         if (!username || !password) {
             return reply.status(400).send({ error: 'Missing username or password' });
         }
@@ -197,6 +199,16 @@ const usersController = async (fastify, options) => {
             if (!passwordMatch) {
                 return reply.status(401).send({ error: 'Invalid password' });
             }
+            if (dbUser.twofa_enabled) {
+                if (!twofa_code) return reply.status(401).send({ error: '2FA code required' });
+                const verified = speakeasy.totp.verify({
+                  secret: dbUser.twofa_secret,
+                  encoding: 'base32',
+                  token: twofa_code
+                });
+                if (!verified) 
+                    return reply.status(401).send({ error: 'Invalid 2FA code' });
+            }
             // Usa fastify.jwt.sign para assinar o token (secretKey definido no plugin JWT)
             const token = fastify.jwt.sign({ id: dbUser.id }, { expiresIn: '1h' });
             return { success: true, message: 'User logged in', token, dbUser: { id: dbUser.id, username: dbUser.username } }; // Inclui dbUser.id para consistência
@@ -205,6 +217,33 @@ const usersController = async (fastify, options) => {
             return reply.status(500).send({ error: 'Internal server error', details: error.message });
         }
     });
+
+    fastify.post('/twofa/setup', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+        const userId = req.user.id;
+        const secret = speakeasy.generateSecret({ name: 'PokePong' });
+        await db.prepare('UPDATE users SET twofa_secret = ?, twofa_enabled = 1 WHERE id = ?')
+          .run(secret.base32, userId);
+        const qrCode = await qrcode.toDataURL(secret.otpauth_url);
+        return { qrCode, secret: secret.base32 };
+    });
+
+    fastify.post('/twofa/disable', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+        const userId = req.user.id;
+        try {
+          await db.prepare('UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?').run(userId);
+          return { success: true, message: '2FA desativado com sucesso' };
+        } catch (error) {
+          req.log.error(`Erro ao desativar 2FA: ${error.message}`);
+          return reply.status(500).send({ error: 'Erro interno ao desativar 2FA' });
+        }
+      });
+      
+    fastify.get('/twofa/status', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+        const userId = req.user.id;
+        const user = db.prepare('SELECT twofa_enabled FROM users WHERE id = ?').get(userId);
+        return { twofa_enabled: user?.twofa_enabled === 1 };
+    });
+      
 
     // --- POST /api/users/google-login - Login Google OAuth ---
     fastify.post('/google-login', async (req, reply) => {

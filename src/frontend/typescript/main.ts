@@ -1,6 +1,6 @@
 // src/frontend/typescript/main.ts
 
-import { login, register, logout, isAuthenticated} from './auth.ts';
+import { register, logout, isAuthenticated, displayError, fetchTwofaStatus} from './auth.ts';
 import { updateProfile, searchUsers} from './profile.ts';
 import { clearInputs, showLoginPage, showRegisterPage, showEditProfilePage, showProfilePage, showGamePage, showDashboardPage, showUserProfilePage, showTourneyPage } from './pages.ts';
 import { router } from './router.ts';
@@ -133,11 +133,72 @@ window.handleGoogleLogin = handleGoogleLogin;
 function setupEventListeners(): void {
     document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await login({
-            username: (document.getElementById('username') as HTMLInputElement).value,
-            password: (document.getElementById('password') as HTMLInputElement).value
+        const username = (document.getElementById('username') as HTMLInputElement).value;
+        const password = (document.getElementById('password') as HTMLInputElement).value;
+        // First, try login without 2FA code
+        const res = await fetch('/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
         });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userName', data.dbUser.username);
+            localStorage.setItem('userId', data.dbUser.id);
+            clearInputs('username', 'password');
+            connectWebSocket(data.token);
+            router.navigate('/dashboard');
+            // document.getElementById('enable2faButton')!.classList.remove('hidden');
+            // document.getElementById('disableTwofaBtn')!.classList.add('hidden');
+        } else if (data.error === '2FA code required') {
+            // Show 2FA modal
+            document.getElementById('twoFAModal')?.classList.remove('hidden');
+            // Store username/password for next step
+            (window as any).pendingLogin = { username, password };
+        } else {
+            displayError('loginResponseMessage', data.error || 'Credenciais inválidas.');
+        }
     });
+    // 2FA modal logic
+    document.getElementById('submitTwofaCode')?.addEventListener('click', async () => {
+        const code = (document.getElementById('modalTwofaCode') as HTMLInputElement).value;
+        const errorDiv = document.getElementById('modalTwofaError');
+        const pending = (window as any).pendingLogin;
+        if (!pending || !code) {
+            if (errorDiv) errorDiv.textContent = 'Código 2FA obrigatório.';
+            return;
+        }
+        // Try login with 2FA code
+        const res = await fetch('/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: pending.username, password: pending.password, twofa_code: code })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userName', data.dbUser.username);
+            localStorage.setItem('userId', data.dbUser.id);
+            clearInputs('username', 'password', 'modalTwofaCode');
+            connectWebSocket(data.token);
+            document.getElementById('twoFAModal')?.classList.add('hidden');
+            (window as any).pendingLogin = null;
+            router.navigate('/dashboard');
+            // document.getElementById('disableTwofaBtn')!.classList.remove('hidden');
+            // document.getElementById('enable2faButton')!.classList.add('hidden');
+        } else {
+            if (errorDiv) errorDiv.textContent = data.error || 'Código 2FA inválido.';
+        }
+    });
+    document.getElementById('closeTwoFAModal')?.addEventListener('click', () => {
+        document.getElementById('twoFAModal')?.classList.add('hidden');
+        (window as any).pendingLogin = null;
+        (document.getElementById('modalTwofaCode') as HTMLInputElement).value = '';
+        document.getElementById('modalTwofaError')!.textContent = '';
+    });
+
+    
 
     document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -344,6 +405,8 @@ function setupEventListeners(): void {
     });
 
     document.getElementById('editProfileButton')?.addEventListener('click', () => {
+        fetchTwofaStatus();
+        document.getElementById('disableTwofaMessage')!.classList.add('hidden');
         router.navigate('/edit-profile');
     });
 
