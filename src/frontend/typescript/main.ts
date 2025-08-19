@@ -7,7 +7,12 @@ import { router } from './router.ts';
 import { connectWebSocket } from './ws.ts';
 import { startGame2D, currentGame2D } from './2d.ts'; // Importa a função de início do jogo 2D
 import { startGame3D, currentGame3D } from './3d.ts'; // No longer directly used here, game.ts handles it
-import { CredentialResponse } from 'google-one-tap';
+// Define CredentialResponse type manually since 'google-one-tap' module is not available
+interface CredentialResponse {
+    clientId: string;
+    credential: string;
+    select_by: string;
+}
 
 // IMPORTANTE para o TypeScript: Declara a função handleGoogleLogin no escopo global
 // para que o script do Google no HTML possa chamá-la.

@@ -32,7 +32,8 @@ services:
       - PORT=8000
       - DATABASE_URL=sqlite:./data/app.db
       - CORS_ORIGIN=https://localhost,http://localhost
-      - JWT_SECRET=sua_secret_jwt_muito_segura_aqui_1234567890abcdef 
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     depends_on:
       database:
         condition: service_started

@@ -178,12 +178,14 @@ export function logout(): void {
   disconnectWebSocket(); // Desconecta o WebSocket
   localStorage.removeItem('authToken'); // Remove o token de autenticação
   localStorage.removeItem('userName'); // Remove o username
+  localStorage.removeItem('google'); // Remove o status de login Google
   const errorElement = document.getElementById('loginResponseMessage');
   if (errorElement) {
     errorElement.textContent = '';
     errorElement.classList.add('hidden');
   }
-  router.navigate('/login'); // Redireciona para a página de login
+  window.location.reload(); // Recarrega a página para limpar o estado
+  // router.navigate('/login'); // Redireciona para a página de login
 }
 
 /**

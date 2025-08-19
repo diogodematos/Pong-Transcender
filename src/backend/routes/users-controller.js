@@ -1,14 +1,15 @@
 import db from '../db.js';
-import argon2 from 'argon2';
-import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
+dotenv.config();
+import argon2 from 'argon2';
 import path from 'path';
 import pump from 'pump';    
 import * as fs from 'fs';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 
-const googleClient = new OAuth2Client('801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{7,20}$/;
 const emailRegex = /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]{2,}$/;
@@ -210,7 +211,7 @@ const usersController = async (fastify, options) => {
                     return reply.status(401).send({ error: 'Invalid 2FA code' });
             }
             // Usa fastify.jwt.sign para assinar o token (secretKey definido no plugin JWT)
-            const token = fastify.jwt.sign({ id: dbUser.id }, { expiresIn: '1h' });
+            const token = fastify.jwt.sign({ id: dbUser.id }, { expiresIn: '1h', secret: process.env.JWT_SECRET });
             return { success: true, message: 'User logged in', token, dbUser: { id: dbUser.id, username: dbUser.username } }; // Inclui dbUser.id para consistência
         } catch (error) {
             req.log.error(`Error during login: ${error.message}`);
@@ -258,7 +259,7 @@ const usersController = async (fastify, options) => {
         try {
             const ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: '801178976948-j91b6t32p0i97628g02vnhvrsa9103b4.apps.googleusercontent.com' // Seu Audience ID
+                audience: process.env.GOOGLE_CLIENT_ID // Seu Audience ID
             });
             const payload = ticket.getPayload();
             const { email, name, picture } = payload;
@@ -293,7 +294,7 @@ const usersController = async (fastify, options) => {
             }
 
             // Usa fastify.jwt.sign para assinar o token
-            const token = fastify.jwt.sign({ id: user.id }, { expiresIn: '1h' });
+            const token = fastify.jwt.sign({ id: user.id }, { expiresIn: '1h', secret: process.env.JWT_SECRET });
             req.log.info(`Token JWT gerado para o utilizador ${user.username}.`);
 
             return reply.send({ success: true, message: 'Google login successful', token, user: { username: user.username } });

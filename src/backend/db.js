@@ -99,8 +99,6 @@ try {
     db.exec(createScoresTable);
     db.exec(createFriendsTable); // Adicionado
     db.exec(createGamesTable);
-    db.exec(createTrigger); // adicionado
-    db.exec(createTournaments);     // Adicionado
     console.log('Database tables (users, scores, friends, games) created/checked successfully');
 } catch (error) {
     console.error('Error creating database tables:', error);
