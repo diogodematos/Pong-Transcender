@@ -113,11 +113,10 @@ async function handleGoogleLogin(response: CredentialResponse) {
         if (data.token) {
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('userName', data.user.username);
+            localStorage.setItem('google', 'true');
             console.log('Login Google bem-sucedido. Token recebido.');
             connectWebSocket(data.token); 
             router.navigate('/dashboard');
-            document.getElementById('enable2faButton')!.classList.add('hidden');
-            document.getElementById('disableTwofaBtn')!.classList.add('hidden');
         } else {
             alert('Erro com login do Google: ' + (data.error || 'Detalhes desconhecidos.'));
             console.error('Erro no login Google (backend response):', data.error);
@@ -408,7 +407,15 @@ function setupEventListeners(): void {
     });
 
     document.getElementById('editProfileButton')?.addEventListener('click', () => {
-        fetchTwofaStatus();
+        const google = localStorage.getItem('google');
+        console.log("Google login status:", google);
+        if (google) {
+            document.getElementById('disableTwofaBtn')!.classList.add('hidden');
+            document.getElementById('enable2faButton')!.classList.add('hidden');
+        }   
+        else {
+            fetchTwofaStatus();
+        }
         document.getElementById('disableTwofaMessage')!.classList.add('hidden');
         router.navigate('/edit-profile');
     });

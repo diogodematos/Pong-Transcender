@@ -22,8 +22,8 @@ const createUsersTable = `
         wins INTEGER DEFAULT 0,
         losses INTEGER DEFAULT 0,  
         nickname TEXT DEFAULT NULL,
-    twofa_enabled INTEGER DEFAULT 0,
-    twofa_secret TEXT DEFAULT NULL
+        twofa_enabled INTEGER DEFAULT 0,
+        twofa_secret TEXT DEFAULT NULL
     )
 `;
 
