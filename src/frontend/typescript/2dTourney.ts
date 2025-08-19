@@ -17,8 +17,9 @@ export class GameTourney {
   public static computerScore: number = 0;
   public static diffMultiplier: number = 1;
   public static diffMultiplierIA: number = 1;
-  public static speedMultiplier: number = 1.4;
-  public static speedMultiplierIA: number = 1.4;
+  public static baseSpeed: number = 1.5;
+  public static speedMultiplier: number = 1.4 * this.baseSpeed;
+  public static speedMultiplierIA: number = 1.4 * this.baseSpeed;
 
   private player1!: Paddle;
   private compBot!: ComputerPaddle;
@@ -334,7 +335,7 @@ class ComputerPaddle extends Entity {
 }
 
 class Ball extends Entity {
-  public speed: number = 6;
+  public speed: number = 6 * GameTourney.baseSpeed;
   public glowColor = "#FFFFFF";
   public isWaiting: boolean = false;
   private lastHitBy: 'player' | 'computer' | null = null;

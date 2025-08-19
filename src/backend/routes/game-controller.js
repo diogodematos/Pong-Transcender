@@ -233,7 +233,7 @@ export default async function gameRoutes(fastify, options) {
 
               // Wall bouncing
               const arenaHalfHeight = 15;
-              if (gameState.ballZ <= -arenaHalfHeight + 1 || gameState.ballZ >= arenaHalfHeight - 1) {
+              if (gameState.ballZ - 0.7 <= -arenaHalfHeight + 1 || gameState.ballZ + 0.7 >= arenaHalfHeight - 1) {
                 gameState.ballVelZ *= -1;
               }
 
@@ -245,9 +245,9 @@ export default async function gameRoutes(fastify, options) {
               let spin = 0.2 * baseSpeed;
 
               // Player 1 paddle collision (left side)
-              if (gameState.ballX <= -arenaHalfWidth + 2 && gameState.ballX >= -arenaHalfWidth + 1) {
-                if (gameState.ballZ >= gameState.paddle1Y - paddleHeight && 
-                    gameState.ballZ <= gameState.paddle1Y + paddleHeight)
+              if (gameState.ballX - 0.3 <= -arenaHalfWidth + 2 && gameState.ballX >= -arenaHalfWidth + 1) {
+                if (gameState.ballZ + 0.5 >= gameState.paddle1Y - paddleHeight && 
+                    gameState.ballZ - 0.5 <= gameState.paddle1Y + paddleHeight)
                 {
                   if (gameState.lastP1Y !== gameState.paddle1Y)
                   {
@@ -265,9 +265,9 @@ export default async function gameRoutes(fastify, options) {
               }
 
               // Player 2 paddle collision (right side)
-              if (gameState.ballX >= arenaHalfWidth - 2 && gameState.ballX <= arenaHalfWidth - 1) {
-                if (gameState.ballZ >= -gameState.paddle2Y - paddleHeight &&
-                    gameState.ballZ <= -gameState.paddle2Y + paddleHeight)
+              if (gameState.ballX + 0.3 >= arenaHalfWidth - 2 && gameState.ballX <= arenaHalfWidth - 1) {
+                if (gameState.ballZ + 0.5 >= -gameState.paddle2Y - paddleHeight &&
+                    gameState.ballZ - 0.5 <= -gameState.paddle2Y + paddleHeight)
                 {
                   if (gameState.lastP2Y !== gameState.paddle2Y)
                   {

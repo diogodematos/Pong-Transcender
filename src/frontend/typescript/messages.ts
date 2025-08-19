@@ -1,6 +1,6 @@
 // Centralized message module for tournament UI
 export const TourneyMessages = {
-  champion: (winner: string) => `Champion: <strong>${winner}</strong> 🏆`,
+  champion: (winner: string) => `Champion: ${winner} 🏆`,
   continue: 'Continue',
   semifinalWinner: (matchNum: number, winner: string) => `Semifinal ${matchNum} winner: ${winner}`,
   final: (p1: string, p2: string) => `Final: ${p1} vs ${p2}`,

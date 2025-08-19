@@ -8,6 +8,7 @@ let currentMatchIndex = 0;
 let semifinalWinners: string[] = [];
 
 function showWinnerModal(winner: string) {
+  // Create modal container
   const modal = document.createElement('div');
   modal.style.position = 'fixed';
   modal.style.left = '50%';
@@ -20,17 +21,30 @@ function showWinnerModal(winner: string) {
   modal.style.zIndex = '1000';
   modal.style.textAlign = 'center';
 
-  modal.innerHTML = `
-    <p>${TourneyMessages.champion(winner)}</p>
-    <button id="closeWinnerModal" style="margin-top: 15px; padding: 8px 20px; font-weight: bold;">${TourneyMessages.continue}</button>
-  `;
+  // Create winner message paragraph
+  const winnerMessage = document.createElement('p');
+  winnerMessage.textContent = TourneyMessages.champion(winner); // Safe with textContent - XSS protected!
 
-  document.body.appendChild(modal);
+  // Create close button
+  const closeButton = document.createElement('button');
+  closeButton.id = 'closeWinnerModal';
+  closeButton.style.marginTop = '15px';
+  closeButton.style.padding = '8px 20px';
+  closeButton.style.fontWeight = 'bold';
+  closeButton.textContent = TourneyMessages.continue; // Safe with textContent
 
-  document.getElementById('closeWinnerModal')?.addEventListener('click', () => {
+  // Add click event listener
+  closeButton.addEventListener('click', () => {
     modal.remove();
     window.location.reload();
   });
+
+  // Assemble the modal
+  modal.appendChild(winnerMessage);
+  modal.appendChild(closeButton);
+
+  // Add to page
+  document.body.appendChild(modal);
 }
 
 window.addEventListener('localTourneyGameOver', (e: any) => {
