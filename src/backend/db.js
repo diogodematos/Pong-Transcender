@@ -21,7 +21,9 @@ const createUsersTable = `
         avatar TEXT DEFAULT NULL,
         wins INTEGER DEFAULT 0,
         losses INTEGER DEFAULT 0,  
-        nickname TEXT DEFAULT NULL
+        nickname TEXT DEFAULT NULL,
+    twofa_enabled INTEGER DEFAULT 0,
+    twofa_secret TEXT DEFAULT NULL
     )
 `;
 
@@ -70,10 +72,12 @@ const createGamesTable = `
 // Criar tabelas se não existirem
 try {
     db.exec(createUsersTable);
-    // Verificar se as colunas 'wins' e 'losses' existem e adicioná-las se não existirem
+    // Verificar se as colunas 'wins', 'losses' e 'twofa_enabled' existem e adicioná-las se não existirem
     const userColumns = db.prepare("PRAGMA table_info(users)").all();
     const hasWins = userColumns.some(col => col.name === 'wins');
     const hasLosses = userColumns.some(col => col.name === 'losses');
+    const hasTwoFA = userColumns.some(col => col.name === 'twofa_enabled');
+    const hasTwoFASecret = userColumns.some(col => col.name === 'twofa_secret');
 
     if (!hasWins) {
         db.exec("ALTER TABLE users ADD COLUMN wins INTEGER DEFAULT 0");
@@ -82,6 +86,14 @@ try {
     if (!hasLosses) {
         db.exec("ALTER TABLE users ADD COLUMN losses INTEGER DEFAULT 0");
         console.log("Added 'losses' column to 'users' table.");
+    }
+    if (!hasTwoFA) {
+        db.exec("ALTER TABLE users ADD COLUMN twofa_enabled INTEGER DEFAULT 0");
+        console.log("Added 'twofa_enabled' column to 'users' table.");
+    }
+    if (!hasTwoFASecret) {
+        db.exec("ALTER TABLE users ADD COLUMN twofa_secret TEXT DEFAULT NULL");
+        console.log("Added 'twofa_secret' column to 'users' table.");
     }
 
     db.exec(createScoresTable);

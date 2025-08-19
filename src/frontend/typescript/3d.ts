@@ -47,6 +47,8 @@ class Game3D {
   private gameEndOverlay: HTMLDivElement | null = null;
   private isRunning: boolean = true;
   private gameState: boolean | null = null; // true = victory, false = defeat
+  private aiState: any;
+  private lastCalculated: number = 0;
 
   // Visual effects
   private playerScorePulse: number = 0;
@@ -64,16 +66,24 @@ class Game3D {
   private isGoalScored: boolean = false;
 
   public setDifficulty(level: 'easy' | 'medium' | 'hard') {
-    if (level === 'easy') {
+    if (level === 'easy')
+    {
         this.diffMultiplier = 2;
+        this.diffMultiplierIA = 1;
         this.speedMultiplier = 1.3;
         this.ballSpeed = 0.25;
-    } else if (level === 'medium') {
+    }
+    else if (level === 'medium')
+    {
         this.diffMultiplier = 1;
+        this.diffMultiplierIA = 1.3;
         this.speedMultiplier = 1.4;
         this.ballSpeed = 0.3;
-    } else if (level === 'hard') {
+    }
+    else if (level === 'hard')
+    {
         this.diffMultiplier = 0.5;
+        this.diffMultiplierIA = 1.8;
         this.speedMultiplier = 1.5;
         this.ballSpeed = 0.35;
     }
@@ -360,7 +370,7 @@ class Game3D {
             type: 'player_update',
             paddleY: this.player.position.z,
             ballX: this.ball.position.x,
-            ballY: this.ball.position.z
+            ballZ: this.ball.position.z
           }));
           
           // If we're the host, send periodic updates to ensure ball starts moving
@@ -376,7 +386,7 @@ class Game3D {
                     type: 'player_update',
                     paddleY: this.player.position.z,
                     ballX: this.ball.position.x,
-                    ballY: this.ball.position.z
+                    ballZ: this.ball.position.z
                   }));
                   
                   // Stop after 10 updates (5 seconds) to let natural gameplay take over
@@ -398,7 +408,7 @@ class Game3D {
         console.log('Received game state:', {
           opponentPaddleY: data.opponentPaddleY,
           ballX: data.ballX,
-          ballY: data.ballY,
+          ballZ: data.ballZ,
           playerScore: data.playerScore,
           opponentScore: data.opponentScore,
           playersConnected: data.playersConnected,
@@ -413,10 +423,10 @@ class Game3D {
           }
           
           // Update ball position ONLY from server authority - disable all client ball physics
-          if (data.ballX !== undefined && data.ballY !== undefined) {
+          if (data.ballX !== undefined && data.ballZ !== undefined) {
             // Always update ball position from server, no client-side ball movement at all
             this.ball.position.x = data.ballX;
-            this.ball.position.z = data.ballY; // Note: server ballY maps to our ballZ
+            this.ball.position.z = data.ballZ; // Note: server ballZ maps to our ballZ
             
             // Show the ball if it was hidden
             if (!this.ball.isEnabled()) {
@@ -513,9 +523,8 @@ class Game3D {
     //this.setupDifficultyButtons();
     
     // Set up score colors based on host status for multiplayer
-    if (this.useMultiplayer) {
+    if (this.useMultiplayer)
       this.setupScoreColors();
-    }
     
     console.log("Rendering...");
     this.startRenderLoop();
@@ -682,7 +691,12 @@ class Game3D {
     if (!this.scene) return;
     // Player paddle (left side)
     this.playerWidth = 6 * this.diffMultiplier;
-    this.player = BABYLON.MeshBuilder.CreateBox("player", { width: 1, height: 1, depth: this.playerWidth }, this.scene);
+    console.log("Created computer paddle with " + this.playerWidth);
+    this.player = BABYLON.MeshBuilder.CreateBox("player", {
+      width: 1,
+      height: 1,
+      depth: this.playerWidth
+    }, this.scene);
     this.player.position.x = this.playerGoal.position.x + 1;
     this.player.position.y = 1.6;
     this.player.position.z = 0;
@@ -695,7 +709,8 @@ class Game3D {
     this.player.material = playerMaterial;
 
     // Computer paddle (right side)
-    this.computerWidth = 6 * this.diffMultiplierIA;
+    this.computerWidth = 6 * this.diffMultiplier;
+    console.log("Created computer paddle with " + this.computerWidth);
     this.computer = BABYLON.MeshBuilder.CreateBox("computer", {
       width: 1,
       height: 1,
@@ -949,10 +964,10 @@ class Game3D {
     }, 800);
 
     // Reset paddle sizes
-    this.playerWidth *= this.diffMultiplier;
-    this.computerWidth *= this.diffMultiplierIA;
+    this.playerWidth = 6 * this.diffMultiplier;
+    this.computerWidth = 6 * this.diffMultiplier;
     this.player.scaling.z = this.diffMultiplier;
-    this.computer.scaling.z = this.diffMultiplierIA;
+    this.computer.scaling.z = this.diffMultiplier;
 
     // Reset visual effects
     this.ballLastHitBy = null;
@@ -1019,7 +1034,7 @@ class Game3D {
           type: 'player_update',
           paddleY: controlledPaddle.position.z, // Send current paddle position
           ballX: this.ball.position.x,          // Include ball position for server-side collision detection
-          ballY: this.ball.position.z           // Your server expects ballY, we use ballZ
+          ballZ: this.ball.position.z           // Your server expects ballZ, we use ballZ
         }));
       }
     }
@@ -1027,39 +1042,119 @@ class Game3D {
 
 
   updateComputer() {
-    // In multiplayer, computer paddle is controlled by the other player
-    if (this.useMultiplayer) {
-      // Computer paddle position is updated via network messages
-      // No local AI logic needed
+    if (this.useMultiplayer)
       return;
+
+    // Initialize AI state if not exists
+    if (!this.aiState) {
+      this.aiState = {
+        targetPosition: 0,
+        calculusFlag: false,
+        calcTriggerPos: this.ball.position.x // Position where AI starts calculating
+      };
     }
 
-    // Single player AI logic
-    const speed = 0.1 * this.speedMultiplierIA;
-    const ballZ = this.ball.position.z;
-    const paddleZ = this.computer.position.z;
-    const paddleHeight = 3 * this.diffMultiplierIA;
+    const difficulty = this.diffMultiplierIA;
 
-    // AI: Follow ball when it's moving towards computer
-    if ((this.ball as any).velocity.x > 0) {
-      if (ballZ < paddleZ - paddleHeight / 2) {
+    // Trajectory calculation - only when ball is moving toward AI and crosses trigger point
+    if ((this.ball as any).velocity.x > 0 &&
+        this.ball.position.x > this.aiState.calcTriggerPos &&
+        !this.aiState.calculusFlag && (Date.now() - this.lastCalculated) >= 1000)
+    {
+      this.lastCalculated = Date.now();
+      console.log("Last AI calculation: " + this.lastCalculated);
+
+      // Simulate ball trajectory
+      let ballX = this.ball.position.x;
+      let ballZ = this.ball.position.z;
+      let ballVx = (this.ball as any).velocity.x;
+      let ballVz = (this.ball as any).velocity.z;
+
+      // Simulate until ball reaches computer paddle position
+      while (ballX < this.computer.position.x) {
+        ballX += ballVx;
+        ballZ += ballVz;
+
+        // Handle top wall bounce
+        if (ballZ > this.topWallZ - this.ballDiameter) {
+          ballZ = this.topWallZ - this.ballDiameter;
+          ballVz *= -1;
+        }
+
+        // Handle bottom wall bounce
+        if (ballZ < this.bottomWallZ + this.ballDiameter) {
+          ballZ = this.bottomWallZ + this.ballDiameter;
+          ballVz *= -1;
+        }
+      }
+
+      // Set target position with boundary constraints
+      const paddleHalfWidth = this.computerWidth / 2;
+      const minPos = this.bottomWallZ + 1 + paddleHalfWidth;
+      const maxPos = this.topWallZ - 1 - paddleHalfWidth;
+
+      this.aiState.targetPosition = Math.max(minPos, Math.min(ballZ, maxPos));
+
+      // Difficulty adjustment - add random error for easier difficulties
+      if (difficulty >= 0.5 && difficulty <= 2.0)
+      {
+        const maxError = (2.5 - difficulty) * 2; // More error for lower difficulty
+        const randomOffset = (Math.random() - 0.5) * maxError;
+        this.aiState.targetPosition += randomOffset;
+
+        // Re-clamp after adding error
+        this.aiState.targetPosition = Math.max(minPos, Math.min(this.aiState.targetPosition, maxPos));
+      }
+
+      this.aiState.calculusFlag = true;
+    }
+
+    // Human-like behavior - stop calculating when ball moves away
+    if ((this.ball as any).velocity.x < 0 && this.ball.position.x <= this.computer.position.x - 1) {
+      this.aiState.calculusFlag = false;
+      this.aiState.targetPosition = (this.topWallZ + this.bottomWallZ) / 2; // Return to center
+    }
+
+    // Reset calculation flag when ball changes direction
+    if ((this.ball as any).velocity.x <= 0) {
+      this.aiState.calculusFlag = false;
+    }
+
+    // Movement execution
+    const currentPos = this.computer.position.z;
+    const speed = 0.09 * this.speedMultiplierIA; // Slightly faster than original
+    const tolerance = 0.1;
+
+    if (this.aiState.targetPosition < currentPos - tolerance)
+    {
+      // Move toward bottom wall
+      const newPos = currentPos - speed;
+      const paddleHalfWidth = this.computerWidth / 2;
+
+      if (newPos - paddleHalfWidth >= this.bottomWallZ + 1) {
+        this.computer.position.z = newPos;
         (this.computer as any).velocity.z = -speed;
-        if (this.computer.position.z - (this.computerWidth / 2) <= this.bottomWallZ + 1) {
-          (this.computer as any).velocity.z = 0;
-        }
-      } else if (ballZ > paddleZ + paddleHeight / 2) {
-        (this.computer as any).velocity.z = speed;
-        if (this.computer.position.z + (this.computerWidth / 2) >= this.topWallZ - 1) {
-          (this.computer as any).velocity.z = 0;
-        }
       } else {
         (this.computer as any).velocity.z = 0;
       }
-    } else {
+    }
+    else if (this.aiState.targetPosition > currentPos + tolerance)
+    {
+      // Move toward top wall
+      const newPos = currentPos + speed;
+      const paddleHalfWidth = this.computerWidth / 2;
+
+      if (newPos + paddleHalfWidth <= this.topWallZ - 1) {
+        this.computer.position.z = newPos;
+        (this.computer as any).velocity.z = speed;
+      } else {
+        (this.computer as any).velocity.z = 0;
+      }
+    }
+    else {
+      // Close enough to target position
       (this.computer as any).velocity.z = 0;
     }
-
-    this.computer.position.z += (this.computer as any).velocity.z;
   }
 
    updateBall() {
@@ -1098,17 +1193,16 @@ class Game3D {
     const ballPos = this.ball.position;
     const playerPos = this.player.position;
     const computerPos = this.computer.position;
-    const paddleHeight = 3 * this.diffMultiplier;
-    const paddleHeightIA = 3 * this.diffMultiplierIA;
+    const paddleWidth = this.playerWidth / 2;
 
     // Player paddle collision
     if (ballPos.x <= playerPos.x + 1 && ballPos.x >= playerPos.x - 1) {
-      if (ballPos.z >= playerPos.z - paddleHeight && ballPos.z <= playerPos.z + paddleHeight) {
+      if (ballPos.z >= playerPos.z - paddleWidth && ballPos.z <= playerPos.z + paddleWidth) {
         console.log("player collision");
         (this.ball as any).velocity.x = Math.abs((this.ball as any).velocity.x);
 
         if (this.isPlayerMoving != "NO") {
-          (this.ball as any).velocity.x += 0.1;
+          (this.ball as any).velocity.x += 0.07;
           (this.ball as any).velocity.z += this.isPlayerMoving == "UP" ? -0.15 : 0.15;
         } else {
           if ((this.ball as any).velocity.x >= this.ballSpeed)
@@ -1125,7 +1219,7 @@ class Game3D {
 
     // Computer paddle collision
     if (ballPos.x >= computerPos.x - 1 && ballPos.x <= computerPos.x + 1) {
-      if (ballPos.z >= computerPos.z - paddleHeightIA && ballPos.z <= computerPos.z + paddleHeightIA) {
+      if (ballPos.z >= computerPos.z - paddleWidth && ballPos.z <= computerPos.z + paddleWidth) {
         console.log("computer collision");
         (this.ball as any).velocity.x = -Math.abs((this.ball as any).velocity.x);
         this.ballLastHitBy = 'computer';
@@ -1508,7 +1602,9 @@ class Game3D {
           mainMenuButton.style.transform = 'scale(1)';
           mainMenuButton.style.boxShadow = '0 4px 15px rgba(125, 249, 255, 0.3)';
         };
-      } else {
+      }
+      else
+      {
         // Non-host: always red button
         mainMenuButton.style.cssText = `
           padding: 15px 30px;
@@ -1545,7 +1641,7 @@ class Game3D {
           box-shadow: 0 4px 15px rgba(125, 249, 255, 0.3);
         `;
         mainMenuButton.onmouseover = () => {
-          mainMenuButton.style.transform = 'scale(1.05)';
+          mainMenuButton.style.transform = 'scale(1.5)';
           mainMenuButton.style.boxShadow = '0 6px 20px rgba(125, 249, 255, 0.5)';
         };
         mainMenuButton.onmouseout = () => {
@@ -1565,7 +1661,7 @@ class Game3D {
           box-shadow: 0 4px 15px rgba(255, 7, 58, 0.3);
         `;
         mainMenuButton.onmouseover = () => {
-          mainMenuButton.style.transform = 'scale(1.05)';
+          mainMenuButton.style.transform = 'scale(1.5)';
           mainMenuButton.style.boxShadow = '0 6px 20px rgba(255, 7, 58, 0.5)';
         };
         mainMenuButton.onmouseout = () => {
@@ -1652,12 +1748,6 @@ export async function startGame3D(gameId: string = '', isHost: boolean = false, 
   const game = new Game3D();
 
   currentGame3D = game;
-
-/*  // Connect with proper multiplayer flag
-  game.connectToGame(gameId, isHost, useMultiplayer).then(() => {
-    console.log("Initializing...");
-    game.init();
-  });*/
 
   try {
     const success = await game.connectToGame(gameId, isHost, useMultiplayer);
